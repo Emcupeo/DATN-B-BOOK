@@ -38,35 +38,35 @@ public class ChiTietSanPham {
     @Column(name = "ten_chi_tiet_san_pham", length = 55)
     private String tenChiTietSanPham;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_san_pham")
     private SanPham idSanPham;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_loai_bia")
     private LoaiBia idLoaiBia;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_nguoi_dich")
     private NguoiDich idNguoiDich;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_tac_gia")
     private TacGia idTacGia;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_chat_lieu")
     private ChatLieu idChatLieu;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_nha_xuat_ban")
     private NhaXuatBan idNhaXuatBan;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_the_loai")
     private TheLoai idTheLoai;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_ngon_ngu")
     private NgonNgu idNgonNgu;
 
@@ -115,13 +115,13 @@ public class ChiTietSanPham {
     @Column(name = "deleted")
     private Boolean deleted;
 
-    @OneToMany(mappedBy = "idChiTietSanPham")
-    private Set<DotGiamGiaChiTiet> dotGiamGiaChiTiets = new LinkedHashSet<>();
-
-    @OneToMany(mappedBy = "idChiTietSanPham")
-    private Set<GioHang> gioHangs = new LinkedHashSet<>();
-
-    @OneToMany(mappedBy = "idChiTietSanPham")
-    private Set<HoaDonChiTiet> hoaDonChiTiets = new LinkedHashSet<>();
+//    @OneToMany(mappedBy = "idChiTietSanPham")
+//    private Set<DotGiamGiaChiTiet> dotGiamGiaChiTiets = new LinkedHashSet<>();
+//
+//    @OneToMany(mappedBy = "idChiTietSanPham")
+//    private Set<GioHang> gioHangs = new LinkedHashSet<>();
+//
+//    @OneToMany(mappedBy = "idChiTietSanPham")
+//    private Set<HoaDonChiTiet> hoaDonChiTiets = new LinkedHashSet<>();
 
 }

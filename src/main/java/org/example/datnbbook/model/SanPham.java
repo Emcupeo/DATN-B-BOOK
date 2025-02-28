@@ -7,8 +7,11 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Nationalized;
 
@@ -17,8 +20,11 @@ import java.util.Set;
 
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @Table(name = "san_pham")
+@ToString
 public class SanPham {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,9 +45,11 @@ public class SanPham {
 
     @ColumnDefault("0")
     @Column(name = "deleted")
-    private Boolean deleted;
+    private Boolean deleted = false;
+//
+//    @OneToMany(mappedBy = "idSanPham")
+//    private Set<ChiTietSanPham> chiTietSanPhams = new LinkedHashSet<>();
 
-    @OneToMany(mappedBy = "idSanPham")
-    private Set<ChiTietSanPham> chiTietSanPhams = new LinkedHashSet<>();
+
 
 }
