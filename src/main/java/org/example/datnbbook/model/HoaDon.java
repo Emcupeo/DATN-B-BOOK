@@ -1,5 +1,8 @@
 package org.example.datnbbook.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -32,18 +35,22 @@ public class HoaDon {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_khach_hang")
+    @JsonIgnore
     private KhachHang idKhachHang;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_nhan_vien")
+    @JsonIgnore
     private NhanVien idNhanVien;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_phieu_giam_gia")
+    @JsonIgnore
     private PhieuGiamGia idPhieuGiamGia;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_hinh_thuc_thanh_toan")
+    @JsonIgnore
     private HinhThucThanhToan idHinhThucThanhToan;
 
     @ColumnDefault("'HD'+right('-000'+CONVERT([nvarchar](5), NEXT VALUE FOR [dbo].[HDSeq]), 5)")
@@ -113,10 +120,12 @@ public class HoaDon {
     @Column(name = "deleted")
     private Boolean deleted;
 
-    @OneToMany(mappedBy = "idHoaDon")
+    @OneToMany(mappedBy = "hoaDon")
+    @JsonManagedReference
     private Set<HoaDonChiTiet> hoaDonChiTiets = new LinkedHashSet<>();
 
-    @OneToMany(mappedBy = "idHoaDon")
+    @OneToMany(mappedBy = "hoaDon")
+    @JsonManagedReference
     private Set<LichSuHoaDon> lichSuHoaDons = new LinkedHashSet<>();
 
 }

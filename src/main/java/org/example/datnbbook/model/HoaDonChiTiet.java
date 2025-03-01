@@ -1,14 +1,8 @@
 package org.example.datnbbook.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
@@ -22,21 +16,21 @@ import java.time.Instant;
 @Entity
 @Table(name = "hoa_don_chi_tiet")
 public class HoaDonChiTiet {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
-    private Integer id;
+    @EmbeddedId
+    private HoaDonChiTietId id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_chi_tiet_san_pham")
+    @MapsId("idHoaDon")
+    @JoinColumn(name = "id_hoa_don", nullable = false)
+    @JsonBackReference
+    private HoaDon hoaDon;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("idChiTietSanPham")
+    @JoinColumn(name = "id_chi_tiet_san_pham", nullable = false)
+    @JsonBackReference
     private ChiTietSanPham idChiTietSanPham;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_hoa_don")
-    private HoaDon idHoaDon;
-
-    @Nationalized
-    @ColumnDefault("'HDCT'+right('-000'+CONVERT([nvarchar](5), NEXT VALUE FOR [dbo].[HDCTSeq]), 5)")
     @Column(name = "ma_hoa_don_chi_tiet", length = 10)
     private String maHoaDonChiTiet;
 
@@ -66,5 +60,4 @@ public class HoaDonChiTiet {
     @ColumnDefault("0")
     @Column(name = "deleted")
     private Boolean deleted;
-
 }

@@ -1,5 +1,8 @@
 package org.example.datnbbook.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -26,12 +29,14 @@ public class LichSuHoaDon {
     @Column(name = "id", nullable = false)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_hoa_don")
-    private HoaDon idHoaDon;
+    @JsonBackReference
+    private HoaDon hoaDon;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_nhan_vien")
+    @JsonBackReference
     private NhanVien idNhanVien;
 
     @ColumnDefault("'LSHD'+right('-000'+CONVERT([nvarchar](5), NEXT VALUE FOR [dbo].[LSHDSeq]), 5)")

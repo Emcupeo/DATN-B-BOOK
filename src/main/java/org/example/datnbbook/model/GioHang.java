@@ -32,10 +32,10 @@ public class GioHang {
     @JoinColumn(name = "id_chi_tiet_san_pham")
     private ChiTietSanPham idChiTietSanPham;
 
-    @Nationalized
-    @ColumnDefault("'GH'+right('-000'+CONVERT([nvarchar](5), NEXT VALUE FOR [dbo].[GHSeq]), 5)")
-    @Column(name = "ma_gio_hang", length = 15)
-    private String maGioHang;
+//    @Nationalized
+//    @ColumnDefault("'GH'+right('-000'+CONVERT([nvarchar](5), NEXT VALUE FOR [dbo].[GHSeq]), 5)")
+//    @Column(name = "ma_gio_hang", length = 15)
+//    private String maGioHang;
 
     @Column(name = "so_luong")
     private Integer soLuong;

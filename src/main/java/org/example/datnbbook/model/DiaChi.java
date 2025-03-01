@@ -41,11 +41,11 @@ public class DiaChi {
     private String soDienThoai;
 
     @ColumnDefault("0")
-    @Column(name = "dia_chi_mac_dinh")
+    @Column(name = "dia_chi_mac_dinh", columnDefinition = "BIT DEFAULT 0")
     private Boolean diaChiMacDinh;
 
     @ColumnDefault("0")
-    @Column(name = "Deleted")
+    @Column(name = "deleted")
     private Boolean deleted;
 
 }
