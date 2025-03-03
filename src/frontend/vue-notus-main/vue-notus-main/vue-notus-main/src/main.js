@@ -49,6 +49,7 @@ import ThuocTinh from "@/views/QuanLySach/ThuocTinh.vue";
 import NhanVien from "@/views/TaiKhoan/NhanVien.vue";
 import KhachHang from "@/views/TaiKhoan/KhachHang.vue";
 import ListSach from "./views/QuanLySach/ListSach.vue";
+import QuanLyDonHang from "@/views/BanHang/QuanLyDonHang.vue";
 
 const routes = [
   {
@@ -80,6 +81,10 @@ const routes = [
       {
         path: "/admin/hoa-don",
         component: HoaDon,
+      },
+      {
+        path: "/admin/hoa-don-chi-tiet/:id",
+        component: QuanLyDonHang,
       },
 
       {

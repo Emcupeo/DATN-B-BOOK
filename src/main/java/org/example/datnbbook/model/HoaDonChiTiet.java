@@ -16,17 +16,17 @@ import java.time.Instant;
 @Entity
 @Table(name = "hoa_don_chi_tiet")
 public class HoaDonChiTiet {
-    @EmbeddedId
-    private HoaDonChiTietId id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
+    private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("idHoaDon")
     @JoinColumn(name = "id_hoa_don", nullable = false)
     @JsonBackReference
     private HoaDon hoaDon;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("idChiTietSanPham")
     @JoinColumn(name = "id_chi_tiet_san_pham", nullable = false)
     @JsonBackReference
     private ChiTietSanPham idChiTietSanPham;
