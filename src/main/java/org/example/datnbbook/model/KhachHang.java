@@ -60,16 +60,16 @@ public class KhachHang {
     @Column(name = "deleted")
     private Boolean deleted;
 
-    @OneToMany(mappedBy = "idKhachHang")
-    private Set<DiaChi> diaChis = new LinkedHashSet<>();
-
-    @OneToMany(mappedBy = "idKhachHang")
-    private Set<GioHang> gioHangs = new LinkedHashSet<>();
-
-    @OneToMany(mappedBy = "idKhachHang")
-    private Set<HoaDon> hoaDons = new LinkedHashSet<>();
-
-    @OneToMany(mappedBy = "idKhachHang")
-    private Set<PhieuGiamGiaKhachHang> phieuGiamGiaKhachHangs = new LinkedHashSet<>();
+//    @OneToMany(mappedBy = "idKhachHang")
+//    private Set<DiaChi> diaChis = new LinkedHashSet<>();
+//
+//    @OneToMany(mappedBy = "idKhachHang")
+//    private Set<GioHang> gioHangs = new LinkedHashSet<>();
+//
+//    @OneToMany(mappedBy = "idKhachHang")
+//    private Set<HoaDon> hoaDons = new LinkedHashSet<>();
+//
+//    @OneToMany(mappedBy = "idKhachHang")
+//    private Set<PhieuGiamGiaKhachHang> phieuGiamGiaKhachHangs = new LinkedHashSet<>();
 
 }

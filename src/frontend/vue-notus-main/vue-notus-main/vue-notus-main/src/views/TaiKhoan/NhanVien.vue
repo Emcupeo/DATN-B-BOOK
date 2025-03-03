@@ -4,10 +4,10 @@
       <div class="w-1/3 bg-white p-4 shadow rounded">
         <h2 class="text-lg font-bold mb-4">Thêm Nhân Viên</h2>
         <form @submit.prevent="addEmployee">
-          <input v-model="newEmployee.id" type="text" placeholder="Mã nhân viên" class="input-style" required />
-          <input v-model="newEmployee.name" type="text" placeholder="Họ và tên" class="input-style" required />
-          <input v-model="newEmployee.position" type="text" placeholder="Chức vụ" class="input-style" required />
-          <input v-model="newEmployee.email" type="email" placeholder="Email" class="input-style" required />
+          <input v-model="nhanVien.id" type="text" placeholder="Mã nhân viên" class="input-style" required />
+          <input v-model="nhanVien.hoTen" type="text" placeholder="Họ và tên" class="input-style" required />
+          <input v-model="nhanVien.namSinh" type="text" placeholder="Chức vụ" class="input-style" required />
+          <input v-model="nhanVien.soDienThoai" type="email" placeholder="Email" class="input-style" required />
           <button type="submit" class="btn-blue">Thêm Nhân Viên</button>
         </form>
       </div>
@@ -24,22 +24,22 @@
                 <th class="px-6 py-3">Mã NV</th>
                 <th class="px-6 py-3">Họ và tên</th>
                 <th class="px-6 py-3">Chức vụ</th>
-                <th class="px-6 py-3">Email</th>
+                <th class="px-6 py-3">Số điện thoại</th>
                 <th class="px-6 py-3">Hành động</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(employee, index) in filteredEmployees" :key="index" class="hover:bg-gray-50">
-                <td class="px-6 py-4">{{ employee.id }}</td>
-                <td class="px-6 py-4">{{ employee.name }}</td>
-                <td class="px-6 py-4">{{ employee.position }}</td>
-                <td class="px-6 py-4">{{ employee.email }}</td>
+              <tr v-for="nhanVien in listNhanVien" v-bind:key="nhanVien.id" class="hover:bg-gray-50">
+                <td class="px-6 py-4">{{ nhanVien.maNhanVien }}</td>
+                <td class="px-6 py-4">{{ nhanVien.hoTen }}</td>
+                <td class="px-6 py-4">{{ nhanVien.chucVu }}</td>
+                <td class="px-6 py-4">{{ nhanVien.soDienThoai }}</td>
                 <td class="px-6 py-4">
                   <a href="#" @click.prevent="editEmployee(index)" class="text-blue-600 hover:underline">Edit</a>
                   <a href="#" @click.prevent="removeEmployee(index)" class="text-red-600 hover:underline ml-3">Remove</a>
                 </td>
               </tr>
-              <tr v-if="!employees.length">
+              <tr v-if="listNhanVien.length === 0">
                 <td class="px-6 py-4 text-center" colspan="5">Không có dữ liệu</td>
               </tr>
             </tbody>
@@ -50,36 +50,48 @@
   </template>
   
   <script>
+  import NhanVienService from "../../service/NhanVienService";
   export default {
+    name:"ListNhanVien",
     data() {
       return {
+        nhanVien:{id:"",hoTen:"",chucVu:"",email:""},
+        listNhanVien: [],
         searchQuery: "",
-        newEmployee: { id: "", name: "", position: "", email: "" },
-        employees: [
-          { id: "NV001", name: "Nguyễn Văn A", position: "Quản lý", email: "a@example.com" },
-          { id: "NV002", name: "Trần Thị B", position: "Nhân viên", email: "b@example.com" }
-        ]
+        // newEmployee: { id: "", name: "", position: "", email: "" },
+        // employees: [
+        //   { id: "NV001", name: "Nguyễn Văn A", position: "Quản lý", email: "a@example.com" },
+        //   { id: "NV002", name: "Trần Thị B", position: "Nhân viên", email: "b@example.com" }
+        // ]
       };
     },
     computed: {
-      filteredEmployees() {
-        return this.employees.filter(emp =>
-          emp.name.toLowerCase().includes(this.searchQuery.toLowerCase())
-        );
-      }
+      // filteredEmployees() {
+      //   return this.employees.filter(emp =>
+      //     emp.name.toLowerCase().includes(this.searchQuery.toLowerCase())
+      //   );
+      // }
     },
     methods: {
-      addEmployee() {
-        this.employees.push({ ...this.newEmployee });
-        this.newEmployee = { id: "", name: "", position: "", email: "" };
+      // addEmployee() {
+      //   this.employees.push({ ...this.newEmployee });
+      //   this.newEmployee = { id: "", name: "", position: "", email: "" };
+      // },
+      // removeEmployee(index) {
+      //   this.employees.splice(index, 1);
+      // },
+      // editEmployee(index) {
+      //   this.newEmployee = { ...this.employees[index] };
+      //   this.employees.splice(index, 1);
+      // }
+      getListNhanVien(){
+        NhanVienService.getListNhanVien().then((response)=>{
+          this.listNhanVien = response.data;
+        });
       },
-      removeEmployee(index) {
-        this.employees.splice(index, 1);
-      },
-      editEmployee(index) {
-        this.newEmployee = { ...this.employees[index] };
-        this.employees.splice(index, 1);
-      }
+    },
+    created() {
+      this.getListNhanVien();
     }
   };
   </script>
