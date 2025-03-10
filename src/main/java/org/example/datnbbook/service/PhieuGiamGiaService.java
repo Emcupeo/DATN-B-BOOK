@@ -27,8 +27,15 @@ public class PhieuGiamGiaService {
 
     // Thêm hoặc cập nhật phiếu giảm giá
     public PhieuGiamGia save(PhieuGiamGia phieuGiamGia) {
+        if (phieuGiamGia.getMaPhieuGiamGia() == null || phieuGiamGia.getMaPhieuGiamGia().isEmpty()) {
+            String nextPhieuGiamGia = phieuGiamGiaRepository.getNextSequenceValue();
+            phieuGiamGia.setMaPhieuGiamGia(nextPhieuGiamGia);
+        }
+        phieuGiamGia.setDeleted(false); // Đảm bảo sản phẩm mới không bị đánh dấu xóa
         return phieuGiamGiaRepository.save(phieuGiamGia);
     }
+
+
 
     // Kiểm tra xem phiếu giảm giá có tồn tại không
     public boolean existsById(Long id) {
