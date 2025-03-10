@@ -179,7 +179,7 @@ export default {
     return {
       phieuGiamGias: [],
       showModal: false,
-      newPhieu: {
+      newPhieu: { 
         soPhanTramGiam: 0,
         giaTriGiam: 0,
         giaTriDonHangToiThieu: 0,
@@ -298,20 +298,6 @@ export default {
         }
       }
     },
-
-
-
-    watch: {
-      showModal(newVal) {
-        if (newVal) {
-          document.body.classList.add("overflow-hidden");
-        } else {
-          document.body.classList.remove("overflow-hidden");
-        }
-      }
-    }
-
-
   },
   mounted() {
     this.fetchData();
