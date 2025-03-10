@@ -1,7 +1,9 @@
 import { createApp } from "vue";
 import { createWebHistory, createRouter } from "vue-router";
-
 import "@/assets/styles/index.css";
+import "@/assets/styles/tailwind.css";
+import "@/assets/styles/custom.css";
+
 // styles
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "@/assets/styles/tailwind.css";
