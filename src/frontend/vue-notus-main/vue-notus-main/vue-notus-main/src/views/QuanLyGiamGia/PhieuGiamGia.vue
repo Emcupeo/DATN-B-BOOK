@@ -122,7 +122,7 @@
         </div>
 
         <div class="flex items-center">
-          <input type="text" placeholder="Tìm kiếm phiếu giảm giá..."
+          <input v-model="searchQuery" type="text" placeholder="Tìm kiếm phiếu giảm giá..."
             class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500 mb-3" />
         </div>
 
@@ -143,7 +143,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr class="bg-white border-b hover:bg-gray-50" v-for="phieu in phieuGiamGias" :key="phieu.id">
+              <tr class="bg-white border-b hover:bg-gray-50" v-for="phieu in filteredPhieuGiamGias" :key="phieu.id">
                 <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ phieu.maPhieuGiamGia }}</td>
                 <td class="px-6 py-4">{{ phieu.soPhanTramGiam }}%</td>
                 <td class="px-6 py-4">{{ phieu.giaTriGiam }}đ</td>
@@ -178,8 +178,9 @@ export default {
   data() {
     return {
       phieuGiamGias: [],
+      searchQuery: "",
       showModal: false,
-      newPhieu: { 
+      newPhieu: {
         soPhanTramGiam: 0,
         giaTriGiam: 0,
         giaTriDonHangToiThieu: 0,
@@ -194,6 +195,15 @@ export default {
 
     };
   },
+
+  computed: {
+    filteredPhieuGiamGias() {
+      return this.phieuGiamGias.filter(phieu =>
+        phieu.maPhieuGiamGia.toLowerCase().includes(this.searchQuery.toLowerCase())
+      );
+    }
+  },
+
   methods: {
     resetForm() {
       this.newPhieu = {
@@ -303,9 +313,16 @@ export default {
     this.fetchData();
   },
 };
+
+
 </script>
 
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+.font-roboto {
+  font-family: 'Roboto', sans-serif;
+}
 .modal {
   z-index: 50;
   /* Đảm bảo modal nằm trên */

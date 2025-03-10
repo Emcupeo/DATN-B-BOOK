@@ -48,6 +48,15 @@ import Sach from "@/views/QuanLySach/Sach.vue";
 import EditSach from "@/views/QuanLySach/EditSach.vue";
 import AddSach from "@/views/QuanLySach/AddSach.vue";
 import ThuocTinh from "@/views/QuanLySach/ThuocTinh.vue";
+// thuoc tinh cua thuoc tinh
+import ChatLieu from "@/views/QuanLySach/ThuocTinh/ChatLieu.vue";
+import LoaiBia from "@/views/QuanLySach/ThuocTinh/LoaiBia.vue";
+import NgonNgu from "@/views/QuanLySach/ThuocTinh/NgonNgu.vue";
+import NguoiDich from "@/views/QuanLySach/ThuocTinh/NguoiDich.vue";
+import NhaXuatBan from "@/views/QuanLySach/ThuocTinh/NhaXuatBan.vue";
+import TacGia from "@/views/QuanLySach/ThuocTinh/TacGia.vue";
+import TheLoai from "@/views/QuanLySach/ThuocTinh/TheLoai.vue";
+//
 import NhanVien from "@/views/TaiKhoan/NhanVien.vue";
 import KhachHang from "@/views/TaiKhoan/KhachHang.vue";
 import ListSach from "./views/QuanLySach/ListSach.vue";
@@ -113,7 +122,43 @@ const routes = [
         path: "/admin/thuoc-tinh",
         component: ThuocTinh,
       },
+      //
+      {
+        path: "/admin/thuoc-tinh/chat-lieu",
+        component: ChatLieu,
+      },
 
+      {
+        path: "/admin/thuoc-tinh/loai-bia",
+        component: LoaiBia,
+      },
+
+      {
+        path: "/admin/thuoc-tinh/ngon-ngu",
+        component: NgonNgu,
+      },
+
+      {
+        path: "/admin/thuoc-tinh/nguoi-dich",
+        component: NguoiDich,
+      },
+
+      {
+        path: "/admin/thuoc-tinh/nha-xuat-ban",
+        component: NhaXuatBan,
+      },
+
+      {
+        path: "/admin/thuoc-tinh/tac-gia",
+        component: TacGia,
+      },
+
+
+      {
+        path: "/admin/thuoc-tinh/the-loai",
+        component: TheLoai,
+      },
+      //
       {
         path: "/admin/phieu-giam-gia",
         component: PhieuGiamGia,
