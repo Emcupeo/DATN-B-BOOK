@@ -1,24 +1,90 @@
 <template>
-  <div class="order-info">
-    <h2>Thông tin đơn hàng</h2>
-    <div v-if="loading">
-      <p>Đang tải dữ liệu...</p>
-    </div>
-    <div v-else-if="order">
-      <p><strong>Mã đơn hàng:</strong> {{ order.maHoaDon }}</p>
-      <p><strong>Tên khách hàng:</strong> {{ order.tenNguoiNhan }}</p>
-      <p><strong>Số điện thoại:</strong> {{ order.soDienThoaiNguoiNhan }}</p>
-      <p><strong>Loại:</strong> {{ order.loaiHoaDon }}</p>
-      <p>
-        <strong>Trạng thái:</strong>
-        <span :class="getStatusClass(order.trangThai)">
-          {{ getStatusText(order.trangThai) }}
-        </span>
-      </p>
-      <p><strong>Địa chỉ nhận:</strong> {{ order.diaChi }}</p>
-    </div>
-    <div v-else>
-      <p class="error-message">Không tìm thấy đơn hàng!</p>
+  <div class="p-6 bg-gray-100 min-h-screen">
+    <!-- Quản lý đơn hàng -->
+    <div class="bg-white p-4 rounded-lg shadow-md">
+      <h2 class="text-lg font-semibold">Quản lý đơn hàng / <span class="text-gray-400">{{ order.maHoaDon || "Không có" }}</span></h2>
+
+<!--      Lich su -->
+      <div class="mt-4">
+        <h3 class="text-md font-semibold">Lịch sử đơn hàng</h3>
+        <div v-if="loading" class="text-gray-500">Đang tải dữ liệu...</div>
+        <div v-else-if="order.lichSuHoaDons.length" class="bg-white p-6 rounded-lg shadow-md">
+          <div class="flex items-center space-x-4 overflow-x-auto">
+            <div v-for="(status, index) in order.lichSuHoaDons" :key="index" class="flex items-center">
+              <div class="flex flex-col items-center">
+                <div class="w-12 h-12 flex items-center justify-center rounded-full text-white" :class="getStatusClass(status.trangThai)">
+                  <i v-if="status.trangThai === 'Tạo đơn hàng'" class="fas fa-file text-xl"></i>
+                  <i v-else-if="status.trangThai === 'Chờ xác nhận'" class="fas fa-hourglass-half text-xl"></i>
+                  <i v-else-if="status.trangThai === 'Chờ giao hàng'" class="fas fa-truck text-xl"></i>
+                  <i v-else-if="status.trangThai === 'Đã giao hàng'" class="fas fa-check-circle text-xl"></i>
+                </div>
+                <p class="mt-2 font-semibold text-center">{{ status.trangThai || "Không xác định" }}</p>
+                <p class="text-sm text-gray-500">{{ formatDate(status.createdAt) }}</p>
+              </div>
+              <div v-if="index < order.lichSuHoaDons.length - 1" class="w-12 h-1 bg-gray-300 mx-2"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 rounded-lg shadow-md d-flex mt-4">
+        <button class="px-4 py-2 border border-orange-400 text-orange-400 rounded-lg">Xác nhận đơn hàng</button>
+        <button class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 ml-2">Hủy đơn</button>
+      </div>
+
+      <!-- Thông tin đơn hàng-->
+      <div class="mt-4">
+        <h3 class="text-md font-semibold">Thông tin đơn hàng - Đơn tại quầy</h3>
+        <div class="bg-white p-6 rounded-lg shadow-md flex justify-between items-center">
+          <div class="text-sm">
+            <p class="mb-3"><strong>Mã:</strong> {{ order.maHoaDon || "Không có" }}</p>
+            <p><strong>Số điện thoại:</strong> {{ order.soDienThoaiNguoiNhan || "Không có" }}</p>
+          </div>
+          <div class="text-sm">
+            <p class="mb-3"><strong>Têsn khách hàng:</strong> {{ order.tenNguoiNhan || "Khách lẻ" }}</p>
+            <p><strong>Tên người nhận:</strong> {{ order.diaChi || "Không có" }}</p>
+          </div>
+          <div class="text-sm">
+            <p class="mb-3"><strong>Loại:</strong> <span class="px-2 py-1 rounded bg-blue-100 text-blue-600">{{ order.loaiHoaDon || "Không xác định" }}</span></p>
+            <p><strong>Trạng thái:</strong> <span class="px-2 py-1 rounded" :class="getStatusClass(order.trangThai)">{{ order.trangThai || "Không xác định" }}</span></p>
+          </div>
+          <button class="px-4 py-2 border border-orange-400 text-orange-400 rounded-lg">Cập nhật</button>
+        </div>
+      </div>
+
+      <!-- Lịch sử thanh toán -->
+      <div class="mt-4">
+        <h3 class="text-md font-semibold">Lịch sử thanh toán</h3>
+        <div class="bg-white p-6 rounded-lg shadow-md">
+          <table class="w-full text-sm text-left text-gray-500">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+            <tr>
+              <th class="px-4 py-3">Số tiền</th>
+              <th class="px-4 py-3">Thời gian</th>
+              <th class="px-4 py-3">PTTT</th>
+              <th class="px-4 py-3">Trạng thái</th>
+              <th class="px-4 py-3">Nhân viên xác nhận</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr class="bg-white border-b hover:bg-gray-50">
+              <td class="px-4 py-3">{{ order.tongTien }} đ</td>
+<!--              <td class="px-4 py-3">{{ formatDate(order.lichSuHoaDons.updatedAt) }}</td>-->
+<!--              <td class="px-4 py-3">{{ order.phuongThucThanhToan. }}</td>-->
+<!--              <td class="px-4 py-3">{{ payment. }}</td>-->
+<!--              <td class="px-4 py-3">{{ order.idNhanVien }}</td>-->
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+<!--      Danh sach san pham-->
+      <div class="mt-4">
+        <h3 class="text-md font-semibold">Danh sách sản phẩm</h3>
+        <div class="bg-white p-6 rounded-lg shadow-md">
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -29,43 +95,65 @@ import HoaDonService from "@/service/hoaDonService";
 export default {
   data() {
     return {
-      order: null,
+      order: {
+        lichSuHoaDons: [],
+        hoaDonChiTiets: [],
+      },
       loading: true
     };
   },
   methods: {
     async fetchOrder() {
-      const orderId = this.$route.params.id; // Lấy ID từ route
-      if (!orderId) {
-        console.error("Thiếu ID hóa đơn");
-        this.loading = false;
-        return;
-      }
       try {
+        const orderId = this.$route.params.id;
+        if (!orderId) {
+          console.error("Thiếu ID hóa đơn");
+          this.loading = false;
+          return;
+        }
+        console.log("Fetching order with ID:", orderId);
         const response = await HoaDonService.getListHoaDonById(orderId);
-        this.order = response.data;
+        if (response.data) {
+          this.order = {
+            ...response.data,
+            lichSuHoaDons: Array.isArray(response.data.lichSuHoaDons) ? response.data.lichSuHoaDons : [],
+            hoaDonChiTiets: Array.isArray(response.data.hoaDonChiTiets) ? response.data.hoaDonChiTiets : [],
+          };
+          console.log("Order data received:", this.order);
+        } else {
+          console.error("Dữ liệu trả về không hợp lệ:", response);
+          this.order = { lichSuHoaDons: [] };
+        }
       } catch (error) {
         console.error("Lỗi khi tải hóa đơn:", error);
+        if (error.response) {
+          console.error("Chi tiết lỗi từ server:", error.response.data);
+        }
       } finally {
         this.loading = false;
       }
     },
+
     getStatusClass(status) {
       return {
-        pending: "text-yellow-500",
-        confirmed: "text-green-500",
-        canceled: "text-red-500",
-        delivered: "text-blue-500"
-      }[status] || "text-gray-500";
+        "Tạo đơn hàng": "bg-green-500 text-white",
+        "Chờ xác nhận": "bg-yellow-500 text-white",
+        "Chờ giao hàng": "bg-yellow-400 text-white",
+        "Đã giao hàng": "bg-green-500 text-white"
+      }[status] || "bg-gray-500 text-white";
     },
-    getStatusText(status) {
-      return {
-        pending: "Chờ xác nhận",
-        confirmed: "Đã xác nhận",
-        canceled: "Đã hủy",
-        delivered: "Đã giao hàng"
-      }[status] || "Không xác định";
-    }
+
+    formatDate(dateString) {
+      if (!dateString) return "Không có dữ liệu";
+      return new Date(dateString).toLocaleString("vi-VN");
+    },
+
+    formatCurrency(value) {
+      return new Intl.NumberFormat("vi-VN", {
+        style: "currency",
+        currency: "VND",
+      }).format(value);
+    },
   },
   mounted() {
     this.fetchOrder();
@@ -74,19 +162,8 @@ export default {
 </script>
 
 <style scoped>
-.order-info {
-  padding: 20px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background: #fff;
-}
-.text-yellow-500 { color: #facc15; }
-.text-green-500 { color: #22c55e; }
-.text-red-500 { color: #ef4444; }
-.text-blue-500 { color: #3b82f6; }
-.text-gray-500 { color: #6b7280; }
-.error-message {
-  color: red;
-  font-weight: bold;
-}
+.bg-green-500 { background-color: #22c55e; }
+.bg-yellow-500 { background-color: #facc15; }
+.bg-yellow-400 { background-color: #fbbf24; }
+.bg-gray-500 { background-color: #6b7280; }
 </style>

@@ -1,12 +1,7 @@
 package org.example.datnbbook.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
@@ -51,7 +46,10 @@ public class PhuongThucThanhToan {
     @Column(name = "deleted")
     private Boolean deleted;
 
-    @OneToMany(mappedBy = "idPhuongThucThanhToan")
+    @OneToMany(mappedBy = "idPhuongThucThanhToan", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
     private Set<HinhThucThanhToan> hinhThucThanhToans = new LinkedHashSet<>();
+
+
 
 }

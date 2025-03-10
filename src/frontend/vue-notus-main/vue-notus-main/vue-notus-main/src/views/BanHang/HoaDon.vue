@@ -1,286 +1,209 @@
 <template>
-    <div class="p-4 space-y-4">
-      <!-- Thanh tiêu đề + Bộ lọc (tất cả ép sang trái) -->
-      <div class="bg-white shadow sm:rounded-lg p-4">
-        <h2 class="text-xl font-semibold text-gray-800 ml-4">
-          Quản lý Hóa đơn
-        </h2>
-        <!-- Tên (placeholder "Tìm tên"...) -->
-        <div class="bg-white sm:rounded-lg p-4 flex flex-wrap items-center gap-2">
-            <input
-          type="text"
-          v-model="searchName"
-          placeholder="Tìm tên, mã hoá đơn..."
-          class="border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:ring"
-        />
-        <!-- Lọc khoảng ngày -->
+  <div class="p-4 space-y-4">
+    <h3 class="text-md font-semibold">Quản lý đơn hàng</h3>
+    <!-- Thanh tiêu đề + Bộ lọc -->
+    <div class="bg-white shadow sm:rounded-lg p-4 space-y-4">
+      <!-- Hàng tìm kiếm -->
+      <div class="flex items-center gap-2">
         <input
-          type="date"
-          v-model="dateFrom"
-          class="border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:ring"
+            type="text"
+            v-model="searchName"
+            placeholder="🔍 Tìm kiếm hóa đơn"
+            class="border border-gray-300 rounded px-4 py-2 text-sm w-80 focus:outline-none focus:ring"
         />
-        <input
-          type="date"
-          v-model="dateTo"
-          class="border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:ring"
-        />
-        <!-- Loại hóa đơn -->
-        <select
-          v-model="deliveryMethod"
-          class="border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:ring"
-        >
-          <option value="">Loại hóa đơn</option>
-          <option value="quầy">Tại quầy</option>
-          <option value="ship">Trực tuyến</option>
-        </select>
-        <!-- Hình thức thanh toán -->
-        <select
-          v-model="paymentMethod"
-          class="border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:ring"
-        >
-          <option value="">Hình thức thanh toán</option>
-          <option value="tienmat">Tiền mặt</option>
-          <option value="chuyenkhoan">Chuyển khoản</option>
-        </select>
-        <!-- Đã bỏ nút Tìm kiếm, tất cả ép sang trái -->
       </div>
+
+      <!-- Hàng lọc -->
+      <div class="flex flex-wrap items-center gap-4 justify-between">
+        <div class="flex-1 flex items-center gap-2">
+          <input
+              type="date"
+              v-model="dateFrom"
+              class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring w-40"
+          />
+          <input
+              type="date"
+              v-model="dateTo"
+              class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring w-40"
+          />
+
+          <!-- Lọc theo khoảng giá -->
+          <input
+              type="number"
+              v-model="minPrice"
+              placeholder="Giá tối thiểu"
+              class="border border-gray-300 rounded px-3 py-2 text-sm w-28 focus:outline-none focus:ring w-60"
+          />
+          <input
+              type="number"
+              v-model="maxPrice"
+              placeholder="Giá tối đa"
+              class="border border-gray-300 rounded px-3 py-2 text-sm w-28 focus:outline-none focus:ring w-60"
+          />
+
+          <!-- Lọc theo loại hóa đơn -->
+          <div class="flex items-center space-x-2">
+            <label class="text-sm font-medium">Loại:</label>
+            <label class="flex items-center space-x-1">
+              <input type="radio" v-model="selectedType" value="Tại quầy" />
+              <span>Tại quầy</span>
+            </label>
+            <label class="flex items-center space-x-1">
+              <input type="radio" v-model="selectedType" value="Trực tuyến" />
+              <span>Trực tuyến</span>
+            </label>
+          </div>
         </div>
 
-      <!-- Bảng Hóa đơn -->
-      <div class="relative overflow-x-auto shadow-md sm:rounded-lg bg-white">
-        <table class="w-full text-sm text-left text-gray-500">
-          <!-- Tiêu đề cột -->
-          <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-            <tr>
-              <th scope="col" class="p-4">
-                <div class="flex items-center">
-                  <input
-                    id="checkbox-all-search"
-                    type="checkbox"
-                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 focus:ring-2"
-                  />
-                  <label for="checkbox-all-search" class="sr-only">checkbox</label>
-                </div>
-              </th>
-              <th scope="col" class="px-6 py-3 cursor-pointer" @click="sortBy('maHD')">
-                Mã HĐ
-<!--                <i :class="getSortIcon('maHD')" class="ml-1"></i>-->
-              </th>
-              <th scope="col" class="px-6 py-3 cursor-pointer">
-                Tổng SP
-                <!--                <i :class="getSortIcon('maHD')" class="ml-1"></i>-->
-              </th>
-              <th scope="col" class="px-6 py-3 cursor-pointer" @click="sortBy('tongTien')">
-                Tổng tiền
-                <!--                <i :class="getSortIcon('tongTien')" class="ml-1"></i>-->
-              </th>
-              <th scope="col" class="px-6 py-3 cursor-pointer" @click="sortBy('khachHang')">
-                Khách hàng
-<!--                <i :class="getSortIcon('khachHang')" class="ml-1"></i>-->
-              </th>
-              <th scope="col" class="px-6 py-3 cursor-pointer" @click="sortBy('ngayTao')">
-                Ngày tạo
-<!--                <i :class="getSortIcon('ngayTao')" class="ml-1"></i>-->
-              </th>
-              <th scope="col" class="px-6 py-3">
-                Loại hóa đơn
-              </th>
-              <th scope="col" class="px-6 py-3">
-                Trạng thái
-              </th>
-              <th scope="col" class="px-6 py-3">
-                Hành động
-              </th>
-            </tr>
-          </thead>
-          <!-- Dữ liệu bảng -->
-          <tbody>
-            <tr
-              v-for="(invoice, index) in invoices"
-              :key="invoice.id"
-              class="bg-white border-b hover:bg-gray-50"
-            >
-              <!-- checkbox -->
-              <td class="w-4 p-4">
-                <div class="flex items-center">
-                  <input
-                    :id="'checkbox-table-search-' + index"
-                    type="checkbox"
-                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 focus:ring-2"
-                  />
-                  <label :for="'checkbox-table-search-' + index" class="sr-only">checkbox</label>
-                </div>
-              </td>
-              <!-- Mã hóa đơn -->
-              <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                {{ invoice.maHoaDon }}
-              </th>
-              <!-- Tổng SP -->
-              <td class="px-6 py-4">
-                {{ getTotalProducts(invoice.hoaDonChiTiets) }}
-              </td>
+        <div class="flex items-center gap-2">
+          <button class="bg-orange-500 text-white px-4 py-2 rounded text-sm hover:bg-orange-600 flex items-center">
+            📷 Quét mã
+          </button>
+          <button class="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-600 flex items-center">
+            ➕ Tạo hóa đơn
+          </button>
+          <button class="bg-blue-500 text-white px-4 py-2 rounded text-sm hover:bg-blue-600 flex items-center">
+            📥 Export Excel
+          </button>
+        </div>
+      </div>
+    </div>
 
-              <!-- Tổng tiền -->
-              <td class="px-6 py-4">
-                {{ formatCurrency(invoice.tongTien) }}
-              </td>
-              <!-- Khách hàng -->
-              <td class="px-6 py-4">
-                {{ invoice.tenNguoiNhan }}
-              </td>
-              <!-- Ngày tạo -->
-              <td class="px-6 py-4">
-                {{ invoice.ngayTao }}
-              </td>
-              <!-- Loại hóa đơn -->
-              <td class="px-6 py-4">
-                {{ invoice.loaiHoaDon }}
-              </td>
-              <!-- Trạng thái -->
-              <td class="px-6 py-4">
-                <span
-                    :class="invoice.trangThai === 'Hoàn thành'
-                    ? 'text-green-600'
-                    : invoice.trangThai === 'Chờ giao hàng'
-                      ? 'text-yellow-600'
-                      : 'text-red-600'"
-                >
-                  {{ invoice.trangThai }}
-                </span>
-              </td>
-              <!-- Hành động -->
-              <td class="px-6 py-4 text-center">
-                <div class="flex justify-center items-center w-20">
-                  <i
-                      class="fas fa-eye text-gray-500 cursor-pointer hover:text-blue-500 text-lg"
-                      @click="viewDetails(invoice.id)"
-                  ></i>
-                </div>
-              </td>
-
-            </tr>
-          </tbody>
-        </table>
+    <!-- Bảng Hóa đơn với Tabs -->
+    <div class="relative overflow-x-auto shadow-md sm:rounded-lg bg-white">
+      <!-- Tabs -->
+      <div class="flex border-b bg-gray-50 px-4 py-2">
+        <button v-for="tab in tabs" :key="tab.value" @click="selectedTab = tab.value"
+                :class="['px-4 py-2', selectedTab === tab.value ? 'border-b-2 border-blue-500 text-blue-500' : 'text-gray-500']">
+          {{ tab.label }}
+        </button>
       </div>
 
+      <table class="w-full text-sm text-left text-gray-500">
+        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+        <tr>
+          <th class="px-4 py-3">#</th>
+          <th class="px-6 py-3">Mã HĐ</th>
+          <th class="px-6 py-3">Tổng SP</th>
+          <th class="px-6 py-3">Tổng tiền</th>
+          <th class="px-6 py-3">Khách hàng</th>
+          <th class="px-6 py-3">Ngày tạo</th>
+          <th class="px-6 py-3">Loại hóa đơn</th>
+          <th class="px-6 py-3">Trạng thái</th>
+          <th class="px-6 py-3">Hành động</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr v-for="(invoice, index) in filteredInvoices" :key="invoice.id" class="bg-white border-b hover:bg-gray-50">
+          <td class="px-4 py-3">{{ index + 1 }}</td>
+          <td class="px-6 py-4 font-medium text-gray-900">{{ invoice.maHoaDon }}</td>
+          <td class="px-6 py-4">{{ getTotalProducts(invoice.hoaDonChiTiets) }}</td>
+          <td class="px-6 py-4">{{ formatCurrency(invoice.tongTien) }}</td>
+          <td class="px-6 py-4">{{ invoice.tenNguoiNhan }}</td>
+          <td class="px-6 py-4">{{ formatDate(invoice.ngayTao) }}</td>
+          <td class="px-6 py-4">
+            <span :class="getInvoiceTypeClass(invoice.loaiHoaDon)">
+              {{ invoice.loaiHoaDon }}
+            </span>
+          </td>
+          <td class="px-6 py-4">
+            <span :class="getStatusClass(invoice.trangThai)">
+              {{ invoice.trangThai }}
+            </span>
+          </td>
+          <td class="px-6 py-4 text-center">
+            <div class="flex justify-center items-center w-20">
+              <i
+                  class="fas fa-eye text-gray-500 cursor-pointer hover:text-blue-500 text-lg"
+                  @click="viewDetails(invoice.id)"
+              ></i>
+            </div>
+          </td>
+        </tr>
+        </tbody>
+      </table>
     </div>
-  </template>
+  </div>
+</template>
 
-  <script>
-  import HoaDonService from "@/service/hoaDonService";
-  export default {
-    name: "QuanLyHoaDon",
-    data() {
-      return {
-        // Các bộ lọc
-        searchName: "",
-        dateFrom: "",
-        dateTo: "",
-        deliveryMethod: "",
-        paymentMethod: "",
-        // Dữ liệu mẫu hoá đơn
-        invoices: [],
-        // Biến sort
-        sortKey: "",
-        sortOrder: 1, // 1: tăng dần, -1: giảm dần
-      };
-    },
-    // computed: {
-    //   filteredAndSorted() {
-    //     // 1) Lọc
-    //     let result = this.invoices.filter((inv) => {
-    //       // Tên/mã
-    //       if (
-    //           this.searchName &&
-    //           !(
-    //               inv.maHD.toLowerCase().includes(this.searchName.toLowerCase()) ||
-    //               inv.khachHang.toLowerCase().includes(this.searchName.toLowerCase())
-    //           )
-    //       ) {
-    //         return false;
-    //       }
-    //       // Lọc ngày từ
-    //       if (this.dateFrom && inv.ngayTao < this.dateFrom) {
-    //         return false;
-    //       }
-    //       // Lọc ngày đến
-    //       if (this.dateTo && inv.ngayTao > this.dateTo) {
-    //         return false;
-    //       }
-    //       // Hình thức nhận hàng
-    //       if (this.deliveryMethod && inv.hinhThucNhanHang.toLowerCase() !== this.deliveryMethod) {
-    //         return false;
-    //       }
-    //       // Hình thức thanh toán
-    //       if (this.paymentMethod && inv.hinhThucThanhToan.toLowerCase() !== this.paymentMethod) {
-    //         return false;
-    //       }
-    //       return true;
-    //     });
-    //     // 2) Sort
-    //     if (this.sortKey) {
-    //       result.sort((a, b) => {
-    //         if (a[this.sortKey] < b[this.sortKey]) return -1 * this.sortOrder;
-    //         if (a[this.sortKey] > b[this.sortKey]) return 1 * this.sortOrder;
-    //         return 0;
-    //       });
-    //     }
-    //     return result;
-    //   },
-    // },
-    methods: {
-      // sortBy(key) {
-      //   if (this.sortKey === key) {
-      //     // Đảo chiều sort
-      //     this.sortOrder = -this.sortOrder;
-      //   } else {
-      //     // Gán sortKey mới, reset sortOrder = 1
-      //     this.sortKey = key;
-      //     this.sortOrder = 1;
-      //   }
-      // },
-      // getSortIcon(key) {
-      //   // Trả về icon sort tương ứng
-      //   if (this.sortKey !== key) {
-      //     return "fas fa-sort text-gray-400"; // icon sort mặc định
-      //   } else {
-      //     // Đang sort cột này
-      //     return this.sortOrder === 1 ? "fas fa-sort-up" : "fas fa-sort-down";
-      //   }
-      // },
-      // onEdit(invoice) {
-      //   alert("Sửa hoá đơn: " + invoice.maHD);
-      // },
-      // onDelete(invoice) {
-      //   alert("Xoá hoá đơn: " + invoice.maHD);
-      // },
-      formatCurrency(value) {
-        return new Intl.NumberFormat("vi-VN", {
-          style: "currency",
-          currency: "VND",
-        }).format(value);
-      },
-      viewDetails(id) {
-        this.$router.push({ path: `/admin/hoa-don-chi-tiet/${id}` });
-      },
-      getListHoaDon() {
-        HoaDonService.getListHoaDon().then((response) => {
-          this.invoices = response.data;
-        });
-      },
-      getTotalProducts(hoaDonChiTiets) {
-        if (!Array.isArray(hoaDonChiTiets)) return 0;
-        return hoaDonChiTiets.reduce((total, item) => total + (item.soLuong || 0), 0);
+<script>
+import HoaDonService from "@/service/hoaDonService";
+
+export default {
+  data() {
+    return {
+      selectedTab: 'all',
+      searchName: "",
+      dateFrom: "",
+      dateTo: "",
+      invoices: [],
+      tabs: [
+        {label: 'TẤT CẢ', value: 'all'},
+        {label: 'ĐÃ HỦY', value: 'cancelled'},
+        {label: 'CHỜ XÁC NHẬN', value: 'pending'},
+        {label: 'CHỜ GIAO HÀNG', value: 'shipping'},
+        {label: 'ĐÃ GIAO HÀNG', value: 'delivered'},
+        {label: 'ĐÃ THANH TOÁN', value: 'paid'},
+        {label: 'HOÀN THÀNH', value: 'completed'}
+      ]
+    };
+  },
+  computed: {
+    filteredInvoices() {
+      let result = this.invoices;
+      if (this.selectedTab !== 'all') {
+        result = result.filter(inv => inv.trangThai.toLowerCase().includes(this.selectedTab));
       }
-
+      if (this.searchName) {
+        result = result.filter(inv => inv.tenNguoiNhan.toLowerCase().includes(this.searchName.toLowerCase()));
+      }
+      return result;
+    }
+  },
+  methods: {
+    formatCurrency(value) {
+      return new Intl.NumberFormat("vi-VN", {
+        style: "currency",
+        currency: "VND",
+      }).format(value);
     },
-    created() {
-      this.getListHoaDon();
+    viewDetails(id) {
+      this.$router.push({path: `/admin/hoa-don-chi-tiet/${id}`});
     },
-
+    getListHoaDon() {
+      HoaDonService.getListHoaDon().then((response) => {
+        this.invoices = response.data;
+      });
+    },
+    getTotalProducts(hoaDonChiTiets) {
+      if (!Array.isArray(hoaDonChiTiets)) return 0;
+      return hoaDonChiTiets.reduce((total, item) => total + (item.soLuong || 0), 0);
+    },
+    getStatusClass(status) {
+      const statusClasses = {
+        'Đã thanh toán': 'text-green-600 bg-green-100 px-2 py-1 rounded',
+        'Hoàn thành': 'text-green-600 bg-green-100 px-2 py-1 rounded',
+        'Đã hủy': 'text-red-600 bg-red-100 px-2 py-1 rounded',
+        'Chờ xác nhận': 'text-yellow-600 bg-yellow-100 px-2 py-1 rounded',
+        'Chờ giao hàng': 'text-yellow-600 bg-yellow-100 px-2 py-1 rounded',
+        'Đã giao hàng': 'text-blue-600 bg-blue-100 px-2 py-1 rounded'
+      };
+      return statusClasses[status] || 'text-gray-600 bg-gray-100 px-2 py-1 rounded';
+    },
+    formatDate(dateString) {
+      if (!dateString) return "Không có dữ liệu";
+      return new Date(dateString).toLocaleString("vi-VN");
+    },
+    getInvoiceTypeClass(type) {
+      const typeClasses = {
+        'Tại quầy': 'text-purple-600 bg-purple-100 px-2 py-1 rounded',
+        'Trực tuyến': 'text-indigo-600 bg-indigo-100 px-2 py-1 rounded'
+      };
+      return typeClasses[type] || 'text-gray-600 bg-gray-100 px-2 py-1 rounded';
+    },
+  },
+  created() {
+    this.getListHoaDon();
   }
-  </script>
-
-  <style scoped>
-  /* Tuỳ chỉnh CSS nếu cần */
-  </style>
+};
+</script>

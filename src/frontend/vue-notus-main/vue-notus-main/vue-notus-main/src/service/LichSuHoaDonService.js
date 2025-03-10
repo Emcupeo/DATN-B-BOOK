@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:8080/api/lich-su-hoa-don";
+const API_URL = "http://localhost:8080/api/hoa-don";
 
 class LichSuHoaDonService {
     getListLSHDById(id) {

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL_ListHoaDon = "http://localhost:8080/api/hoa-don"; // Kiểm tra lại port của backend
+const API_URL_ListHoaDon = "http://localhost:8080/api/hoa-don";
 
 class HoaDonService {
     getListHoaDon() {

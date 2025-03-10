@@ -1,5 +1,6 @@
 package org.example.datnbbook.service;
 
+import org.example.datnbbook.model.HoaDon;
 import org.example.datnbbook.model.HoaDonChiTiet;
 import org.example.datnbbook.repository.HoaDonChiTietRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,4 +20,8 @@ public class HoaDonChiTietService {
 //    public Integer getTotalProductQuantity(Integer hoaDonId) {
 //        return hoaDonChiTietRepository.getTotalProductQuantityByHoaDonId(hoaDonId);
 //    }
+
+    public HoaDonChiTiet getHoaDonById(int id) {
+        return hoaDonChiTietRepository.findById(id).orElse(null);
+    }
 }
