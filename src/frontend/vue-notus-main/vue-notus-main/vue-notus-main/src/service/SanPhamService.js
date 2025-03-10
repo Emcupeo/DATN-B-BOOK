@@ -1,33 +1,37 @@
-import axios from "axios";
-
-// const API_URL = "http://localhost:8080/api/san-pham";
-
-// export const getAllProducts = async () => {
-//   try {
-//     const response = await axios.get(`${API_URL}/all`);
-//     return response.data;
-//   } catch (error) {
-//     console.error("ĐỊt mẹ lỗi :", error);
-//     return [];
-//   }
-// };
-
-const sanPhamAPIBaseURL = "http://localhost:8080/api/san-pham";
+import api from './api';
+import SanPham from '../models/SanPham';
 
 class SanPhamService {
-  getListSanPham() {
-    return axios.get(sanPhamAPIBaseURL);
+  async getAll() {
+    const response = await api.get('/san-pham');
+    return response.data.map(item => new SanPham(item));
+  }
+
+  async getById(id) {
+    const response = await api.get(`/san-pham/${id}`);
+    return new SanPham(response.data);
+  }
+
+  async create(sanPham) {
+    const response = await api.post('/san-pham', sanPham.toJSON());
+    return new SanPham(response.data);
+  }
+
+  async update(id, sanPham) {
+    const response = await api.put(`/san-pham/${id}`, sanPham.toJSON());
+    return new SanPham(response.data);
+  }
+
+  async delete(id) {
+    await api.delete(`/san-pham/${id}`);
+  }
+
+  async search(keyword) {
+    const response = await api.get('/san-pham/search', {
+      params: { keyword }
+    });
+    return response.data.map(item => new SanPham(item));
   }
 }
 
 export default new SanPhamService();
-
-// export const getProductsByCategoryId = async (sanPhamId) => {
-//   try {
-//     const response = await axios.get(`${API_URL}/sanPham/${sanPhamId}`);
-//     return response.data;
-//   } catch (error) {
-//     console.error(`Bruh ${SanPhamId}:`, error);
-//     return [];
-//   }
-// };

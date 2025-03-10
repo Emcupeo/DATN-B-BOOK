@@ -45,8 +45,8 @@ import HoaDon from "@/views/BanHang/HoaDon.vue";
 import PhieuGiamGia from "@/views/QuanLyGiamGia/PhieuGiamGia.vue";
 import DanhMuc from "@/views/QuanLySach/DanhMucSach.vue";
 import Sach from "@/views/QuanLySach/Sach.vue";
-import EditSach from "@/views/QuanLySach/EditSach.vue";
-import AddSach from "@/views/QuanLySach/AddSach.vue";
+// import EditSach from "@/views/QuanLySach/EditSach.vue";
+// import AddSach from "@/views/QuanLySach/AddSach.vue";
 import ThuocTinh from "@/views/QuanLySach/ThuocTinh.vue";
 // thuoc tinh cua thuoc tinh
 import ChatLieu from "@/views/QuanLySach/ThuocTinh/ChatLieu.vue";
@@ -61,6 +61,9 @@ import NhanVien from "@/views/TaiKhoan/NhanVien.vue";
 import KhachHang from "@/views/TaiKhoan/KhachHang.vue";
 import ListSach from "./views/QuanLySach/ListSach.vue";
 import QuanLyDonHang from "@/views/BanHang/QuanLyDonHang.vue";
+import AddChiTietSach from "./views/QuanLySach/AddChiTietSach.vue";
+import EditChiTietSach from "./views/QuanLySach/EditChiTietSach.vue";
+import ChiTietSach from "./views/QuanLySach/ChiTietSach.vue";
 
 const routes = [
   {
@@ -97,22 +100,27 @@ const routes = [
         path: "/admin/hoa-don-chi-tiet/:id",
         component: QuanLyDonHang,
       },
-
       {
         path: "/admin/sach",
         name: "Sản phẩm",
         component: Sach,
       },
       {
-        path: "/admin/sach/edit",
-        component: EditSach,
+        path: "/admin/sach/add/:id",
+        name: "AddChiTietSach",
+        component: AddChiTietSach,
       },
 
       {
-        path: "/admin/sach/add",
-        component: AddSach,
+        path: "/admin/sach/edit/:id",
+        name: "EditChiTietSach",
+        component: EditChiTietSach,
       },
-
+      {
+        path: "/admin/sach/:id",
+        name: "ChiTietSach",
+        component: ChiTietSach,
+      },
       {
         path: "/admin/danh-muc",
         component: DanhMuc,

@@ -33,10 +33,6 @@ public class ThuocTinhController {
         return thuocTinhService.getAllLoaiBia();
     }
 
-    @GetMapping("/chat-lieu")
-    public List<ChatLieu> getAlChatLieu() {
-        return thuocTinhService.getAllChatLieu();
-    }
 
     @GetMapping("/nha-xuat-ban")
     public List<NhaXuatBan> getAllNhaXuatBan() {

@@ -26,7 +26,7 @@ public class TheLoai {
     private Integer id;
 
     @ColumnDefault("'TL'+right('-000'+CONVERT([nvarchar](5), NEXT VALUE FOR [dbo].[TLSeq]), 5)")
-    @Column(name = "ma_the_loai", length = 10)
+    @Column(name = "ma_the_loai", length = 10, nullable = false)
     private String maTheLoai;
 
     @Nationalized

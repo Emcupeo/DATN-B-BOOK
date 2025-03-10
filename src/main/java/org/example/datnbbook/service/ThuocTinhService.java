@@ -47,7 +47,6 @@ public class ThuocTinhService {
         return tacGiaRepository.findAll();
     }
 
-
     public List<LoaiBia> getAllLoaiBia() {
         return loaiBiaRepository.findAll();
     }
@@ -67,6 +66,7 @@ public class ThuocTinhService {
     public List<TheLoai> getAllTheLoai() {
         return theLoaiRepository.findAll();
     }
+
     public List<NgonNgu> getAllNgonNgu() {
         return ngonNguRepository.findAll();
     }

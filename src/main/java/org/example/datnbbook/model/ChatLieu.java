@@ -26,7 +26,7 @@ public class ChatLieu {
     private Integer id;
 
     @ColumnDefault("'CL'+right('-000'+CONVERT([nvarchar](5), NEXT VALUE FOR [dbo].[CLSeq]), 5)")
-    @Column(name = "ma_chat_lieu", length = 10)
+    @Column(name = "ma_chat_lieu", length = 10, nullable = false)
     private String maChatLieu;
 
     @Nationalized
