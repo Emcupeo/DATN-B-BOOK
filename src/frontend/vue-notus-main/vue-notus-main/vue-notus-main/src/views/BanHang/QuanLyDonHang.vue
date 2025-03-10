@@ -12,13 +12,13 @@
           <div class="flex items-center space-x-4 overflow-x-auto">
             <div v-for="(status, index) in order.lichSuHoaDons" :key="index" class="flex items-center">
               <div class="flex flex-col items-center">
-                <div class="w-12 h-12 flex items-center justify-center rounded-full text-white" :class="getStatusClass(status.trangThai)">
-                  <i v-if="status.trangThai === 'Tạo đơn hàng'" class="fas fa-file text-xl"></i>
-                  <i v-else-if="status.trangThai === 'Chờ xác nhận'" class="fas fa-hourglass-half text-xl"></i>
-                  <i v-else-if="status.trangThai === 'Chờ giao hàng'" class="fas fa-truck text-xl"></i>
-                  <i v-else-if="status.trangThai === 'Đã giao hàng'" class="fas fa-check-circle text-xl"></i>
+                <div class="w-12 h-12 flex items-center justify-center rounded-full text-white" :class="getStatusClass(status.trangThaiMoi)">
+                  <i v-if="status.trangThaiMoi === 'Tạo đơn hàng'" class="fas fa-file text-xl"></i>
+                  <i v-else-if="status.trangThaiMoi === 'Chờ xác nhận'" class="fas fa-hourglass-half text-xl"></i>
+                  <i v-else-if="status.trangThaiMoi === 'Chờ giao hàng'" class="fas fa-truck text-xl"></i>
+                  <i v-else-if="status.trangThaiMoi === 'Đã giao hàng'" class="fas fa-check-circle text-xl"></i>
                 </div>
-                <p class="mt-2 font-semibold text-center">{{ status.trangThai || "Không xác định" }}</p>
+                <p class="mt-2 font-semibold text-center">{{ status.trangThaiMoi || "Không xác định" }}</p>
                 <p class="text-sm text-gray-500">{{ formatDate(status.createdAt) }}</p>
               </div>
               <div v-if="index < order.lichSuHoaDons.length - 1" class="w-12 h-1 bg-gray-300 mx-2"></div>

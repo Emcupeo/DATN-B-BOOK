@@ -44,8 +44,12 @@ public class LichSuHoaDon {
     private String maLichSuHoaDon;
 
     @Nationalized
-    @Column(name = "trang_thai", length = 50)
-    private String trangThai;
+    @Column(name = "trang_thai_moi", length = 50)
+    private String trangThaiMoi;
+
+    @Nationalized
+    @Column(name = "trang_thai_cu", length = 50)
+    private String trangThaiCu;
 
     @Nationalized
     @Column(name = "ghi_chu", length = 200)
