@@ -1,8 +1,15 @@
 package org.example.datnbbook.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
@@ -24,13 +31,7 @@ public class HinhThucThanhToan {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_phuong_thuc_thanh_toan")
-    @JsonBackReference
     private PhuongThucThanhToan idPhuongThucThanhToan;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_hoa_don", nullable = false)
-    @JsonBackReference
-    private HoaDon hoaDon;
 
     @Column(name = "ma_hinh_thuc_thanh_toan", length = 10)
     private String maHinhThucThanhToan;
@@ -60,5 +61,8 @@ public class HinhThucThanhToan {
     @ColumnDefault("0")
     @Column(name = "deleted")
     private Boolean deleted;
+
+    @OneToMany(mappedBy = "idHinhThucThanhToan")
+    private Set<HoaDon> hoaDons = new LinkedHashSet<>();
 
 }
