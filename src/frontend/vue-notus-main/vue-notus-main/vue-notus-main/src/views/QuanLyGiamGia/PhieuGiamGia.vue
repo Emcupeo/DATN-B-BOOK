@@ -1,6 +1,7 @@
 <template>
   <div class="relative">
     <div class="relative">
+      <h1 class="block mb-2 text-2xl font-bold text-gray-900 dark:text-white mb-5">Phiếu giảm giá</h1>
       <!-- Form nhập phiếu giảm giá -->
       <div v-if="showModal" class="fixed inset-0 flex items-center justify-center  backdrop-blur-sm z-50">
         <!-- new form -->
