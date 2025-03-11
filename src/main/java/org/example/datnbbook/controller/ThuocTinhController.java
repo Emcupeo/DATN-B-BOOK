@@ -16,41 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-@CrossOrigin(origins = {"http://localhost:3000"})
-@RestController
-@RequestMapping("/api")
 public class ThuocTinhController {
-    @Autowired
-    private ThuocTinhService thuocTinhService;
 
-    @GetMapping("/tac-gia")
-    public List<TacGia> getAllTacGia() {
-        return thuocTinhService.getAllTacGia();
-    }
-
-    @GetMapping("/loai-bia")
-    public List<LoaiBia> getAllLoaiBia() {
-        return thuocTinhService.getAllLoaiBia();
-    }
-
-
-    @GetMapping("/nha-xuat-ban")
-    public List<NhaXuatBan> getAllNhaXuatBan() {
-        return thuocTinhService.getAllNhaXuatBan();
-    }
-
-    @GetMapping("/nguoi-dich")
-    public List<NguoiDich> getAllNguoiDich() {
-        return thuocTinhService.getAllNguoiDich();
-    }
-
-    @GetMapping("/ngon-ngu")
-    public List<NgonNgu> getAllNgonNgu() {
-        return thuocTinhService.getAllNgonNgu();
-    }
-
-    @GetMapping("/the-loai")
-    public List<TheLoai> getAllTheLoai() {
-        return thuocTinhService.getAllTheLoai();
-    }
 }

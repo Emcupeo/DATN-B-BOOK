@@ -42,7 +42,7 @@ public class ChatLieuService {
                 .filter(sp -> !sp.getDeleted())
                 .orElseThrow(() -> new RuntimeException("Chất liệu không tồn tại với id: " + id));
 
-        BeanUtils.copyProperties(chatLieuDTO, chatLieu ,"machatLieu","id", "deleted");
+        BeanUtils.copyProperties(chatLieuDTO, chatLieu ,"maChatLieu","id", "deleted");
         chatLieu = chatLieuRepository.save(chatLieu);
         return convertToDTO(chatLieu);
     }

@@ -90,28 +90,7 @@
               </span>
           </th>
           <!-- Mô tả -->
-          <th
-              class="px-6 py-3 text-xs uppercase font-semibold text-left border border-solid whitespace-nowrap cursor-pointer"
-              :class="
-                color === 'light'
-                  ? 'bg-blueGray-50 text-blueGray-500 border-blueGray-100'
-                  : 'bg-emerald-800 text-emerald-300 border-emerald-700'
-              "
-              @click="sortBy('moTa')"
-          >
-            Mô tả
-            <span>
-                <i
-                    v-if="sortKey === 'moTa' && sortOrder === 1"
-                    class="fas fa-sort-up ml-1"
-                ></i>
-                <i
-                    v-else-if="sortKey === 'moTa' && sortOrder === -1"
-                    class="fas fa-sort-down ml-1"
-                ></i>
-                <i v-else class="fas fa-sort ml-1"></i>
-              </span>
-          </th>
+
           <!-- Hành động -->
           <th
               class="px-6 py-3 text-xs uppercase font-semibold text-left border border-solid whitespace-nowrap"
@@ -142,17 +121,9 @@
               </span>
           </td>
           <!-- Mô tả -->
-          <td class="border-t-0 px-6 py-4 text-xs">
-            {{ chatLieu.moTa }}
-          </td>
+
           <!-- Hành động -->
           <td class="border-t-0 px-6 py-4 text-xs whitespace-nowrap">
-            <button
-                class="bg-indigo-500 text-white px-3 py-1 rounded hover:bg-indigo-600 transition mr-2"
-                @click="viewDetails(chatLieu.id)"
-            >
-              Chi tiết
-            </button>
             <button
                 class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition mr-2"
                 @click="editChatLieu(chatLieu)"
@@ -202,10 +173,7 @@
             <label class="block text-sm font-medium mb-1">Tên chất liệu </label>
             <input v-model="formData.tenChatLieu" type="text" class="w-full border rounded px-3 py-2" required>
           </div>
-          <div class="mb-4">
-            <label class="block text-sm font-medium mb-1">Mô tả</label>
-            <textarea v-model="formData.moTa" class="w-full border rounded px-3 py-2" rows="3"></textarea>
-          </div>
+
           <div class="flex justify-end">
             <button type="button" @click="closeModal" class="bg-gray-500 text-white px-4 py-2 rounded mr-2">Hủy</button>
             <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Lưu</button>
@@ -253,8 +221,7 @@ export default {
       return this.listChatLieu.filter(item => {
         return (
             item.maChatLieu.toLowerCase().includes(searchLower) ||
-            item.tenChatLieu.toLowerCase().includes(searchLower) ||
-            item.moTa.toLowerCase().includes(searchLower)
+            item.tenChatLieu.toLowerCase().includes(searchLower)
         );
       });
     },
@@ -285,7 +252,7 @@ export default {
       try {
         this.listChatLieu = await ChatLieuService.getAll();
       } catch (error) {
-        console.error('Error loading san pham:', error);
+        console.error('Error loading chat lieu:', error);
         alert('Có lỗi xảy ra khi tải danh sách chất liệu ');
       }
     },
@@ -300,7 +267,7 @@ export default {
           try {
             this.listChatLieu = await ChatLieuService.search(this.searchQuery.trim());
           } catch (error) {
-            console.error('Error searching san pham:', error);
+            console.error('Error searching chat lieu:', error);
             alert('Có lỗi xảy ra khi tìm kiếm chất liệu ');
           }
         } else {
@@ -334,7 +301,7 @@ export default {
         this.closeModal();
         await this.loadChatLieus();
       } catch (error) {
-        console.error('Error saving san pham:', error);
+        console.error('Error saving chat lieu:', error);
         alert('Có lỗi xảy ra khi lưu chất liệu ');
       }
     },
@@ -345,7 +312,7 @@ export default {
           await ChatLieuService.delete(id);
           await this.loadChatLieus();
         } catch (error) {
-          console.error('Error deleting san pham:', error);
+          console.error('Error deleting chat lieu:', error);
           alert('Có lỗi xảy ra khi xóa chất liệu ');
         }
       }
@@ -384,9 +351,6 @@ export default {
       if (this.currentPage < this.totalPages) this.currentPage++;
     },
 
-    viewDetails(id) {
-      this.$router.push(`/admin/chat-lieu/${id}`);
-    },
   },
   created() {
     this.loadChatLieus();

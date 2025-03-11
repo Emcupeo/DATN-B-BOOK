@@ -19,55 +19,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
 public class ThuocTinhService {
 
-    @Autowired
-    private TacGiaRepository tacGiaRepository;
-
-    @Autowired
-    private LoaiBiaRepository loaiBiaRepository;
-
-    @Autowired
-    private NguoiDichRepository nguoiDichRepository;
-
-    @Autowired
-    private ChatLieuRepository chatLieuRepository;
-
-    @Autowired
-    private NhaXuatBanRepository nhaXuatBanRepository;
-
-    @Autowired
-    private TheLoaiRepository theLoaiRepository;
-
-    @Autowired
-    private NgonNguRepository ngonNguRepository;
-
-    public List<TacGia> getAllTacGia() {
-        return tacGiaRepository.findAll();
-    }
-
-    public List<LoaiBia> getAllLoaiBia() {
-        return loaiBiaRepository.findAll();
-    }
-
-    public List<NguoiDich> getAllNguoiDich() {
-        return nguoiDichRepository.findAll();
-    }
-
-    public List<ChatLieu> getAllChatLieu() {
-        return chatLieuRepository.findAll();
-    }
-
-    public List<NhaXuatBan> getAllNhaXuatBan() {
-        return nhaXuatBanRepository.findAll();
-    }
-
-    public List<TheLoai> getAllTheLoai() {
-        return theLoaiRepository.findAll();
-    }
-
-    public List<NgonNgu> getAllNgonNgu() {
-        return ngonNguRepository.findAll();
-    }
 }

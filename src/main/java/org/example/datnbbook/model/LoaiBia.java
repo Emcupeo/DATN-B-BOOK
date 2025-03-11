@@ -26,7 +26,7 @@ public class LoaiBia {
     private Integer id;
 
     @ColumnDefault("'LB'+right('-000'+CONVERT([nvarchar](5), NEXT VALUE FOR [dbo].[LBSeq]), 5)")
-    @Column(name = "ma_loai_bia", length = 10)
+    @Column(name = "ma_loai_bia", length = 10, nullable = false)
     private String maLoaiBia;
 
     @Nationalized

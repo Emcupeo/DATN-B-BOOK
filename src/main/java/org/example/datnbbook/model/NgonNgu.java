@@ -30,8 +30,8 @@ public class NgonNgu {
     private String maNgonNgu;
 
     @Nationalized
-    @Column(name = "ngon_ngu", length = 100)
-    private String ngonNgu;
+    @Column(name = "ten_ngon_ngu", length = 100)
+    private String tenNgonNgu;
 
     @ColumnDefault("0")
     @Column(name = "deleted")
