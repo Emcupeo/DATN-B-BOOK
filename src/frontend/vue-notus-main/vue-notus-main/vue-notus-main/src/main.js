@@ -1,4 +1,4 @@
-import { createApp } from "vue";
+  import { createApp } from "vue";
 import { createWebHistory, createRouter } from "vue-router";
 import "@/assets/styles/index.css";
 import "@/assets/styles/tailwind.css";
@@ -106,7 +106,7 @@ const routes = [
         component: Sach,
       },
       {
-        path: "/admin/sach/add/:id",
+        path: "/admin/sach/add/",
         name: "AddChiTietSach",
         component: AddChiTietSach,
       },

@@ -4,6 +4,7 @@ import SanPham from '../models/SanPham';
 class SanPhamService {
   async getAll() {
     const response = await api.get('/san-pham');
+    console.log('Response từ GET /api/san-pham/all:', response.data);
     return response.data.map(item => new SanPham(item));
   }
 

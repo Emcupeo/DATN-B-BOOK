@@ -40,124 +40,84 @@
     <!-- Nội dung bảng -->
     <div class="block w-full overflow-x-auto">
       <table class="items-center w-full bg-transparent border-collapse">
-        <!-- Tiêu đề cột -->
         <thead>
         <tr>
-          <!-- Mã sản phẩm -->
           <th
               class="px-6 py-3 text-xs uppercase font-semibold text-left border border-solid whitespace-nowrap cursor-pointer"
-              :class="
-                color === 'light'
-                  ? 'bg-blueGray-50 text-blueGray-500 border-blueGray-100'
-                  : 'bg-emerald-800 text-emerald-300 border-emerald-700'
-              "
+              :class="color === 'light' ? 'bg-blueGray-50 text-blueGray-500 border-blueGray-100' : 'bg-emerald-800 text-emerald-300 border-emerald-700'"
               @click="sortBy('maSanPham')"
           >
             Mã sản phẩm
             <span>
-                <i
-                    v-if="sortKey === 'maSanPham' && sortOrder === 1"
-                    class="fas fa-sort-up ml-1"
-                ></i>
-                <i
-                    v-else-if="sortKey === 'maSanPham' && sortOrder === -1"
-                    class="fas fa-sort-down ml-1"
-                ></i>
-                <i v-else class="fas fa-sort ml-1"></i>
-              </span>
+              <i v-if="sortKey === 'maSanPham' && sortOrder === 1" class="fas fa-sort-up ml-1"></i>
+              <i v-else-if="sortKey === 'maSanPham' && sortOrder === -1" class="fas fa-sort-down ml-1"></i>
+              <i v-else class="fas fa-sort ml-1"></i>
+            </span>
           </th>
-          <!-- Tên sách có sort -->
           <th
               class="px-6 py-3 text-xs uppercase font-semibold text-left border border-solid whitespace-nowrap cursor-pointer"
-              :class="
-                color === 'light'
-                  ? 'bg-blueGray-50 text-blueGray-500 border-blueGray-100'
-                  : 'bg-emerald-800 text-emerald-300 border-emerald-700'
-              "
+              :class="color === 'light' ? 'bg-blueGray-50 text-blueGray-500 border-blueGray-100' : 'bg-emerald-800 text-emerald-300 border-emerald-700'"
               @click="sortBy('tenSanPham')"
           >
             Tên sách
             <span>
-                <i
-                    v-if="sortKey === 'tenSanPham' && sortOrder === 1"
-                    class="fas fa-sort-up ml-1"
-                ></i>
-                <i
-                    v-else-if="sortKey === 'tenSanPham' && sortOrder === -1"
-                    class="fas fa-sort-down ml-1"
-                ></i>
-                <i v-else class="fas fa-sort ml-1"></i>
-              </span>
+              <i v-if="sortKey === 'tenSanPham' && sortOrder === 1" class="fas fa-sort-up ml-1"></i>
+              <i v-else-if="sortKey === 'tenSanPham' && sortOrder === -1" class="fas fa-sort-down ml-1"></i>
+              <i v-else class="fas fa-sort ml-1"></i>
+            </span>
           </th>
-          <!-- Mô tả -->
           <th
               class="px-6 py-3 text-xs uppercase font-semibold text-left border border-solid whitespace-nowrap cursor-pointer"
-              :class="
-                color === 'light'
-                  ? 'bg-blueGray-50 text-blueGray-500 border-blueGray-100'
-                  : 'bg-emerald-800 text-emerald-300 border-emerald-700'
-              "
+              :class="color === 'light' ? 'bg-blueGray-50 text-blueGray-500 border-blueGray-100' : 'bg-emerald-800 text-emerald-300 border-emerald-700'"
               @click="sortBy('moTa')"
           >
             Mô tả
             <span>
-                <i
-                    v-if="sortKey === 'moTa' && sortOrder === 1"
-                    class="fas fa-sort-up ml-1"
-                ></i>
-                <i
-                    v-else-if="sortKey === 'moTa' && sortOrder === -1"
-                    class="fas fa-sort-down ml-1"
-                ></i>
-                <i v-else class="fas fa-sort ml-1"></i>
-              </span>
+              <i v-if="sortKey === 'moTa' && sortOrder === 1" class="fas fa-sort-up ml-1"></i>
+              <i v-else-if="sortKey === 'moTa' && sortOrder === -1" class="fas fa-sort-down ml-1"></i>
+              <i v-else class="fas fa-sort ml-1"></i>
+            </span>
           </th>
-          <!-- Hành động -->
+          <th
+              class="px-6 py-3 text-xs uppercase font-semibold text-left border border-solid whitespace-nowrap cursor-pointer"
+              :class="color === 'light' ? 'bg-blueGray-50 text-blueGray-500 border-blueGray-100' : 'bg-emerald-800 text-emerald-300 border-emerald-700'"
+              @click="sortBy('tongSoLuongTon')"
+          >
+            Số lượng tồn
+            <span>
+              <i v-if="sortKey === 'tongSoLuongTon' && sortOrder === 1" class="fas fa-sort-up ml-1"></i>
+              <i v-else-if="sortKey === 'tongSoLuongTon' && sortOrder === -1" class="fas fa-sort-down ml-1"></i>
+              <i v-else class="fas fa-sort ml-1"></i>
+            </span>
+          </th>
           <th
               class="px-6 py-3 text-xs uppercase font-semibold text-left border border-solid whitespace-nowrap"
-              :class="
-                color === 'light'
-                  ? 'bg-blueGray-50 text-blueGray-500 border-blueGray-100'
-                  : 'bg-emerald-800 text-emerald-300 border-emerald-700'
-              "
+              :class="color === 'light' ? 'bg-blueGray-50 text-blueGray-500 border-blueGray-100' : 'bg-emerald-800 text-emerald-300 border-emerald-700'"
           >
             Hành động
           </th>
         </tr>
         </thead>
-
-        <!-- Dữ liệu bảng (tbody) -->
         <tbody>
         <tr v-for="sanPham in paginatedSanPham" v-bind:key="sanPham.id">
-          <!-- Mã sản phẩm -->
           <td class="border-t-0 px-6 py-4 text-xs whitespace-nowrap">
-              <span class="font-semibold">
-                {{ sanPham.maSanPham }}
-              </span>
+            <span class="font-semibold">{{ sanPham.maSanPham }}</span>
           </td>
-          <!-- Tên sách -->
           <td class="border-t-0 px-6 py-4 text-xs whitespace-nowrap">
-              <span class="font-semibold">
-                {{ sanPham.tenSanPham }}
-              </span>
+            <span class="font-semibold">{{ sanPham.tenSanPham }}</span>
           </td>
-          <!-- Mô tả -->
           <td class="border-t-0 px-6 py-4 text-xs">
             {{ sanPham.moTa }}
           </td>
-          <!-- Hành động -->
+          <td class="border-t-0 px-6 py-4 text-xs whitespace-nowrap">
+            {{ sanPham.tongSoLuongTon || 0 }}
+          </td>
           <td class="border-t-0 px-6 py-4 text-xs whitespace-nowrap">
             <button
                 class="bg-indigo-500 text-white px-3 py-1 rounded hover:bg-indigo-600 transition mr-2"
                 @click="viewDetails(sanPham.id)"
             >
               Chi tiết
-            </button>
-            <button
-                class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition mr-2"
-                @click="editSanPham(sanPham)"
-            >
-              Sửa
             </button>
             <button
                 class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition"
@@ -191,34 +151,11 @@
         Next
       </button>
     </div>
-
-    <!-- Modal thêm/sửa sách -->
-    <div v-if="showModal" class="fixed inset-0 bg-opacity-80 flex items-center justify-center backdrop-blur-sm z-50">
-      <div class="bg-white p-6 rounded-lg w-1/2 shadow-[0_10px_30px_rgba(0,0,0,0.4)] ">
-        <h2 class="text-xl font-bold mb-4">{{ isEditing ? 'Sửa sách' : 'Thêm sách' }}</h2>
-        <form @submit.prevent="validateAndSave">
-          <!-- Bỏ trường Mã sản phẩm -->
-          <div class="mb-4">
-            <label class="block text-sm font-medium mb-1">Tên sản phẩm</label>
-            <input v-model="formData.tenSanPham" type="text" class="w-full border rounded px-3 py-2" required>
-          </div>
-          <div class="mb-4">
-            <label class="block text-sm font-medium mb-1">Mô tả</label>
-            <textarea v-model="formData.moTa" class="w-full border rounded px-3 py-2" rows="3"></textarea>
-          </div>
-          <div class="flex justify-end">
-            <button type="button" @click="closeModal" class="bg-gray-500 text-white px-4 py-2 rounded mr-2">Hủy</button>
-            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Lưu</button>
-          </div>
-        </form>
-      </div>
-    </div>
   </div>
 </template>
 
 <script>
 import SanPhamService from '@/service/SanPhamService';
-import SanPham from '@/models/SanPham';
 
 export default {
   name: "Sach",
@@ -238,11 +175,7 @@ export default {
       itemsPerPage: 10,
       sortKey: "",
       sortOrder: 1,
-      showModal: false,
-      isEditing: false,
       searchTimeout: null,
-      formData: new SanPham(),
-      editingId: null
     };
   },
   computed: {
@@ -263,6 +196,11 @@ export default {
 
       if (this.sortKey) {
         result.sort((a, b) => {
+          if (this.sortKey === 'tongSoLuongTon') {
+            // Sắp xếp số lượng tồn (number)
+            return (a.tongSoLuongTon - b.tongSoLuongTon) * this.sortOrder;
+          }
+          // Sắp xếp các trường chuỗi
           if (a[this.sortKey] < b[this.sortKey]) return -1 * this.sortOrder;
           if (a[this.sortKey] > b[this.sortKey]) return 1 * this.sortOrder;
           return 0;
@@ -284,6 +222,7 @@ export default {
     async loadSanPhams() {
       try {
         this.listSanPham = await SanPhamService.getAll();
+        console.log('Dữ liệu từ API:', this.listSanPham); // Debug dữ liệu
       } catch (error) {
         console.error('Error loading san pham:', error);
         alert('Có lỗi xảy ra khi tải danh sách sản phẩm');
@@ -299,6 +238,7 @@ export default {
         if (this.searchQuery.trim()) {
           try {
             this.listSanPham = await SanPhamService.search(this.searchQuery.trim());
+            console.log('Dữ liệu tìm kiếm:', this.listSanPham); // Debug dữ liệu tìm kiếm
           } catch (error) {
             console.error('Error searching san pham:', error);
             alert('Có lỗi xảy ra khi tìm kiếm sản phẩm');
@@ -310,33 +250,8 @@ export default {
       }, 300);
     },
 
-    openAddModal() {
-      this.isEditing = false;
-      this.formData = new SanPham();
-      this.showModal = true;
-    },
-
-    editSanPham(sanPham) {
-      this.isEditing = true;
-      this.editingId = sanPham.id;
-      this.formData = new SanPham(sanPham);
-      this.showModal = true;
-    },
-
-    async saveSanPham() {
-      try {
-        if (this.isEditing) {
-          await SanPhamService.update(this.editingId, this.formData);
-        } else {
-          // Khi tạo mới, không cần gửi maSanPham, backend sẽ tự xử lý
-          await SanPhamService.create(this.formData);
-        }
-        this.closeModal();
-        await this.loadSanPhams();
-      } catch (error) {
-        console.error('Error saving san pham:', error);
-        alert('Có lỗi xảy ra khi lưu sản phẩm');
-      }
+    addProduct() {
+      this.$router.push('/admin/sach/add');
     },
 
     async deleteSanPham(id) {
@@ -349,21 +264,6 @@ export default {
           alert('Có lỗi xảy ra khi xóa sản phẩm');
         }
       }
-    },
-
-    closeModal() {
-      this.showModal = false;
-      this.formData = new SanPham();
-      this.editingId = null;
-    },
-
-    async validateAndSave() {
-      // Bỏ logic kiểm tra maSanPham vì backend sẽ tự sinh
-      this.saveSanPham();
-    },
-
-    addProduct() {
-      this.openAddModal();
     },
 
     sortBy(key) {

@@ -24,8 +24,8 @@ public class LoaiBiaService {
 
     public LoaiBia getById(Integer id) {
         return loaiBiaRepository.findById(id)
-                .filter(sp -> !sp.getDeleted())
-                .orElseThrow(() -> new RuntimeException("Loại bìa không tồn tại với id: " + id));
+                .filter(lb -> !lb.getDeleted())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy loại bìa với ID: " + id));
     }
 
     public LoaiBia create(LoaiBia sp) {
