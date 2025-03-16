@@ -1,5 +1,5 @@
 <template>
-  <div class="relative">
+  <div class="min-h-screen w-full bg-gray-100 font-roboto">
     <!-- Toast Notification -->
     <transition name="fade">
       <div v-if="showToast"
@@ -59,7 +59,9 @@
         </div>
       </div>
     </div>
-    <div class="relative">
+
+    <div class="w-full">
+      <!-- Modal chi tiết -->
       <div v-if="showModalDetail" class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
         <div class="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full relative">
           <button @click="showModalDetail = false" class="absolute top-3 right-3 text-gray-600 hover:text-red-500">
@@ -113,6 +115,7 @@
           </table>
         </div>
       </div>
+
       <!-- Form nhập phiếu giảm giá -->
       <div v-if="showModal" class="fixed inset-0 flex items-center justify-center backdrop-blur-sm z-50">
         <div class="relative w-full max-w-md max-h-full rounded-lg shadow-[0_10px_30px_rgba(0,0,0,0.4)]">
@@ -220,7 +223,7 @@
       </div>
 
       <!-- Bảng hiển thị phiếu giảm giá -->
-      <div class="bg-white p-4 shadow rounded">
+      <div class="bg-white p-4 shadow rounded w-full">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-lg font-bold mb-4">Phiếu giảm giá</h2>
           <div class="flex items-center justify-between gap-3">
@@ -243,7 +246,7 @@
           </div>
         </div>
 
-        <div class="relative overflow-x-auto sm:rounded-lg w-full h-[calc(100vh-150px)]">
+        <div class="relative overflow-x-auto sm:rounded-lg w-full h-[calc(100vh-200px)]">
           <table class="w-full text-sm text-center text-gray-500">
             <thead class="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
@@ -671,7 +674,20 @@ export default {
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+html, body, #app {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
 
+.h-screen {
+  height: 100vh;
+}
+
+.w-screen {
+  width: 100vw;
+}
 .font-roboto {
   font-family: 'Roboto', sans-serif;
 }
