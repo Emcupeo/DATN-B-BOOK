@@ -117,7 +117,7 @@
       </div>
 
       <!-- Form nhập phiếu giảm giá -->
-      <div v-if="showModal" class="fixed inset-0 flex items-center justify-center backdrop-blur-sm z-50">
+      <div v-if="showModal" class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
         <div class="relative w-full max-w-md max-h-full rounded-lg shadow-[0_10px_30px_rgba(0,0,0,0.4)]">
           <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
             <div
