@@ -165,6 +165,15 @@
               </a>
             </router-link>
           </li>
+          <li class="items-center">
+            <router-link to="/admin/dot-giam-gia" v-slot="{ href, navigate, isActive }">
+              <a :href="href" @click="navigate" class="text-xs uppercase py-3 font-bold block"
+                 :class="isActive ? 'text-blue-500 hover:text-blue-600' : 'text-blueGray-700 hover:text-blueGray-500'">
+                <i class="fas fa-ticket-alt mr-2 text-sm" :class="isActive ? 'opacity-75' : 'text-blueGray-300'"></i>
+                Đợt giảm giá
+              </a>
+            </router-link>
+          </li>
         </ul>
 
         <!-- Divider -->

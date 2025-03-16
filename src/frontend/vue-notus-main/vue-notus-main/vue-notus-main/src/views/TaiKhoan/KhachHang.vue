@@ -10,13 +10,15 @@
               </h3>
             </div>
             <div class="relative w-full px-4 max-w-full flex-grow flex-1 text-right">
-              <button @click="openModal" class="bg-indigo-500 text-white active:bg-indigo-600 text-xs font-bold uppercase px-3 py-1 rounded outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150">
+              <button @click="openModal"
+                      class="bg-indigo-500 text-white active:bg-indigo-600 text-xs font-bold uppercase px-3 py-1 rounded outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150">
                 Thêm khách hàng
               </button>
             </div>
           </div>
           <div class="mt-4 flex justify-end">
-            <input v-model="searchQuery" @input="handleSearch" type="text" placeholder="Tìm kiếm khách hàng..." class="border px-3 py-2 rounded">
+            <input v-model="searchQuery" @input="handleSearch" type="text" placeholder="Tìm kiếm khách hàng..."
+                   class="border px-3 py-2 rounded">
           </div>
         </div>
 
@@ -65,14 +67,22 @@
                 {{ formatDiaChi(khachHang) }}
               </td>
               <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
-                  <span :class="getStatusClass(khachHang.trangThai)" class="px-2 py-1 text-green-700 border border-green-500 bg-green-100 rounded">
+                  <span :class="getStatusClass(khachHang.trangThai)"
+                        class="px-2 py-1 text-green-700 border border-green-500 bg-green-100 rounded">
                     {{ khachHang.trangThai ? 'Hoạt động' : 'Không hoạt động' }}
                   </span>
               </td>
               <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
-                <button @click="editKhachHang(khachHang)" class="bg-blue-500 text-white px-2 py-1 rounded mr-2">Sửa</button>
-                <button @click="deleteKhachHang(khachHang.id)" class="bg-red-500 text-white px-2 py-1 rounded mr-2">Xóa</button>
-                <router-link :to="'/admin/khach-hang/' + khachHang.id" class="bg-yellow-500 text-white px-2 py-1 rounded">Chi tiết</router-link>
+                <router-link :to="'/admin/khach-hang/' + khachHang.id" class="bg-blue-500 text-white px-2 py-1 rounded">
+                  Chi tiết
+                </router-link>
+                &nbsp;
+                <button @click="editKhachHang(khachHang)" class="bg-yellow-500 text-white px-2 py-1 rounded mr-2">Sửa
+                </button>
+                <button @click="deleteKhachHang(khachHang.id)" class="bg-red-500 text-white px-2 py-1 rounded mr-2">
+                  Xóa
+                </button>
+
               </td>
             </tr>
             </tbody>
@@ -90,7 +100,8 @@
         </div>
 
         <!-- Modal panel -->
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+        <div
+            class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
           <!-- Modal content -->
           <div class="max-h-[80vh] overflow-y-auto">
             <div class="bg-white px-4 pt-5 pb-4 sm:p-6">
@@ -166,7 +177,8 @@
         <div class="fixed inset-0 transition-opacity" aria-hidden="true">
           <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
         </div>
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+        <div
+            class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
           <div class="bg-white px-4 pt-5 pb-4 sm:p-6">
             <div class="flex justify-between items-center mb-4">
               <h2 class="text-xl font-bold">Quản lý địa chỉ cho {{ selectedKhachHang?.hoTen }}</h2>
@@ -180,7 +192,8 @@
               <form @submit.prevent="saveAddress" class="space-y-4">
                 <div>
                   <label class="block text-sm font-medium mb-1">Tỉnh/Thành phố</label>
-                  <select v-model="selectedAddressProvince" @change="handleAddressProvinceChange" class="w-full border rounded px-3 py-2" required>
+                  <select v-model="selectedAddressProvince" @change="handleAddressProvinceChange"
+                          class="w-full border rounded px-3 py-2" required>
                     <option value="">Chọn Tỉnh/Thành phố</option>
                     <option v-for="province in provinces" :key="province.code" :value="province">
                       {{ province.name }}
@@ -190,7 +203,8 @@
 
                 <div>
                   <label class="block text-sm font-medium mb-1">Quận/Huyện</label>
-                  <select v-model="selectedAddressDistrict" @change="handleAddressDistrictChange" class="w-full border rounded px-3 py-2" required :disabled="!selectedAddressProvince">
+                  <select v-model="selectedAddressDistrict" @change="handleAddressDistrictChange"
+                          class="w-full border rounded px-3 py-2" required :disabled="!selectedAddressProvince">
                     <option value="">Chọn Quận/Huyện</option>
                     <option v-for="district in districts" :key="district.code" :value="district">
                       {{ district.name }}
@@ -200,7 +214,8 @@
 
                 <div>
                   <label class="block text-sm font-medium mb-1">Xã/Phường/Thị trấn</label>
-                  <select v-model="selectedAddressWard" class="w-full border rounded px-3 py-2" required :disabled="!selectedAddressDistrict">
+                  <select v-model="selectedAddressWard" class="w-full border rounded px-3 py-2" required
+                          :disabled="!selectedAddressDistrict">
                     <option value="">Chọn Xã/Phường/Thị trấn</option>
                     <option v-for="ward in wards" :key="ward.code" :value="ward">
                       {{ ward.name }}
@@ -210,7 +225,8 @@
 
                 <div>
                   <label class="block text-sm font-medium mb-1">Địa chỉ chi tiết</label>
-                  <input v-model="addressFormData.diaChiChiTiet" type="text" class="w-full border rounded px-3 py-2" required
+                  <input v-model="addressFormData.diaChiChiTiet" type="text" class="w-full border rounded px-3 py-2"
+                         required
                          placeholder="Số nhà, tên đường...">
                 </div>
 
@@ -507,7 +523,7 @@ export default {
     async editAddress(diaChi) {
       this.showAddressForm = true;
       this.editingAddressId = diaChi.id;
-      this.addressFormData = { ...diaChi };
+      this.addressFormData = {...diaChi};
 
       // Set selected locations
       this.selectedAddressProvince = this.provinces.find(p => p.name === diaChi.tinhThanh);
