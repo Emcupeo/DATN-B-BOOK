@@ -10,13 +10,13 @@
             type="text"
             v-model="searchName"
             placeholder="🔍 Tìm kiếm hóa đơn"
-            class="border border-gray-300 rounded px-4 py-2 text-sm w-80 focus:outline-none focus:ring"
+            class="border border-gray-300 rounded px-4 py-2 text-sm w-[700px] focus:outline-none focus:ring"
         />
         <div class="flex gap-2 ml-auto">
           <button class="bg-orange-500 text-white px-4 py-2 rounded text-sm hover:bg-orange-600 flex items-center">
             📷 Quét mã
           </button>
-          <button class="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-600 flex items-center">
+          <button class="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-600 flex items-center" @click="viewBanHang">
             ➕ Tạo hóa đơn
           </button>
         </div>
@@ -28,12 +28,12 @@
           <input
               type="date"
               v-model="dateFrom"
-              class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring w-40"
+              class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring w-[350px]"
           />
           <input
               type="date"
               v-model="dateTo"
-              class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring w-40"
+              class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring w-[350px]"
           />
 
           <!-- Lọc theo khoảng giá -->
@@ -82,11 +82,12 @@
           </div>
         </div>
 
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 mr-12">
           <button class="bg-blue-500 text-white px-4 py-2 rounded text-sm hover:bg-blue-600 flex items-center">
             📥 Export Excel
           </button>
         </div>
+
       </div>
     </div>
 
@@ -226,12 +227,17 @@ export default {
 
       let result = this.invoices;
 
-      // Hiển thị theo tab
+      // Lọc theo tab trạng thái
       if (this.selectedTab !== 'all') {
         result = result.filter(inv => inv.trangThai === tabMapping[this.selectedTab]);
       }
 
-      // Lọc theo mã, tên, sdt, mã nv
+      // Lọc theo loại hóa đơn
+      if (this.selectedType) {
+        result = result.filter(inv => inv.loaiHoaDon === this.selectedType);
+      }
+
+      // Lọc theo tìm kiếm (mã, tên, sđt, mã nhân viên)
       if (this.searchName) {
         const searchLower = this.searchName.toLowerCase();
         result = result.filter(inv =>
@@ -245,30 +251,24 @@ export default {
       // Lọc theo ngày
       if (this.dateFrom) {
         const fromDate = new Date(this.dateFrom);
-        fromDate.setHours(0, 0, 0, 0); // Đặt về 00:00:00
+        fromDate.setHours(0, 0, 0, 0);
         result = result.filter(inv => new Date(inv.ngayTao) >= fromDate);
       }
 
       if (this.dateTo) {
         const toDate = new Date(this.dateTo);
-        toDate.setHours(23, 59, 59, 999); // Đặt về 23:59:59
+        toDate.setHours(23, 59, 59, 999);
         result = result.filter(inv => new Date(inv.ngayTao) <= toDate);
       }
 
       // Lọc theo khoảng giá
       result = result.filter(inv => inv.tongTien >= this.minPrice && inv.tongTien <= this.maxPrice);
 
-
-      // Lọc theo loại hóa đơn
-      if (this.selectedType) {
-        result = result.filter(inv => inv.loaiHoaDon === this.selectedType);
-      }
-
       return result;
     },
 
     invoiceCounts() {
-      return this.invoices.reduce((counts, invoice) => {
+      return this.filteredInvoices.reduce((counts, invoice) => {
         const statusMapping = {
           "Đã hủy": "cancelled",
           "Chờ xác nhận": "pending",
@@ -308,9 +308,15 @@ export default {
         currency: "VND",
       }).format(value);
     },
+
     viewDetails(id) {
       this.$router.push({path: `/admin/hoa-don-chi-tiet/${id}`});
     },
+
+    viewBanHang(){
+      this.$router.push('/admin/ban-hang-tai-quay');
+    },
+
     getListHoaDon() {
       HoaDonService.getListHoaDon().then((response) => {
         this.invoices = response.data;
