@@ -84,7 +84,7 @@ public class ChiTietSanPhamService {
         if (idTacGia != null) {
             TacGia tacGia = new TacGia();
             tacGia.setId(idTacGia);
-            chiTietSanPham.setIdTacGia(tacGia);
+            chiTietSanPham.setTacGia(tacGia);
         }
         if (idNhaXuatBan != null) {
             NhaXuatBan nhaXuatBan = new NhaXuatBan();
@@ -154,12 +154,12 @@ public class ChiTietSanPhamService {
             existing.setIdLoaiBia(null);
         }
 
-        if (updatedData.getIdTacGia() != null) {
+        if (updatedData.getTacGia() != null) {
             TacGia tacGia = tacGiaService
-                    .getById(updatedData.getIdTacGia().getId());
-            existing.setIdTacGia(tacGia);
+                    .getById(updatedData.getTacGia().getId());
+            existing.setTacGia(tacGia);
         } else {
-            existing.setIdTacGia(null);
+            existing.setTacGia(null);
         }
 
         if (updatedData.getIdNhaXuatBan() != null) {
@@ -244,9 +244,9 @@ public class ChiTietSanPhamService {
             chiTietSanPham.setIdLoaiBia(loaiBia);
         }
 
-        if (newData.getIdTacGia() != null) {
-            TacGia tacGia = tacGiaService.getById(newData.getIdTacGia().getId());
-            chiTietSanPham.setIdTacGia(tacGia);
+        if (newData.getTacGia() != null) {
+            TacGia tacGia = tacGiaService.getById(newData.getTacGia().getId());
+            chiTietSanPham.setTacGia(tacGia);
         }
 
         if (newData.getIdNhaXuatBan() != null) {
