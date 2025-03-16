@@ -61,7 +61,7 @@ import TheLoai from "@/views/QuanLySach/ThuocTinh/TheLoai.vue";
 import NhanVien from "@/views/TaiKhoan/NhanVien.vue";
 import KhachHang from "@/views/TaiKhoan/KhachHang.vue";
 import ListSach from "./views/QuanLySach/ListSach.vue";
-import QuanLyDonHang from "@/views/BanHang/QuanLyDonHang.vue";
+import QuanLyHoaDon from "@/views/BanHang/QuanLyHoaDon.vue";
 import AddChiTietSach from "./views/QuanLySach/AddChiTietSach.vue";
 import EditChiTietSach from "./views/QuanLySach/EditChiTietSach.vue";
 import ChiTietSach from "./views/QuanLySach/ChiTietSach.vue";
@@ -100,7 +100,7 @@ const routes = [
       },
       {
         path: "/admin/hoa-don-chi-tiet/:id",
-        component: QuanLyDonHang,
+        component: QuanLyHoaDon,
       },
       {
         path: "/admin/sach",
