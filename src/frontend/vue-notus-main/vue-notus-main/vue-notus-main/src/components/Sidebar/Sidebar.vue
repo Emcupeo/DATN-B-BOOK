@@ -1,5 +1,4 @@
 <template>
-
   <nav
     class="md:left-0 md:block md:fixed md:top-0 md:bottom-0 md:overflow-y-auto md:flex-row md:flex-nowrap md:overflow-hidden shadow-xl bg-white flex flex-wrap items-center justify-between relative md:w-64 z-10 py-4 px-6 font-roboto">
     <div
@@ -69,7 +68,7 @@
           <li class="items-center">
             <router-link to="/admin/dashboard" v-slot="{ href, navigate, isActive }">
               <a :href="href" @click="navigate" class="text-xs uppercase py-3 font-bold block"
-                :class="isActive ? 'text-emerald-500 hover:text-emerald-600' : 'text-blueGray-700 hover:text-blueGray-500'">
+                :class="isActive ? 'text-blue-500 hover:text-blue-600' : 'text-blueGray-700 hover:text-blueGray-500'">
                 <i class="fas fa-chart-line mr-2 text-sm" :class="isActive ? 'opacity-75' : 'text-blueGray-300'"></i>
                 Dashboard
               </a>
@@ -79,7 +78,7 @@
           <li class="items-center">
             <router-link to="/admin/ban-hang-tai-quay" v-slot="{ href, navigate, isActive }">
               <a :href="href" @click="navigate" class="text-xs uppercase py-3 font-bold block"
-                :class="isActive ? 'text-emerald-500 hover:text-emerald-600' : 'text-blueGray-700 hover:text-blueGray-500'">
+                :class="isActive ? 'text-blue-500 hover:text-blue-600' : 'text-blueGray-700 hover:text-blueGray-500'">
                 <i class="fas fa-shopping-cart mr-2 text-sm" :class="isActive ? 'opacity-75' : 'text-blueGray-300'"></i>
                 Bán hàng tại quầy
               </a>
@@ -89,7 +88,7 @@
           <li class="items-center">
             <router-link to="/admin/hoa-don" v-slot="{ href, navigate, isActive }">
               <a :href="href" @click="navigate" class="text-xs uppercase py-3 font-bold block"
-                :class="isActive ? 'text-emerald-500 hover:text-emerald-600' : 'text-blueGray-700 hover:text-blueGray-500'">
+                :class="isActive ? 'text-blue-500 hover:text-blue-600' : 'text-blueGray-700 hover:text-blueGray-500'">
                 <i class="fas fa-file-invoice-dollar mr-2 text-sm"
                   :class="isActive ? 'opacity-75' : 'text-blueGray-300'"></i>
                 Hóa đơn
@@ -110,7 +109,7 @@
           <li class="items-center">
             <router-link to="/admin/sach" v-slot="{ href, navigate, isActive }">
               <a :href="href" @click="navigate" class="text-xs uppercase py-3 font-bold block"
-                :class="isActive ? 'text-emerald-500 hover:text-emerald-600' : 'text-blueGray-700 hover:text-blueGray-500'">
+                :class="isActive ? 'text-blue-500 hover:text-blue-600' : 'text-blueGray-700 hover:text-blueGray-500'">
                 <i class="fas fa-book mr-2 text-sm" :class="isActive ? 'opacity-75' : 'text-blueGray-300'"></i>
                 Sách
               </a>
@@ -120,7 +119,7 @@
           <li class="items-center">
             <router-link to="/admin/danh-muc" v-slot="{ href, navigate, isActive }">
               <a :href="href" @click="navigate" class="text-xs uppercase py-3 font-bold block"
-                :class="isActive ? 'text-emerald-500 hover:text-emerald-600' : 'text-blueGray-700 hover:text-blueGray-500'">
+                :class="isActive ? 'text-blue-500 hover:text-blue-600' : 'text-blueGray-700 hover:text-blueGray-500'">
                 <i class="fas fa-list mr-2 text-sm" :class="isActive ? 'opacity-75' : 'text-blueGray-300'"></i>
                 Danh mục sách
               </a>
@@ -130,7 +129,7 @@
           <li class="items-center">
             <button @click="isThuocTinhOpen = !isThuocTinhOpen"
               class="text-xs uppercase py-3 font-bold block w-full text-left"
-              :class="isThuocTinhOpen ? 'text-emerald-500' : 'text-blueGray-700 hover:text-blueGray-500'">
+              :class="isThuocTinhOpen ? 'text-blue-500' : 'text-blueGray-700 hover:text-blueGray-500'">
               <i class="fas fa-tags mr-2 text-sm" :class="isThuocTinhOpen ? 'opacity-75' : 'text-blueGray-300'"></i>
               Thuộc tính sách
               <i class="fas" :class="isThuocTinhOpen ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
@@ -140,13 +139,12 @@
             <li v-for="thuocTinh in danhSachThuocTinh" :key="thuocTinh.path" class="items-center">
               <router-link :to="thuocTinh.path" v-slot="{ href, navigate, isActive }">
                 <a :href="href" @click="navigate" class="text-xs uppercase py-2 font-bold block"
-                  :class="isActive ? 'text-emerald-500' : 'text-blueGray-700 hover:text-blueGray-500'">
-                  <i class="fas fa-circle mr-2 text-xs"></i> {{ thuocTinh.name }}
+                  :class="isActive ? 'text-blue-500' : 'text-blueGray-700 hover:text-blueGray-500'">
+                  <i :class="thuocTinh.icon + ' mr-2 text-xs'"></i> {{ thuocTinh.name }}
                 </a>
               </router-link>
             </li>
           </ul>
-
         </ul>
 
         <!-- Divider -->
@@ -161,7 +159,7 @@
           <li class="items-center">
             <router-link to="/admin/phieu-giam-gia" v-slot="{ href, navigate, isActive }">
               <a :href="href" @click="navigate" class="text-xs uppercase py-3 font-bold block"
-                :class="isActive ? 'text-emerald-500 hover:text-emerald-600' : 'text-blueGray-700 hover:text-blueGray-500'">
+                :class="isActive ? 'text-blue-500 hover:text-blue-600' : 'text-blueGray-700 hover:text-blueGray-500'">
                 <i class="fas fa-ticket-alt mr-2 text-sm" :class="isActive ? 'opacity-75' : 'text-blueGray-300'"></i>
                 Phiếu giảm giá
               </a>
@@ -181,7 +179,7 @@
           <li class="items-center">
             <router-link to="/admin/nhan-vien" v-slot="{ href, navigate, isActive }">
               <a :href="href" @click="navigate" class="text-xs uppercase py-3 font-bold block"
-                :class="isActive ? 'text-emerald-500 hover:text-emerald-600' : 'text-blueGray-700 hover:text-blueGray-500'">
+                :class="isActive ? 'text-blue-500 hover:text-blue-600' : 'text-blueGray-700 hover:text-blueGray-500'">
                 <i class="fas fa-users mr-2 text-sm" :class="isActive ? 'opacity-75' : 'text-blueGray-300'"></i>
                 Nhân viên
               </a>
@@ -191,7 +189,7 @@
           <li class="items-center">
             <router-link to="/admin/khach-hang" v-slot="{ href, navigate, isActive }">
               <a :href="href" @click="navigate" class="text-xs uppercase py-3 font-bold block"
-                :class="isActive ? 'text-emerald-500 hover:text-emerald-600' : 'text-blueGray-700 hover:text-blueGray-500'">
+                :class="isActive ? 'text-blue-500 hover:text-blue-600' : 'text-blueGray-700 hover:text-blueGray-500'">
                 <i class="fas fa-user mr-2 text-sm" :class="isActive ? 'opacity-75' : 'text-blueGray-300'"></i>
                 Khách hàng
               </a>
@@ -214,14 +212,14 @@ export default {
       collapseShow: "hidden",
       isThuocTinhOpen: false,
       danhSachThuocTinh: [
-      { path: "/admin/thuoc-tinh/chat-lieu", name: "Chất liệu" },
-      { path: "/admin/thuoc-tinh/loai-bia", name: "Loại bìa" },
-      { path: "/admin/thuoc-tinh/ngon-ngu", name: "Ngôn ngữ" },
-      { path: "/admin/thuoc-tinh/nguoi-dich", name: "Người dịch" },
-      { path: "/admin/thuoc-tinh/nha-xuat-ban", name: "Nhà xuất bản" },
-      { path: "/admin/thuoc-tinh/tac-gia", name: "Tác giả" },
-      { path: "/admin/thuoc-tinh/the-loai", name: "Thể loại" },
-    ],
+        { path: "/admin/thuoc-tinh/chat-lieu", name: "Chất liệu", icon: "fas fa-paint-roller" },
+        { path: "/admin/thuoc-tinh/loai-bia", name: "Loại bìa", icon: "fas fa-book-open" },
+        { path: "/admin/thuoc-tinh/ngon-ngu", name: "Ngôn ngữ", icon: "fas fa-language" },
+        { path: "/admin/thuoc-tinh/nguoi-dich", name: "Người dịch", icon: "fas fa-user-edit" },
+        { path: "/admin/thuoc-tinh/nha-xuat-ban", name: "Nhà xuất bản", icon: "fas fa-building" },
+        { path: "/admin/thuoc-tinh/tac-gia", name: "Tác giả", icon: "fas fa-pen" },
+        { path: "/admin/thuoc-tinh/the-loai", name: "Thể loại", icon: "fas fa-bookmark" },
+      ],
     };
   },
   methods: {
