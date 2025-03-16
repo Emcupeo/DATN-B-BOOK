@@ -62,8 +62,6 @@
     <div class="relative">
       <div v-if="showModalDetail" class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
         <div class="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full relative">
-
-          <!-- Nút đóng -->
           <button @click="showModalDetail = false" class="absolute top-3 right-3 text-gray-600 hover:text-red-500">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -71,11 +69,8 @@
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
           </button>
-
           <h2 class="text-xl font-bold mb-4 text-center">Chi tiết phiếu giảm giá</h2>
-
-          <!-- Bảng thông tin -->
-          <table class="w-full ">
+          <table class="w-full">
             <tbody>
               <tr>
                 <td class="p-2 font-semibold">ID</td>
@@ -116,24 +111,19 @@
               </tr>
             </tbody>
           </table>
-
         </div>
       </div>
       <!-- Form nhập phiếu giảm giá -->
-      <div v-if="showModal" class="fixed inset-0 flex items-center justify-center  backdrop-blur-sm z-50">
-        <!-- new form -->
+      <div v-if="showModal" class="fixed inset-0 flex items-center justify-center backdrop-blur-sm z-50">
         <div class="relative w-full max-w-md max-h-full rounded-lg shadow-[0_10px_30px_rgba(0,0,0,0.4)]">
-          <!-- Modal content -->
           <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
-            <!-- Modal header -->
             <div
               class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
               <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
                 {{ newPhieu.id ? "Sửa phiếu giảm giá" : "Thêm phiếu giảm giá" }}
               </h3>
               <button @click="closeModal" type="button"
-                class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
-                data-modal-toggle="crud-modal">
+                class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
                 <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
                   viewBox="0 0 14 14">
                   <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -142,8 +132,6 @@
                 <span class="sr-only">Đóng</span>
               </button>
             </div>
-            <!-- Modal body -->
-            <!-- Modal body -->
             <form class="p-4 md:p-5" @submit.prevent="newPhieu.id ? updatePhieuGiamGia() : addPhieuGiamGia()">
               <div class="grid gap-4 mb-4 grid-cols-2">
                 <div class="col-span-2 sm:col-span-1">
@@ -154,7 +142,6 @@
                     placeholder="% giảm" required>
                   <p v-if="errors.soPhanTramGiam" class="text-red-500 text-xs mt-1">{{ errors.soPhanTramGiam }}</p>
                 </div>
-
                 <div class="col-span-2 sm:col-span-1">
                   <label for="giaTriGiam" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Giá trị
                     giảm</label>
@@ -163,7 +150,6 @@
                     placeholder="Giá trị giảm" required>
                   <p v-if="errors.giaTriGiam" class="text-red-500 text-xs mt-1">{{ errors.giaTriGiam }}</p>
                 </div>
-
                 <div class="col-span-2 sm:col-span-1">
                   <label for="giaTriDonHangToiThieu"
                     class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Giá trị đơn giảm tối
@@ -175,7 +161,6 @@
                   <p v-if="errors.giaTriDonHangToiThieu" class="text-red-500 text-xs mt-1">{{
                     errors.giaTriDonHangToiThieu }}</p>
                 </div>
-
                 <div class="col-span-2 sm:col-span-1">
                   <label for="soLuong" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Số
                     lượng</label>
@@ -184,7 +169,6 @@
                     placeholder="Số lượng" required>
                   <p v-if="errors.soLuong" class="text-red-500 text-xs mt-1">{{ errors.soLuong }}</p>
                 </div>
-
                 <div class="col-span-2 sm:col-span-1">
                   <label for="ngayBatDau" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Ngày bắt
                     đầu</label>
@@ -193,7 +177,6 @@
                     required>
                   <p v-if="errors.ngayBatDau" class="text-red-500 text-xs mt-1">{{ errors.ngayBatDau }}</p>
                 </div>
-
                 <div class="col-span-2 sm:col-span-1">
                   <label for="ngayKetThuc" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Ngày kết
                     thúc</label>
@@ -202,7 +185,6 @@
                     required>
                   <p v-if="errors.ngayKetThuc" class="text-red-500 text-xs mt-1">{{ errors.ngayKetThuc }}</p>
                 </div>
-
                 <div class="col-span-2 sm:col-span-1">
                   <label for="trangThai" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Trạng
                     thái</label>
@@ -214,7 +196,6 @@
                   </select>
                   <p v-if="errors.trangThai" class="text-red-500 text-xs mt-1">{{ errors.trangThai }}</p>
                 </div>
-
                 <div class="col-span-2">
                   <label for="moTa" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Mô tả</label>
                   <textarea v-model="newPhieu.moTa" id="moTa" rows="4"
@@ -239,12 +220,17 @@
       </div>
 
       <!-- Bảng hiển thị phiếu giảm giá -->
-
       <div class="bg-white p-4 shadow rounded">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-lg font-bold mb-4">Phiếu giảm giá</h2>
           <div class="flex items-center justify-between gap-3">
-            <input v-model="searchQuery" type="text" placeholder="Tìm kiếm phiếu giảm giá theo tên, mã, số lượng...."
+            <select v-model="filterStatus" @change="applyFilters"
+              class="block w-[150px] h-[40px] p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500 mb-2">
+              <option value="">Tất cả trạng thái</option>
+              <option value="true">Hoạt động</option>
+              <option value="false">Hết hạn</option>
+            </select>
+            <input v-model="searchQuery" type="text" placeholder="Tìm kiếm phiếu giảm giá theo tên, mã, số lượng..."
               class="block w-[300px] h-[40px] p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500 mb-2" />
             <button @click="showModal = true" type="button"
               class="flex items-center gap-2 text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">
@@ -254,7 +240,6 @@
               </svg>
               Thêm phiếu giảm giá
             </button>
-
           </div>
         </div>
 
@@ -354,34 +339,31 @@
                   </a>
                 </td>
               </tr>
-              <tr class="bg-white border-b hover:bg-gray-50" v-if="phieuGiamGias.length == 0">
-                <td class="px-6 py-4" colspan="5" align="center">Không có dữ liệu</td>
+              <tr class="bg-white border-b hover:bg-gray-50" v-if="filteredPhieuGiamGias.length == 0">
+                <td class="px-6 py-4" colspan="6" align="center">Không có dữ liệu</td>
               </tr>
             </tbody>
           </table>
         </div>
         <div class="flex justify-center items-center mt-4 space-x-2">
           <button @click="prevPage" :disabled="currentPage === 0"
-            class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm p-2  text-center flex items-center justify-center">
+            class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm p-2 text-center flex items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
               stroke="currentColor" class="w-4 h-4">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
             </svg>
           </button>
-
           <span class="text-xs font-semibold text-gray-700">
             Trang {{ currentPage + 1 }} / {{ totalPages }}
           </span>
-
           <button @click="nextPage" :disabled="currentPage >= totalPages - 1"
-            class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm p-2  text-center flex items-center justify-center">
+            class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm p-2 text-center flex items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
               stroke="currentColor" class="w-4 h-4">
               <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
             </svg>
           </button>
         </div>
-
       </div>
     </div>
   </div>
@@ -398,6 +380,7 @@ export default {
       totalPages: 0,
       itemsPerPage: 14,
       searchQuery: "",
+      filterStatus: "", // Bộ lọc trạng thái
       showModal: false,
       showModalDetail: false,
       selectedPhieu: null,
@@ -418,15 +401,21 @@ export default {
       showToast: false,
       toastMessage: '',
       toastType: 'success',
-      // Trạng thái modal xác nhận
       showConfirmModal: false,
-      confirmActionCallback: null, // Lưu hàm callback khi xác nhận
+      confirmActionCallback: null,
     };
   },
 
   computed: {
     filteredPhieuGiamGias() {
       let result = [...this.phieuGiamGias];
+
+      // Lọc theo trạng thái
+      if (this.filterStatus !== "") {
+        result = result.filter(phieu => phieu.trangThai.toString() === this.filterStatus);
+      }
+
+      // Lọc theo tìm kiếm
       if (this.searchQuery) {
         const query = this.searchQuery.toLowerCase();
         result = result.filter(phieu => {
@@ -438,6 +427,8 @@ export default {
           });
         });
       }
+
+      // Sắp xếp nếu có sortKey
       if (this.sortKey) {
         result.sort((a, b) => {
           let valueA = a[this.sortKey];
@@ -453,6 +444,7 @@ export default {
           return 0;
         });
       }
+
       return result;
     },
   },
@@ -465,6 +457,10 @@ export default {
       setTimeout(() => {
         this.showToast = false;
       }, 3000);
+    },
+
+    applyFilters() {
+      // Không cần làm gì thêm vì computed property sẽ tự động cập nhật
     },
 
     validateForm() {
@@ -576,19 +572,16 @@ export default {
       }
     },
 
-    // Hiển thị modal xác nhận
     showConfirmModalWithAction(callback) {
       this.showConfirmModal = true;
       this.confirmActionCallback = callback;
     },
 
-    // Đóng modal xác nhận
     closeConfirmModal() {
       this.showConfirmModal = false;
       this.confirmActionCallback = null;
     },
 
-    // Xác nhận hành động
     confirmAction() {
       if (this.confirmActionCallback) {
         this.confirmActionCallback();
@@ -694,7 +687,6 @@ table {
   z-index: 1;
 }
 
-/* Hiệu ứng fade cho toast */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.5s;
@@ -705,19 +697,15 @@ table {
   opacity: 0;
 }
 
-/* Định dạng toast */
 .bg-green-500 {
   background-color: #10b981;
-  /* Màu xanh thành công */
 }
 
 .bg-red-500 {
   background-color: #ef4444;
-  /* Màu đỏ lỗi */
 }
 
 .bg-yellow-500 {
   background-color: #f59e0b;
-  /* Màu vàng cảnh báo */
 }
 </style>
