@@ -1,51 +1,35 @@
 package org.example.datnbbook.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.Nationalized;
 
-@Getter
-@Setter
 @Entity
 @Table(name = "dia_chi")
-public class DiaChi {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
-    private Integer id;
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class DiaChi extends BaseEntity {
 
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(name = "id_khach_hang", nullable = false)
-    private KhachHang idKhachHang;
+    @Column(name = "dia_chi_chi_tiet")
+    private String diaChiChiTiet;
 
-    @ColumnDefault("'DC'+right('-000'+CONVERT([nvarchar](5), NEXT VALUE FOR [dbo].[DCSeq]), 5)")
-    @Column(name = "ma_dia_chi", length = 10)
-    private String maDiaChi;
+    @Column(name = "tinh_thanh")
+    private String tinhThanh;
 
-    @Nationalized
-    @Column(name = "ten_nguoi_nhan")
-    private String tenNguoiNhan;
+    @Column(name = "quan_huyen")
+    private String quanHuyen;
 
-    @Nationalized
-    @Column(name = "so_dien_thoai")
-    private String soDienThoai;
+    @Column(name = "xa_phuong")
+    private String xaPhuong;
 
-    @ColumnDefault("0")
-    @Column(name = "dia_chi_mac_dinh", columnDefinition = "BIT DEFAULT 0")
-    private Boolean diaChiMacDinh;
+    @Column(name = "mac_dinh")
+    private Boolean macDinh = false;
 
-    @ColumnDefault("0")
-    @Column(name = "deleted")
-    private Boolean deleted;
-
+    @ManyToOne
+    @JoinColumn(name = "khach_hang_id")
+    private KhachHang khachHang;
 }

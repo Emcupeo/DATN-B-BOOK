@@ -4,6 +4,7 @@ package org.example.datnbbook.controller;
 import lombok.RequiredArgsConstructor;
 import org.example.datnbbook.dto.ChiTietSanPhamDTO;
 import org.example.datnbbook.model.ChiTietSanPham;
+import org.example.datnbbook.model.SanPham;
 import org.example.datnbbook.service.ChiTietSanPhamService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @CrossOrigin(origins = {"http://localhost:3000"})
@@ -29,10 +31,17 @@ public class ChiTietSanPhamController {
 
     private final ChiTietSanPhamService chiTietSanPhamService;
 
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<List<ChiTietSanPham>> getAll() {
         return ResponseEntity.ok(chiTietSanPhamService.getAll());
     }
+
+    @PostMapping
+    public ResponseEntity<ChiTietSanPham> create(@RequestBody ChiTietSanPham chiTietSanPham) {
+        ChiTietSanPham created = chiTietSanPhamService.create(chiTietSanPham);
+        return ResponseEntity.ok(created);
+    }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<ChiTietSanPham> getById(@PathVariable Integer id) {
@@ -44,16 +53,11 @@ public class ChiTietSanPhamController {
         return ResponseEntity.ok(chiTietSanPhamService.getByMa(ma));
     }
 
-    @PostMapping
-    public ResponseEntity<ChiTietSanPham> create(@RequestBody ChiTietSanPham ctsp) {
-        return ResponseEntity.ok(chiTietSanPhamService.create(ctsp));
-    }
-
     @PutMapping("/{id}")
-    public ResponseEntity<ChiTietSanPham> update(
-            @PathVariable Integer id,
-            @RequestBody ChiTietSanPham ctsp) {
-        return ResponseEntity.ok(chiTietSanPhamService.update(id, ctsp));
+    public ResponseEntity<ChiTietSanPham> update(@PathVariable Integer id, @RequestBody ChiTietSanPham chiTietSanPham) {
+        chiTietSanPham.setId(id); // Đảm bảo ID khớp với path variable
+        ChiTietSanPham updated = chiTietSanPhamService.update(id, chiTietSanPham);
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
@@ -66,4 +70,16 @@ public class ChiTietSanPhamController {
     public ResponseEntity<List<ChiTietSanPham>> search(@RequestParam String keyword) {
         return ResponseEntity.ok(chiTietSanPhamService.search(keyword));
     }
+
+    @GetMapping("/by-san-pham/{idSanPham}")
+    public ResponseEntity<List<ChiTietSanPham>> getBySanPhamId(@PathVariable Integer idSanPham) {
+
+        List<ChiTietSanPham> chiTietSanPhams = chiTietSanPhamService.getBySanPhamId(idSanPham);
+        if (chiTietSanPhams.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(chiTietSanPhams);
+    }
+
+
 }

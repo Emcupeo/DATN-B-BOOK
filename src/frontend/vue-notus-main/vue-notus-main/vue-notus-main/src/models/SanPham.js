@@ -4,6 +4,7 @@ export default class SanPham {
         this.maSanPham = data.maSanPham || '';
         this.tenSanPham = data.tenSanPham || '';
         this.moTa = data.moTa || '';
+        this.tongSoLuongTon = data.tongSoLuongTon
         this.deleted = data.deleted !== undefined ? data.deleted : true;
     }
 

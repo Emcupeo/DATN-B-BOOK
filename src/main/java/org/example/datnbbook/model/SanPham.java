@@ -7,6 +7,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -46,6 +47,9 @@ public class SanPham {
     @ColumnDefault("0")
     @Column(name = "deleted")
     private Boolean deleted = false;
+
+    @Transient // Không lưu vào database
+    private int tongSoLuongTon;
 //
 //    @OneToMany(mappedBy = "idSanPham")
 //    private Set<ChiTietSanPham> chiTietSanPhams = new LinkedHashSet<>();

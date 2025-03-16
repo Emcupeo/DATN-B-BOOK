@@ -1,22 +1,14 @@
 package org.example.datnbbook.service;
 
-import org.example.datnbbook.model.NhanVien;
-import org.example.datnbbook.repository.NhanVienRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.example.datnbbook.dto.NhanVienDTO;
 
 import java.util.List;
 
-@Service
-public class NhanVienService {
-    @Autowired
-    private NhanVienRepository nhanVienRepository;
-    public List<NhanVien> getAlllNhanVien(){
-        return nhanVienRepository.findAll();
-    }
-
-    public NhanVien addNhanVien(NhanVien nhanVien) {
-        return nhanVienRepository.save(nhanVien);
-    }
-
+public interface NhanVienService {
+    List<NhanVienDTO> getAll();
+    NhanVienDTO getById(Integer id);
+    NhanVienDTO create(NhanVienDTO nhanVienDTO);
+    NhanVienDTO update(Integer id, NhanVienDTO nhanVienDTO);
+    void delete(Integer id);
+    List<NhanVienDTO> search(String keyword);
 }

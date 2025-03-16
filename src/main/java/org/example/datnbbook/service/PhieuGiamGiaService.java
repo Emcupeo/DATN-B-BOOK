@@ -3,6 +3,9 @@ package org.example.datnbbook.service;
 import org.example.datnbbook.model.PhieuGiamGia;
 import org.example.datnbbook.repository.PhieuGiamGiaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Service;
 
@@ -14,9 +17,10 @@ public class PhieuGiamGiaService {
     @Autowired
     private PhieuGiamGiaRepository phieuGiamGiaRepository;
 
-    public List<PhieuGiamGia> getAll() {
-        return phieuGiamGiaRepository.getAllActive();
+    public Page<PhieuGiamGia> getAll(Pageable pageable) {
+        return phieuGiamGiaRepository.findAllByDeletedFalse(pageable);
     }
+
 
 
 

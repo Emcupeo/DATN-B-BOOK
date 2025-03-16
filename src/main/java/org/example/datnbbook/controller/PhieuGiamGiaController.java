@@ -3,6 +3,8 @@ package org.example.datnbbook.controller;
 import org.example.datnbbook.model.PhieuGiamGia;
 import org.example.datnbbook.service.PhieuGiamGiaService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,9 +19,14 @@ public class PhieuGiamGiaController {
 
     // Lấy danh sách phiếu giảm giá
     @GetMapping
-    public ResponseEntity<List<PhieuGiamGia>> getAll() {
-        return ResponseEntity.ok(phieuGiamGiaService.getAll());
+    public ResponseEntity<Page<PhieuGiamGia>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "14") int size) {
+        Page<PhieuGiamGia> phieuGiamGiaPage = phieuGiamGiaService.getAll(PageRequest.of(page, size));
+        return ResponseEntity.ok(phieuGiamGiaPage);
     }
+
+
 
     // Lấy chi tiết phiếu giảm giá theo ID
     @GetMapping("/{id}")

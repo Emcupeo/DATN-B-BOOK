@@ -5,7 +5,7 @@ const chiTietSanPhamAPIBaseURL = "http://localhost:8080/api/chi-tiet-san-pham";
 
 class chiTietSanPhamService {
     async getAll() {
-        const response = await axios.get(chiTietSanPhamAPIBaseURL);
+        const response = await axios.get(`${chiTietSanPhamAPIBaseURL}/all`);
         return response.data.map(item => new ChiTietSanPham(item));
     }
     async getById(id) {
@@ -13,18 +13,23 @@ class chiTietSanPhamService {
         return new ChiTietSanPham(response.data);
     }
 
+    async getBySanPhamId(idSanPham) {
+        const response = await axios.get(`${chiTietSanPhamAPIBaseURL}/by-san-pham/${idSanPham}`);
+        return response.data;
+    }
+
     async getByMa(ma) {
         const response = await axios.get(`${chiTietSanPhamAPIBaseURL}/ma/${ma}`);
         return new ChiTietSanPham(response.data);
     }
 
-    async create(chiTietSanPham) {
-        const response = await axios.post(chiTietSanPhamAPIBaseURL, chiTietSanPham.toJSON());
-        return new ChiTietSanPham(response.data);
+    async create(data) {
+        const response = await axios.post(chiTietSanPhamAPIBaseURL, data);
+        return response.data;
     }
 
     async update(id, chiTietSanPham) {
-        const response = await axios.put(`${chiTietSanPhamAPIBaseURL}/${id}`, chiTietSanPham.toJSON());
+        const response = await axios.put(`${chiTietSanPhamAPIBaseURL}/${id}`, chiTietSanPham);
         return new ChiTietSanPham(response.data);
     }
 
