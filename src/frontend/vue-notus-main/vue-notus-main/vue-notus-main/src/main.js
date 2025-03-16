@@ -64,6 +64,7 @@ import QuanLyDonHang from "@/views/BanHang/QuanLyDonHang.vue";
 import AddChiTietSach from "./views/QuanLySach/AddChiTietSach.vue";
 import EditChiTietSach from "./views/QuanLySach/EditChiTietSach.vue";
 import ChiTietSach from "./views/QuanLySach/ChiTietSach.vue";
+import KhachHangDetail from "./views/TaiKhoan/KhachHangDetail.vue";
 
 const routes = [
   {
@@ -180,6 +181,11 @@ const routes = [
       {
         path: "/admin/khach-hang",
         component: KhachHang,
+      },
+      {
+        path: "/admin/khach-hang/:id",
+        name: "KhachHangDetail",
+        component: KhachHangDetail,
       },
     ],
   },

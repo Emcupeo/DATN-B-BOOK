@@ -1,18 +1,14 @@
 package org.example.datnbbook.service;
 
-import org.example.datnbbook.model.KhachHang;
-import org.example.datnbbook.repository.KhachHangRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.example.datnbbook.dto.KhachHangDTO;
 
 import java.util.List;
 
-@Service
-public class KhachHangService {
-    @Autowired
-    private KhachHangRepository khachHangRepository;
-
-    public List<KhachHang> getAllKhachHang() {
-        return khachHangRepository.findAll();
-    }
+public interface KhachHangService {
+    List<KhachHangDTO> getAll();
+    KhachHangDTO getById(Long id);
+    KhachHangDTO create(KhachHangDTO khachHangDTO);
+    KhachHangDTO update(Long id, KhachHangDTO khachHangDTO);
+    void delete(Long id);
+    List<KhachHangDTO> search(String keyword);
 }

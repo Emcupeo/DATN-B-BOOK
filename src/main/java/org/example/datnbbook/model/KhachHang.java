@@ -1,41 +1,35 @@
 package org.example.datnbbook.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.Nationalized;
 
-import java.time.Instant;
 import java.time.LocalDate;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
-@Getter
-@Setter
 @Entity
 @Table(name = "khach_hang")
-public class KhachHang {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
-    private Integer id;
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class KhachHang extends BaseEntity {
 
-    @ColumnDefault("'KH'+right('-000'+CONVERT([nvarchar](5), NEXT VALUE FOR [dbo].[KHSeq]), 5)")
-    @Column(name = "ma_khach_hang", length = 10)
+    @Column(name = "ma_khach_hang", unique = true, nullable = false, length = 10, insertable = false, updatable = false)
+    @ColumnDefault("'KH'+right('00000'+CONVERT([nvarchar](5), NEXT VALUE FOR [dbo].[KHSeq]), 5)")
     private String maKhachHang;
 
-    @Nationalized
     @Column(name = "ho_ten")
     private String hoTen;
 
-    @Column(name = "so_dien_thoai", length = 20)
+    @Column(name = "email")
+    private String email;
+
+    @Column(name = "so_dien_thoai")
     private String soDienThoai;
 
     @Column(name = "ngay_sinh")
@@ -44,32 +38,19 @@ public class KhachHang {
     @Column(name = "gioi_tinh")
     private Boolean gioiTinh;
 
-    @ColumnDefault("1")
     @Column(name = "trang_thai")
-    private Boolean trangThai;
+    private Boolean trangThai = true;
 
-    @ColumnDefault("getdate()")
-    @Column(name = "created_at")
-    private Instant createdAt;
+    @OneToMany(mappedBy = "khachHang", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DiaChi> danhSachDiaChi = new ArrayList<>();
 
-    @ColumnDefault("getdate()")
-    @Column(name = "updated_at")
-    private Instant updatedAt;
+    public void themDiaChi(DiaChi diaChi) {
+        danhSachDiaChi.add(diaChi);
+        diaChi.setKhachHang(this);
+    }
 
-    @ColumnDefault("0")
-    @Column(name = "deleted")
-    private Boolean deleted;
-
-//    @OneToMany(mappedBy = "idKhachHang")
-//    private Set<DiaChi> diaChis = new LinkedHashSet<>();
-//
-//    @OneToMany(mappedBy = "idKhachHang")
-//    private Set<GioHang> gioHangs = new LinkedHashSet<>();
-//
-//    @OneToMany(mappedBy = "idKhachHang")
-//    private Set<HoaDon> hoaDons = new LinkedHashSet<>();
-//
-//    @OneToMany(mappedBy = "idKhachHang")
-//    private Set<PhieuGiamGiaKhachHang> phieuGiamGiaKhachHangs = new LinkedHashSet<>();
-
+    public void xoaDiaChi(DiaChi diaChi) {
+        danhSachDiaChi.remove(diaChi);
+        diaChi.setKhachHang(null);
+    }
 }
