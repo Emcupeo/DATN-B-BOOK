@@ -4,7 +4,7 @@
     <div class="relative md:ml-64 flex flex-col flex-grow">
       <!-- <admin-navbar /> -->
       <HeaderStats />
-      <div class="px-4 md:px-10 mx-auto w-full flex-grow">
+      <div class="px-4 md:px-11 mx-auto w-full flex-grow">
         <router-view />
       </div>
       <FooterAdmin />
