@@ -39,26 +39,30 @@
           <!-- Lọc theo khoảng giá -->
           <div class="flex flex-col space-y-2 w-60">
             <label class="text-sm font-medium">
-              Khoảng giá: {{ minPrice.toLocaleString() }} - {{ maxPrice.toLocaleString() }} ₫
+              Khoảng giá: {{ formatCurrency(priceRange.min) }} - {{ formatCurrency(priceRange.max) }}
             </label>
-
-            <input
-                type="range"
-                v-model="minPrice"
-                :min="priceRange.min"
-                :max="priceRange.max"
-                :step="10000"
-                class="w-full"
-            />
-
-            <input
-                type="range"
-                v-model="maxPrice"
-                :min="priceRange.min"
-                :max="priceRange.max"
-                :step="10000"
-                class="w-full"
-            />
+            <div class="flex items-center">
+              <input
+                  type="range"
+                  :min="priceRange.min"
+                  :max="priceRange.max"
+                  v-model.number="priceRangeValueMin"
+                  class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  @input="updatePriceRange"
+              />
+              <input
+                  type="range"
+                  :min="priceRange.min"
+                  :max="priceRange.max"
+                  v-model.number="priceRangeValueMax"
+                  class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  @input="updatePriceRange"
+              />
+            </div>
+            <div class="flex justify-between">
+              <span>{{ formatCurrency(priceRangeValueMin) }}</span>
+              <span>{{ formatCurrency(priceRangeValueMax) }}</span>
+            </div>
           </div>
 
           <!-- Lọc theo loại hóa đơn -->
@@ -189,25 +193,25 @@ export default {
   data() {
     return {
       selectedType: "",
-      minPrice: 0,
-      maxPrice: 5000000,
       priceRange: {
-        min: 0,
-        max: 5000000,
+        min: 0, // Giá trị tối thiểu
+        max: 50000000 // Giá trị tối đa
       },
+      priceRangeValueMin: 0, // Giá trị tối thiểu mặc định
+      priceRangeValueMax: 50000000, // Giá trị tối đa mặc định
       selectedTab: 'all',
       searchName: "",
       dateFrom: "",
       dateTo: "",
       invoices: [],
       tabs: [
-        {label: 'TẤT CẢ', value: 'all'},
-        {label: 'ĐÃ HỦY', value: 'cancelled'},
-        {label: 'CHỜ XÁC NHẬN', value: 'pending'},
-        {label: 'CHỜ GIAO HÀNG', value: 'shipping'},
-        {label: 'ĐÃ GIAO HÀNG', value: 'delivered'},
-        {label: 'ĐÃ THANH TOÁN', value: 'paid'},
-        {label: 'HOÀN THÀNH', value: 'completed'}
+        { label: 'TẤT CẢ', value: 'all' },
+        { label: 'ĐÃ HỦY', value: 'cancelled' },
+        { label: 'CHỜ XÁC NHẬN', value: 'pending' },
+        { label: 'CHỜ GIAO HÀNG', value: 'shipping' },
+        { label: 'ĐÃ GIAO HÀNG', value: 'delivered' },
+        { label: 'ĐÃ THANH TOÁN', value: 'paid' },
+        { label: 'HOÀN THÀNH', value: 'completed' }
       ],
       currentPage: 1,
       itemsPerPage: 10,
@@ -261,8 +265,8 @@ export default {
         result = result.filter(inv => new Date(inv.ngayTao) <= toDate);
       }
 
-      // Lọc theo khoảng giá
-      result = result.filter(inv => inv.tongTien >= this.minPrice && inv.tongTien <= this.maxPrice);
+      // Lọc theo khoảng giá (từ min đến priceRangeValue)
+      result = result.filter(inv => inv.tongTien >= this.priceRangeValueMin && inv.tongTien <= this.priceRangeValueMax);
 
       return result;
     },
@@ -311,6 +315,11 @@ export default {
 
     viewDetails(id) {
       this.$router.push({path: `/admin/hoa-don-chi-tiet/${id}`});
+    },
+
+    updatePriceRange() {
+      // Cập nhật giá trị tối thiểu và tối đa
+      this.priceRangeValueMin = Math.min(this.priceRangeValueMin, this.priceRangeValueMax);
     },
 
     viewBanHang(){
