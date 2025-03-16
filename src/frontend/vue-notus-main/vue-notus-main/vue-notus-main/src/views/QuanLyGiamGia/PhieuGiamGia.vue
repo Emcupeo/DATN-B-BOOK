@@ -1,7 +1,124 @@
 <template>
   <div class="relative">
+    <!-- Toast Notification -->
+    <transition name="fade">
+      <div v-if="showToast"
+        class="fixed top-5 right-5 z-50 max-w-sm w-full p-4 rounded-lg shadow-lg text-white flex items-center" :class="{
+          'bg-green-500': toastType === 'success',
+          'bg-red-500': toastType === 'error',
+          'bg-yellow-500': toastType === 'warning'
+        }">
+        <span class="mr-2">
+          <svg v-if="toastType === 'success'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+          <svg v-if="toastType === 'error'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+          <svg v-if="toastType === 'warning'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 9v2m0 4h.01M12 3a9 9 0 110 18 9 9 0 010-18z"></path>
+          </svg>
+        </span>
+        {{ toastMessage }}
+      </div>
+    </transition>
+
+    <!-- Modal xác nhận xóa -->
+    <div v-if="showConfirmModal" class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
+      <div class="relative p-4 w-full max-w-md max-h-full">
+        <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
+          <button @click="closeConfirmModal" type="button"
+            class="absolute top-3 end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
+            <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+            </svg>
+            <span class="sr-only">Close modal</span>
+          </button>
+          <div class="p-4 md:p-5 text-center">
+            <svg class="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200" aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+            <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">Bạn có chắc muốn xóa phiếu giảm giá
+              này không?</h3>
+            <button @click="confirmAction" type="button"
+              class="text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center">
+              Có, tôi chắc chắn
+            </button>
+            <button @click="closeConfirmModal" type="button"
+              class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+              Không, hủy bỏ
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="relative">
-      <h1 class="block mb-2 text-2xl font-bold text-gray-900 dark:text-white mb-5">Phiếu giảm giá</h1>
+      <div v-if="showModalDetail" class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
+        <div class="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full relative">
+
+          <!-- Nút đóng -->
+          <button @click="showModalDetail = false" class="absolute top-3 right-3 text-gray-600 hover:text-red-500">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+
+          <h2 class="text-xl font-bold mb-4 text-center">Chi tiết phiếu giảm giá</h2>
+
+          <!-- Bảng thông tin -->
+          <table class="w-full ">
+            <tbody>
+              <tr>
+                <td class="p-2 font-semibold">ID</td>
+                <td class="p-2">{{ selectedPhieu?.id }}</td>
+              </tr>
+              <tr>
+                <td class="p-2 font-semibold">Mô tả</td>
+                <td class="p-2">{{ selectedPhieu?.moTa }}</td>
+              </tr>
+              <tr>
+                <td class="p-2 font-semibold">Phần trăm giảm</td>
+                <td class="p-2">{{ selectedPhieu?.soPhanTramGiam }}%</td>
+              </tr>
+              <tr>
+                <td class="p-2 font-semibold">Giá trị giảm</td>
+                <td class="p-2">{{ selectedPhieu?.giaTriGiam }}</td>
+              </tr>
+              <tr>
+                <td class="p-2 font-semibold">Số lượng</td>
+                <td class="p-2">{{ selectedPhieu?.soLuong }}</td>
+              </tr>
+              <tr>
+                <td class="p-2 font-semibold">Ngày bắt đầu</td>
+                <td class="p-2">{{ selectedPhieu?.ngayBatDau }}</td>
+              </tr>
+              <tr>
+                <td class="p-2 font-semibold">Ngày kết thúc</td>
+                <td class="p-2">{{ selectedPhieu?.ngayKetThuc }}</td>
+              </tr>
+              <tr>
+                <td class="p-2 font-semibold">Trạng thái</td>
+                <td class="p-2">
+                  <span
+                    :class="selectedPhieu?.trangThai ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'">
+                    {{ selectedPhieu?.trangThai ? "Hoạt động" : "Ngừng" }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+        </div>
+      </div>
       <!-- Form nhập phiếu giảm giá -->
       <div v-if="showModal" class="fixed inset-0 flex items-center justify-center  backdrop-blur-sm z-50">
         <!-- new form -->
@@ -26,79 +143,88 @@
               </button>
             </div>
             <!-- Modal body -->
+            <!-- Modal body -->
             <form class="p-4 md:p-5" @submit.prevent="newPhieu.id ? updatePhieuGiamGia() : addPhieuGiamGia()">
               <div class="grid gap-4 mb-4 grid-cols-2">
                 <div class="col-span-2 sm:col-span-1">
-                  <label for="price" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Phần trăm
+                  <label for="soPhanTramGiam" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Phần
+                    trăm giảm</label>
+                  <input v-model="newPhieu.soPhanTramGiam" type="number" name="soPhanTramGiam" id="soPhanTramGiam"
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                    placeholder="% giảm" required>
+                  <p v-if="errors.soPhanTramGiam" class="text-red-500 text-xs mt-1">{{ errors.soPhanTramGiam }}</p>
+                </div>
+
+                <div class="col-span-2 sm:col-span-1">
+                  <label for="giaTriGiam" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Giá trị
                     giảm</label>
-                  <input v-model="newPhieu.soPhanTramGiam" type="number" name="price" id="price"
+                  <input v-model="newPhieu.giaTriGiam" type="number" name="giaTriGiam" id="giaTriGiam"
                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                    placeholder="% giảm" required="">
+                    placeholder="Giá trị giảm" required>
+                  <p v-if="errors.giaTriGiam" class="text-red-500 text-xs mt-1">{{ errors.giaTriGiam }}</p>
                 </div>
 
                 <div class="col-span-2 sm:col-span-1">
-                  <label for="price" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Giá trị
-                    giảm</label>
-                  <input v-model="newPhieu.giaTriGiam" type="number" name="price" id="price"
+                  <label for="giaTriDonHangToiThieu"
+                    class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Giá trị đơn giảm tối
+                    thiểu</label>
+                  <input v-model="newPhieu.giaTriDonHangToiThieu" type="number" name="giaTriDonHangToiThieu"
+                    id="giaTriDonHangToiThieu"
                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                    placeholder="Giá trị giảm" required="">
-                </div>
-
-
-                <div class="col-span-2 sm:col-span-1">
-                  <label for="price" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Giá trị đơn
-                    giảm tối thiểu</label>
-                  <input v-model="newPhieu.giaTriDonHangToiThieu" type="number" name="price" id="price"
-                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                    placeholder="Giá trị đơn hàng tối thiểu" required="">
+                    placeholder="Giá trị đơn hàng tối thiểu" required>
+                  <p v-if="errors.giaTriDonHangToiThieu" class="text-red-500 text-xs mt-1">{{
+                    errors.giaTriDonHangToiThieu }}</p>
                 </div>
 
                 <div class="col-span-2 sm:col-span-1">
-                  <label for="price" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Số
+                  <label for="soLuong" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Số
                     lượng</label>
-                  <input v-model="newPhieu.soLuong" type="number" name="price" id="price"
+                  <input v-model="newPhieu.soLuong" type="number" name="soLuong" id="soLuong"
                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                    placeholder="Số lượng" required="">
+                    placeholder="Số lượng" required>
+                  <p v-if="errors.soLuong" class="text-red-500 text-xs mt-1">{{ errors.soLuong }}</p>
                 </div>
 
                 <div class="col-span-2 sm:col-span-1">
-                  <label for="price" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Ngày bắt
+                  <label for="ngayBatDau" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Ngày bắt
                     đầu</label>
-                  <input v-model="newPhieu.ngayBatDau" type="date" name="price" id="price"
+                  <input v-model="newPhieu.ngayBatDau" type="date" name="ngayBatDau" id="ngayBatDau"
                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                    required="">
+                    required>
+                  <p v-if="errors.ngayBatDau" class="text-red-500 text-xs mt-1">{{ errors.ngayBatDau }}</p>
                 </div>
 
                 <div class="col-span-2 sm:col-span-1">
-                  <label for="price" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Ngày kết
+                  <label for="ngayKetThuc" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Ngày kết
                     thúc</label>
-                  <input v-model="newPhieu.ngayKetThuc" type="date" name="price" id="price"
+                  <input v-model="newPhieu.ngayKetThuc" type="date" name="ngayKetThuc" id="ngayKetThuc"
                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                    required="">
+                    required>
+                  <p v-if="errors.ngayKetThuc" class="text-red-500 text-xs mt-1">{{ errors.ngayKetThuc }}</p>
                 </div>
 
                 <div class="col-span-2 sm:col-span-1">
-                  <label for="category" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Trạng
+                  <label for="trangThai" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Trạng
                     thái</label>
-                  <select v-model="newPhieu.trangThai" id="category"
+                  <select v-model="newPhieu.trangThai" id="trangThai"
                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
-                    <option selected="">Chọn trạng thái</option>
-                    <option value=true>Hoạt động</option>
-                    <option value=false>Hết hạn</option>
+                    <option value="" disabled>Chọn trạng thái</option>
+                    <option value="true">Hoạt động</option>
+                    <option value="false">Hết hạn</option>
                   </select>
+                  <p v-if="errors.trangThai" class="text-red-500 text-xs mt-1">{{ errors.trangThai }}</p>
                 </div>
 
                 <div class="col-span-2">
-                  <label for="description" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Mô
-                    tả</label>
-                  <textarea v-model="newPhieu.moTa" id="description" rows="4"
+                  <label for="moTa" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Mô tả</label>
+                  <textarea v-model="newPhieu.moTa" id="moTa" rows="4"
                     class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                     placeholder="Nhập mô tả"></textarea>
+                  <p v-if="errors.moTa" class="text-red-500 text-xs mt-1">{{ errors.moTa }}</p>
                 </div>
-
               </div>
               <button type="submit"
-                class="text-white inline-flex items-center bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                class="flex items-center gap-2 text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">
                 <svg class="me-1 -ms-1 w-5 h-5" fill="currentColor" viewBox="0 0 20 20"
                   xmlns="http://www.w3.org/2000/svg">
                   <path fill-rule="evenodd"
@@ -116,48 +242,116 @@
 
       <div class="bg-white p-4 shadow rounded">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-bold mb-4">Danh sách phiếu giảm giá</h2>
-          <button @click="showModal = true" type="button"
-            class="text-white bg-gradient-to-br from-green-400 to-blue-600 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-green-200 dark:focus:ring-green-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Thêm
-            phiếu giảm giá</button>
+          <h2 class="text-lg font-bold mb-4">Phiếu giảm giá</h2>
+          <div class="flex items-center justify-between gap-3">
+            <input v-model="searchQuery" type="text" placeholder="Tìm kiếm phiếu giảm giá theo tên, mã, số lượng...."
+              class="block w-[300px] h-[40px] p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500 mb-2" />
+            <button @click="showModal = true" type="button"
+              class="flex items-center gap-2 text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="w-4 h-4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              Thêm phiếu giảm giá
+            </button>
+
+          </div>
         </div>
 
-        <div class="flex items-center">
-          <input v-model="searchQuery" type="text" placeholder="Tìm kiếm phiếu giảm giá..."
-            class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500 mb-3" />
-        </div>
-
-        <div class="relative overflow-x-auto sm:rounded-lg">
-          <table class="w-full text-sm text-left text-gray-500">
+        <div class="relative overflow-x-auto sm:rounded-lg w-full h-[calc(100vh-150px)]">
+          <table class="w-full text-sm text-center text-gray-500">
             <thead class="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <th scope="col" class="px-6 py-3">Mã phiếu</th>
-                <th scope="col" class="px-6 py-3">Số phần trăm giảm</th>
-                <th scope="col" class="px-6 py-3">Giá trị giảm</th>
-                <th scope="col" class="px-6 py-3">Giá trị đơn hàng tối thiểu</th>
-                <th scope="col" class="px-6 py-3">Mô tả</th>
-                <th scope="col" class="px-6 py-3">Số lượng</th>
-                <th scope="col" class="px-6 py-3">Trạng thái</th>
-                <th scope="col" class="px-6 py-3">Ngày bắt đầu</th>
-                <th scope="col" class="px-6 py-3">Ngày kết thúc</th>
+                <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('id')">
+                  #
+                  <span v-if="sortKey === 'id'" class="ml-1">
+                    <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        :d="sortDirection === 'asc' ? 'M19 9l-7 7-7-7' : 'M5 15l7-7 7 7'"></path>
+                    </svg>
+                  </span>
+                </th>
+                <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('maPhieuGiamGia')">
+                  Mã phiếu
+                  <span v-if="sortKey === 'maPhieuGiamGia'" class="ml-1">
+                    <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        :d="sortDirection === 'asc' ? 'M19 9l-7 7-7-7' : 'M5 15l7-7 7 7'"></path>
+                    </svg>
+                  </span>
+                </th>
+                <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('moTa')">
+                  Mô tả
+                  <span v-if="sortKey === 'moTa'" class="ml-1">
+                    <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        :d="sortDirection === 'asc' ? 'M19 9l-7 7-7-7' : 'M5 15l7-7 7 7'"></path>
+                    </svg>
+                  </span>
+                </th>
+                <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('soLuong')">
+                  Số lượng
+                  <span v-if="sortKey === 'soLuong'" class="ml-1">
+                    <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        :d="sortDirection === 'asc' ? 'M19 9l-7 7-7-7' : 'M5 15l7-7 7 7'"></path>
+                    </svg>
+                  </span>
+                </th>
+                <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('trangThai')">
+                  Trạng thái
+                  <span v-if="sortKey === 'trangThai'" class="ml-1">
+                    <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        :d="sortDirection === 'asc' ? 'M19 9l-7 7-7-7' : 'M5 15l7-7 7 7'"></path>
+                    </svg>
+                  </span>
+                </th>
                 <th scope="col" class="px-6 py-3">Hành động</th>
               </tr>
             </thead>
             <tbody>
-              <tr class="bg-white border-b hover:bg-gray-50" v-for="phieu in filteredPhieuGiamGias" :key="phieu.id">
+              <tr class="bg-white border-b hover:bg-gray-50" v-for="(phieu, index) in filteredPhieuGiamGias"
+                :key="phieu.id">
+                <td class="px-6 py-4">{{ (currentPage * itemsPerPage) + index + 1 }}</td>
                 <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ phieu.maPhieuGiamGia }}</td>
-                <td class="px-6 py-4">{{ phieu.soPhanTramGiam }}%</td>
-                <td class="px-6 py-4">{{ phieu.giaTriGiam }}đ</td>
-                <td class="px-6 py-4">{{ phieu.giaTriDonHangToiThieu }}đ</td>
                 <td class="px-6 py-4">{{ phieu.moTa }}</td>
                 <td class="px-6 py-4">{{ phieu.soLuong }}</td>
-                <td class="px-6 py-4">{{ phieu.trangThai ? 'Hoạt động' : 'Hết hạn' }}</td>
-                <td class="px-6 py-4">{{ phieu.ngayBatDau }}</td>
-                <td class="px-6 py-4">{{ phieu.ngayKetThuc }}</td>
-                <td class="px-6 py-4">
-                  <a href="#" class="font-medium text-blue-600 hover:underline" @click="editPhieu(phieu)">Edit</a>
-                  <a href="#" class="font-medium text-red-600 hover:underline ml-3"
-                    @click="xoaPhieu(phieu.id)">Remove</a>
+                <td class="px-6 py-4 text-center">
+                  <span :class="phieu.trangThai
+                    ? 'bg-green-100 text-green-700 px-2 py-1 text-xs text-center font-semibold rounded-lg'
+                    : 'bg-red-100 text-red-700 px-2 py-1 text-xs text-center font-semibold rounded-lg'">
+                    {{ phieu.trangThai ? 'Hoạt động' : 'Hết hạn' }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 flex justify-center space-x-3">
+                  <a href="#" @click="editPhieu(phieu)" class="text-blue-600 hover:text-blue-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                      stroke="currentColor" class="w-5 h-5">
+                      <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M16.862 3.487a2.25 2.25 0 1 1 3.182 3.182L6.75 19.5l-4.5 1.5 1.5-4.5 13.294-13.294z" />
+                    </svg>
+                  </a>
+                  <a href="#" @click="xoaPhieu(phieu.id)" class="text-red-600 hover:text-red-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                      stroke="currentColor" class="w-5 h-5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                  </a>
+                  <a href="#" @click="showDetail(phieu)" class="text-gray-600 hover:text-gray-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                      stroke="currentColor" class="w-5 h-5">
+                      <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 5c7 0 10 7 10 7s-3 7-10 7-10-7-10-7 3-7 10-7z" />
+                      <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 9c1.657 0 3 1.343 3 3s-1.343 3-3 3-3-1.343-3-3 1.343-3 3-3z" />
+                    </svg>
+                  </a>
                 </td>
               </tr>
               <tr class="bg-white border-b hover:bg-gray-50" v-if="phieuGiamGias.length == 0">
@@ -166,8 +360,29 @@
             </tbody>
           </table>
         </div>
-      </div>
+        <div class="flex justify-center items-center mt-4 space-x-2">
+          <button @click="prevPage" :disabled="currentPage === 0"
+            class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm p-2  text-center flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+              stroke="currentColor" class="w-4 h-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+            </svg>
+          </button>
 
+          <span class="text-xs font-semibold text-gray-700">
+            Trang {{ currentPage + 1 }} / {{ totalPages }}
+          </span>
+
+          <button @click="nextPage" :disabled="currentPage >= totalPages - 1"
+            class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm p-2  text-center flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+              stroke="currentColor" class="w-4 h-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+            </svg>
+          </button>
+        </div>
+
+      </div>
     </div>
   </div>
 </template>
@@ -179,143 +394,286 @@ export default {
   data() {
     return {
       phieuGiamGias: [],
+      currentPage: 0,
+      totalPages: 0,
+      itemsPerPage: 14,
       searchQuery: "",
       showModal: false,
+      showModalDetail: false,
+      selectedPhieu: null,
       newPhieu: {
         soPhanTramGiam: 0,
         giaTriGiam: 0,
         giaTriDonHangToiThieu: 0,
         moTa: "",
         soLuong: 0,
-        trangThai: "true",
+        trangThai: "",
         ngayBatDau: "",
         ngayKetThuc: "",
         deleted: 0,
       },
-
-
+      sortKey: '',
+      sortDirection: 'asc',
+      errors: {},
+      showToast: false,
+      toastMessage: '',
+      toastType: 'success',
+      // Trạng thái modal xác nhận
+      showConfirmModal: false,
+      confirmActionCallback: null, // Lưu hàm callback khi xác nhận
     };
   },
 
   computed: {
     filteredPhieuGiamGias() {
-      return this.phieuGiamGias.filter(phieu =>
-        phieu.maPhieuGiamGia.toLowerCase().includes(this.searchQuery.toLowerCase())
-      );
-    }
+      let result = [...this.phieuGiamGias];
+      if (this.searchQuery) {
+        const query = this.searchQuery.toLowerCase();
+        result = result.filter(phieu => {
+          return Object.values(phieu).some(value => {
+            if (value !== null && value !== undefined) {
+              return value.toString().toLowerCase().includes(query);
+            }
+            return false;
+          });
+        });
+      }
+      if (this.sortKey) {
+        result.sort((a, b) => {
+          let valueA = a[this.sortKey];
+          let valueB = b[this.sortKey];
+          if (valueA == null) valueA = '';
+          if (valueB == null) valueB = '';
+          if (this.sortKey === 'soLuong') {
+            valueA = Number(valueA) || 0;
+            valueB = Number(valueB) || 0;
+          }
+          if (valueA < valueB) return this.sortDirection === 'asc' ? -1 : 1;
+          if (valueA > valueB) return this.sortDirection === 'asc' ? 1 : -1;
+          return 0;
+        });
+      }
+      return result;
+    },
   },
 
   methods: {
+    showToastMessage(message, type = 'success') {
+      this.toastMessage = message;
+      this.toastType = type;
+      this.showToast = true;
+      setTimeout(() => {
+        this.showToast = false;
+      }, 3000);
+    },
+
+    validateForm() {
+      this.errors = {};
+      const currentDate = new Date('2025-03-16');
+      const ngayBatDau = new Date(this.newPhieu.ngayBatDau);
+      const ngayKetThuc = new Date(this.newPhieu.ngayKetThuc);
+
+      if (this.newPhieu.soPhanTramGiam < 0 || this.newPhieu.soPhanTramGiam > 100) {
+        this.errors.soPhanTramGiam = 'Phần trăm giảm phải từ 0 đến 100.';
+      }
+      if (this.newPhieu.giaTriGiam < 0) {
+        this.errors.giaTriGiam = 'Giá trị giảm không được âm.';
+      }
+      if (this.newPhieu.giaTriDonHangToiThieu < 0) {
+        this.errors.giaTriDonHangToiThieu = 'Giá trị đơn hàng tối thiểu không được âm.';
+      }
+      if (this.newPhieu.soLuong <= 0 || !Number.isInteger(Number(this.newPhieu.soLuong))) {
+        this.errors.soLuong = 'Số lượng phải là số nguyên dương.';
+      }
+      if (!this.newPhieu.ngayBatDau) {
+        this.errors.ngayBatDau = 'Ngày bắt đầu không được để trống.';
+      } else if (ngayBatDau < currentDate && !this.newPhieu.id) {
+        this.errors.ngayBatDau = 'Ngày bắt đầu không được nhỏ hơn ngày hiện tại.';
+      }
+      if (!this.newPhieu.ngayKetThuc) {
+        this.errors.ngayKetThuc = 'Ngày kết thúc không được để trống.';
+      } else if (ngayKetThuc < ngayBatDau) {
+        this.errors.ngayKetThuc = 'Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu.';
+      }
+      if (!this.newPhieu.moTa.trim()) {
+        this.errors.moTa = 'Mô tả không được để trống.';
+      }
+      if (this.newPhieu.trangThai === '') {
+        this.errors.trangThai = 'Vui lòng chọn trạng thái.';
+      }
+
+      return Object.keys(this.errors).length === 0;
+    },
+
+    sort(key) {
+      if (this.sortKey === key) {
+        this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+      } else {
+        this.sortKey = key;
+        this.sortDirection = 'asc';
+      }
+    },
+
+    prevPage() {
+      if (this.currentPage > 0) {
+        this.fetchPhieuGiamGia(this.currentPage - 1);
+      }
+    },
+
+    nextPage() {
+      if (this.currentPage < this.totalPages - 1) {
+        this.fetchPhieuGiamGia(this.currentPage + 1);
+      }
+    },
+
+    showDetail(phieu) {
+      this.selectedPhieu = phieu;
+      this.showModalDetail = true;
+    },
+
     resetForm() {
       this.newPhieu = {
-        id: null,  // Đảm bảo ID được reset khi thêm mới
+        id: null,
         soPhanTramGiam: 0,
         giaTriGiam: 0,
         giaTriDonHangToiThieu: 0,
         moTa: "",
         soLuong: 0,
-        trangThai: "true",
+        trangThai: "",
         ngayBatDau: "",
         ngayKetThuc: "",
       };
+      this.errors = {};
     },
+
+    fetchPhieuGiamGia(page = 0) {
+      if (page < 0 || (this.totalPages && page >= this.totalPages)) return;
+      phieuGiamGiaService.getAll(page, this.itemsPerPage).then((res) => {
+        console.log("API Response:", res.data);
+        if (res.data && Array.isArray(res.data.content)) {
+          this.phieuGiamGias = res.data.content;
+          this.totalPages = res.data.totalPages;
+          this.currentPage = res.data.number;
+        } else {
+          console.error("Dữ liệu không hợp lệ:", res.data);
+          this.phieuGiamGias = [];
+        }
+      }).catch((error) => {
+        console.error("Lỗi gọi API:", error);
+        this.showToastMessage("Lỗi khi tải dữ liệu: " + (error.response?.data || error.message), "error");
+      });
+    },
+
     async fetchData() {
       try {
-        const response = await phieuGiamGiaService.getAll();
-        this.phieuGiamGias = response.data;
+        const response = await phieuGiamGiaService.getAll(this.currentPage, this.itemsPerPage);
+        this.phieuGiamGias = Array.isArray(response.data.content) ? response.data.content : [];
+        this.totalPages = response.data.totalPages;
+        this.currentPage = response.data.number;
       } catch (error) {
         console.error("Lỗi khi tải dữ liệu:", error);
+        this.showToastMessage("Lỗi khi tải dữ liệu: " + (error.response?.data || error.message), "error");
       }
     },
+
+    // Hiển thị modal xác nhận
+    showConfirmModalWithAction(callback) {
+      this.showConfirmModal = true;
+      this.confirmActionCallback = callback;
+    },
+
+    // Đóng modal xác nhận
+    closeConfirmModal() {
+      this.showConfirmModal = false;
+      this.confirmActionCallback = null;
+    },
+
+    // Xác nhận hành động
+    confirmAction() {
+      if (this.confirmActionCallback) {
+        this.confirmActionCallback();
+      }
+      this.closeConfirmModal();
+    },
+
     async deletePhieu(id) {
-      if (confirm("Bạn có chắc muốn xóa?")) {
+      this.showConfirmModalWithAction(async () => {
         try {
           await phieuGiamGiaService.delete(id);
+          this.showToastMessage("Xóa thành công!", "success");
           this.fetchData();
         } catch (error) {
           console.error("Lỗi khi xóa:", error);
+          this.showToastMessage("Lỗi khi xóa: " + (error.response?.data || error.message), "error");
         }
-      }
+      });
     },
+
     editPhieu(phieu) {
       this.newPhieu = { ...phieu };
       this.showModal = true;
     },
 
     async updatePhieuGiamGia() {
-      try {
-        await phieuGiamGiaService.update(this.newPhieu.id, this.newPhieu);
-        alert("Cập nhật thành công!");
-
-        // Đóng modal
-        this.showModal = false;
-
-        // Reset form
-        this.newPhieu = {
-          id: null,
-
-          soPhanTramGiam: "",
-          giaTriGiam: "",
-          giaTriDonHangToiThieu: "",
-          soLuong: "",
-          ngayBatDau: "",
-          ngayKetThuc: "",
-          trangThai: null,
-          moTa: ""
-        };
-
-        // Reload danh sách
-        this.fetchData();
-      } catch (error) {
-        console.error("Lỗi khi cập nhật:", error.response?.data || error.message);
-        alert("Lỗi khi cập nhật: " + (error.response?.data || error.message));
+      if (this.validateForm()) {
+        try {
+          await phieuGiamGiaService.update(this.newPhieu.id, this.newPhieu);
+          this.showToastMessage("Cập nhật thành công!", "success");
+          this.showModal = false;
+          this.resetForm();
+          this.fetchData();
+        } catch (error) {
+          console.error("Lỗi khi cập nhật:", error.response?.data || error.message);
+          this.showToastMessage("Lỗi khi cập nhật: " + (error.response?.data || error.message), "error");
+        }
+      } else {
+        this.showToastMessage("Vui lòng kiểm tra lại dữ liệu nhập!", "warning");
+        console.log("Validation failed:", this.errors);
       }
     },
 
     closeModal() {
       this.showModal = false;
-      this.resetForm(); // Reset form khi đóng modal
+      this.resetForm();
     },
 
     async addPhieuGiamGia() {
-      try {
-        console.log("Dữ liệu gửi lên:", this.newPhieu); // Kiểm tra dữ liệu trước khi gửi
-
-        await phieuGiamGiaService.create(this.newPhieu);
-        alert("Thêm thành công!");
-
-        // Reset form
-        this.resetForm();
-
-        // Đóng modal
-        this.showModal = false;
-
-        // Reload danh sách
-        this.fetchData();
-      } catch (error) {
-        console.error("Lỗi khi thêm:", error.response?.data || error.message);
-        alert("Lỗi khi thêm: " + (error.response?.data || error.message));
+      if (this.validateForm()) {
+        try {
+          console.log("Dữ liệu gửi lên:", this.newPhieu);
+          await phieuGiamGiaService.create(this.newPhieu);
+          this.showToastMessage("Thêm thành công!", "success");
+          this.resetForm();
+          this.showModal = false;
+          this.fetchData();
+        } catch (error) {
+          console.error("Lỗi khi thêm:", error.response?.data || error.message);
+          this.showToastMessage("Lỗi khi thêm: " + (error.response?.data || error.message), "error");
+        }
+      } else {
+        this.showToastMessage("Vui lòng kiểm tra lại dữ liệu nhập!", "warning");
+        console.log("Validation failed:", this.errors);
       }
     },
 
     async xoaPhieu(id) {
-      const confirmDelete = confirm("Bạn có chắc muốn xóa?");
-      if (confirmDelete) {
+      this.showConfirmModalWithAction(async () => {
         try {
           await phieuGiamGiaService.delete(id);
-          this.fetchData(); // CẬP NHẬT DANH SÁCH LUÔN
+          this.showToastMessage("Xóa thành công!", "success");
+          this.fetchData();
         } catch (error) {
           console.error("Lỗi khi xóa:", error);
+          this.showToastMessage("Lỗi khi xóa: " + (error.response?.data || error.message), "error");
         }
-      }
+      });
     },
   },
+
   mounted() {
     this.fetchData();
   },
 };
-
-
 </script>
 
 <style>
@@ -324,9 +682,9 @@ export default {
 .font-roboto {
   font-family: 'Roboto', sans-serif;
 }
+
 .modal {
   z-index: 50;
-  /* Đảm bảo modal nằm trên */
   position: fixed;
   inset: 0;
 }
@@ -334,6 +692,32 @@ export default {
 table {
   position: relative;
   z-index: 1;
-  /* Đảm bảo bảng không đè lên modal */
+}
+
+/* Hiệu ứng fade cho toast */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s;
+}
+
+.fade-enter,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* Định dạng toast */
+.bg-green-500 {
+  background-color: #10b981;
+  /* Màu xanh thành công */
+}
+
+.bg-red-500 {
+  background-color: #ef4444;
+  /* Màu đỏ lỗi */
+}
+
+.bg-yellow-500 {
+  background-color: #f59e0b;
+  /* Màu vàng cảnh báo */
 }
 </style>

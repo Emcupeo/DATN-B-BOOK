@@ -3,8 +3,8 @@ import axios from "axios";
 const API_URL = "http://localhost:8080/api/admin/phieu-giam-gia";
 
 export default {
-  getAll() {
-    return axios.get(API_URL);
+  getAll(page = 0, size = 14) {
+    return axios.get(`${API_URL}?page=${page}&size=${size}`);
   },
   getById(id) {
     return axios.get(`${API_URL}/${id}`);
