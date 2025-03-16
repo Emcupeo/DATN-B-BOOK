@@ -2,6 +2,7 @@ package org.example.datnbbook.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -26,23 +27,23 @@ public class HoaDon {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_khach_hang")
-    @JsonIgnore
-    private KhachHang idKhachHang;
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "hoaDons", "lichSuHoaDons"})
+    private KhachHang khachHang;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_nhan_vien")
-    @JsonIgnore
-    private NhanVien idNhanVien;
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "hoaDons", "lichSuHoaDons"})
+    private NhanVien nhanVien;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_phieu_giam_gia")
-    @JsonIgnore
-    private PhieuGiamGia idPhieuGiamGia;
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "hoaDons", "lichSuHoaDons"})
+    private PhieuGiamGia phieuGiamGia;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_hinh_thuc_thanh_toan")
-    @JsonIgnore
-    private HinhThucThanhToan idHinhThucThanhToan;
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "hoaDons", "lichSuHoaDons"})
+    private HinhThucThanhToan hinhThucThanhToan;
 
     @ColumnDefault("'HD'+right('-000'+CONVERT([nvarchar](5), NEXT VALUE FOR [dbo].[HDSeq]), 5)")
     @Column(name = "ma_hoa_don", length = 20)

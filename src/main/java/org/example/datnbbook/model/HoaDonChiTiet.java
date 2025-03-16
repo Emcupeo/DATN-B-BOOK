@@ -2,6 +2,7 @@ package org.example.datnbbook.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -28,8 +29,8 @@ public class HoaDonChiTiet {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_chi_tiet_san_pham", nullable = false)
-    @JsonBackReference
-    private ChiTietSanPham idChiTietSanPham;
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "hoaDonChiTiets"})
+    private ChiTietSanPham chiTietSanPham;
 
     @Column(name = "ma_hoa_don_chi_tiet", length = 10)
     private String maHoaDonChiTiet;

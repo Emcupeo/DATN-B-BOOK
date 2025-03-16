@@ -1,5 +1,6 @@
 package org.example.datnbbook.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -63,6 +64,23 @@ public class DotGiamGia {
     private Boolean deleted;
 
     @OneToMany(mappedBy = "idDotGiamGia")
+    @JsonIgnore // Ngăn serialize quan hệ này
     private Set<DotGiamGiaChiTiet> dotGiamGiaChiTiets = new LinkedHashSet<>();
 
+    @Override
+    public String toString() {
+        return "DotGiamGia{" +
+                "id=" + id +
+                ", maDotGiamGia='" + maDotGiamGia + '\'' +
+                ", tenDotGiamGia='" + tenDotGiamGia + '\'' +
+                ", loaiGiamGia='" + loaiGiamGia + '\'' +
+                ", soPhanTramGiam=" + soPhanTramGiam +
+                ", giaTriGiam=" + giaTriGiam +
+                ", moTa='" + moTa + '\'' +
+                ", trangThai=" + trangThai +
+                ", ngayBatDau=" + ngayBatDau +
+                ", ngayKetThuc=" + ngayKetThuc +
+                ", deleted=" + deleted +
+                '}';
+    }
 }

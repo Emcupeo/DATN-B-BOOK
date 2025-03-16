@@ -1,5 +1,7 @@
 package org.example.datnbbook.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -51,7 +53,8 @@ public class PhuongThucThanhToan {
     @Column(name = "deleted")
     private Boolean deleted;
 
-    @OneToMany(mappedBy = "idPhuongThucThanhToan")
+    @OneToMany(mappedBy = "phuongThucThanhToan")
+    @JsonManagedReference
     private Set<HinhThucThanhToan> hinhThucThanhToans = new LinkedHashSet<>();
 
 }

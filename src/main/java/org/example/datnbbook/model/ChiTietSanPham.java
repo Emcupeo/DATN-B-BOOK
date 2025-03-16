@@ -1,5 +1,6 @@
 package org.example.datnbbook.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -52,7 +53,7 @@ public class ChiTietSanPham {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_tac_gia")
-    private TacGia idTacGia;
+    private TacGia tacGia;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_chat_lieu")
@@ -121,7 +122,8 @@ public class ChiTietSanPham {
 //    @OneToMany(mappedBy = "idChiTietSanPham")
 //    private Set<GioHang> gioHangs = new LinkedHashSet<>();
 //
-//    @OneToMany(mappedBy = "idChiTietSanPham")
-//    private Set<HoaDonChiTiet> hoaDonChiTiets = new LinkedHashSet<>();
+    @OneToMany(mappedBy = "chiTietSanPham")
+    @JsonManagedReference
+    private Set<HoaDonChiTiet> hoaDonChiTiets = new LinkedHashSet<>();
 
 }

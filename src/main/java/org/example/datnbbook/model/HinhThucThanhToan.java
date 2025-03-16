@@ -1,5 +1,8 @@
 package org.example.datnbbook.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -31,7 +34,8 @@ public class HinhThucThanhToan {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_phuong_thuc_thanh_toan")
-    private PhuongThucThanhToan idPhuongThucThanhToan;
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "hinhThucThanhToans"})
+    private PhuongThucThanhToan phuongThucThanhToan;
 
     @Column(name = "ma_hinh_thuc_thanh_toan", length = 10)
     private String maHinhThucThanhToan;
@@ -62,7 +66,9 @@ public class HinhThucThanhToan {
     @Column(name = "deleted")
     private Boolean deleted;
 
-    @OneToMany(mappedBy = "idHinhThucThanhToan")
+    @OneToMany(mappedBy = "hinhThucThanhToan")
     private Set<HoaDon> hoaDons = new LinkedHashSet<>();
+
+
 
 }

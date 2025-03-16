@@ -27,11 +27,11 @@ public class PhieuGiamGiaKhachHang {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_khach_hang")
-    private KhachHang idKhachHang;
+    private KhachHang khachHang;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_phieu_giam_gia")
-    private PhieuGiamGia idPhieuGiamGia;
+    private PhieuGiamGia phieuGiamGia;
 
     @ColumnDefault("'PGGKH'+right('-000'+CONVERT([nvarchar](5), NEXT VALUE FOR [dbo].[PGGKHSeq]), 5)")
     @Column(name = "ma_phieu_giam_gia_khach_hang", length = 15)

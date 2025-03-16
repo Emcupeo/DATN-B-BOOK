@@ -81,10 +81,10 @@ public class NhanVien {
     @Column(name = "deleted")
     private Boolean deleted;
 
-    @OneToMany(mappedBy = "idNhanVien")
+    @OneToMany(mappedBy = "nhanVien")
     private Set<HoaDon> hoaDons = new LinkedHashSet<>();
 
-    @OneToMany(mappedBy = "idNhanVien")
+    @OneToMany(mappedBy = "nhanVien")
     private Set<LichSuHoaDon> lichSuHoaDons = new LinkedHashSet<>();
 
 }
