@@ -1,5 +1,7 @@
 package org.example.datnbbook.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -66,8 +68,9 @@ public class KhachHang {
 //    @OneToMany(mappedBy = "idKhachHang")
 //    private Set<GioHang> gioHangs = new LinkedHashSet<>();
 //
-//    @OneToMany(mappedBy = "idKhachHang")
-//    private Set<HoaDon> hoaDons = new LinkedHashSet<>();
+    @OneToMany(mappedBy = "khachHang")
+    @JsonBackReference
+    private Set<HoaDon> hoaDons = new LinkedHashSet<>();
 //
 //    @OneToMany(mappedBy = "idKhachHang")
 //    private Set<PhieuGiamGiaKhachHang> phieuGiamGiaKhachHangs = new LinkedHashSet<>();

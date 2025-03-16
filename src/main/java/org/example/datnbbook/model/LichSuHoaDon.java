@@ -37,7 +37,7 @@ public class LichSuHoaDon {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_nhan_vien")
     @JsonBackReference
-    private NhanVien idNhanVien;
+    private NhanVien nhanVien;
 
     @ColumnDefault("'LSHD'+right('-000'+CONVERT([nvarchar](5), NEXT VALUE FOR [dbo].[LSHDSeq]), 5)")
     @Column(name = "ma_lich_su_hoa_don", length = 20)
