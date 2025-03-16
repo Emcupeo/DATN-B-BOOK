@@ -157,17 +157,37 @@
         </h6>
         <!-- Navigation: Quản lý giảm giá -->
         <ul class="md:flex-col md:min-w-full flex flex-col list-none md:mb-4">
-          <!-- Phiếu giảm giá -->
-          <li class="items-center">
-            <router-link to="/admin/phieu-giam-gia" v-slot="{ href, navigate, isActive }">
-              <a :href="href" @click="navigate" class="text-xs uppercase py-3 font-bold block"
-                :class="isActive ? 'text-emerald-500 hover:text-emerald-600' : 'text-blueGray-700 hover:text-blueGray-500'">
-                <i class="fas fa-ticket-alt mr-2 text-sm" :class="isActive ? 'opacity-75' : 'text-blueGray-300'"></i>
-                Phiếu giảm giá
-              </a>
-            </router-link>
-          </li>
-        </ul>
+  <!-- Phiếu giảm giá -->
+  <li class="items-center">
+    <router-link to="/admin/phieu-giam-gia" v-slot="{ href, navigate, isActive }">
+      <a
+        :href="href"
+        @click="navigate"
+        class="text-xs uppercase py-3 font-bold block"
+        :class="isActive ? 'text-emerald-500 hover:text-emerald-600' : 'text-blueGray-700 hover:text-blueGray-500'">
+        <i
+          class="fas fa-ticket-alt mr-2 text-sm"
+          :class="isActive ? 'opacity-75' : 'text-blueGray-300'"></i>
+        Phiếu giảm giá
+      </a>
+    </router-link>
+  </li>
+  <!-- Đợt giảm giá -->
+  <li class="items-center">
+    <router-link to="/admin/dot-giam-gia" v-slot="{ href, navigate, isActive }">
+      <a
+        :href="href"
+        @click="navigate"
+        class="text-xs uppercase py-3 font-bold block"
+        :class="isActive ? 'text-emerald-500 hover:text-emerald-600' : 'text-blueGray-700 hover:text-blueGray-500'">
+        <i
+          class="fas fa-percentage mr-2 text-sm"
+          :class="isActive ? 'opacity-75' : 'text-blueGray-300'"></i>
+        Đợt giảm giá
+      </a>
+    </router-link>
+  </li>
+</ul>
 
         <!-- Divider -->
         <hr class="my-4 md:min-w-full" />
