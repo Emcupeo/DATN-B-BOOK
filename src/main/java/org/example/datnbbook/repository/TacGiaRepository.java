@@ -19,5 +19,5 @@ public interface TacGiaRepository extends JpaRepository<TacGia, Integer> {
     @Query(value = "SELECT 'TG' + RIGHT('-000' + CONVERT(NVARCHAR(5), NEXT VALUE FOR [dbo].[TGSeq]), 5)", nativeQuery = true)
     String getNextSequenceValue();
 
-    List<TacGia> findByDeletedFalse();
+    List<TacGia> findAllByDeletedFalseOrderByIdDesc();
 }

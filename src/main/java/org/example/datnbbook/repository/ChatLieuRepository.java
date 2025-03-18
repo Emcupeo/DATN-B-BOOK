@@ -18,5 +18,5 @@ public interface ChatLieuRepository extends JpaRepository<ChatLieu, Integer> {
     @Query(value = "SELECT 'CL' + RIGHT('-000' + CONVERT(NVARCHAR(5), NEXT VALUE FOR [dbo].[CLSeq]), 5)", nativeQuery = true)
     String getNextSequenceValue();
 
-    List<ChatLieu> findByDeletedFalse();
+    List<ChatLieu> findAllByDeletedFalseOrderByIdDesc();
 }

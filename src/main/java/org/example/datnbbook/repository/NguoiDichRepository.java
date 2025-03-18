@@ -19,5 +19,5 @@ public interface NguoiDichRepository extends JpaRepository<NguoiDich, Integer> {
     @Query(value = "SELECT 'ND' + RIGHT('-000' + CONVERT(NVARCHAR(5), NEXT VALUE FOR [dbo].[NDSeq]), 5)", nativeQuery = true)
     String getNextSequenceValue();
 
-    List<NguoiDich> findByDeletedFalse();
+    List<NguoiDich> findAllByDeletedFalseOrderByIdDesc();
 }

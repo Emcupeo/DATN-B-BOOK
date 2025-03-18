@@ -16,7 +16,7 @@ public class TheLoaiService {
 
 
     public List<TheLoai> getAll() {
-        return theLoaiRepository.findByDeletedFalse();
+        return theLoaiRepository.findAllByDeletedFalseOrderByIdDesc();
     }
 
     public TheLoai getById(Integer id) {

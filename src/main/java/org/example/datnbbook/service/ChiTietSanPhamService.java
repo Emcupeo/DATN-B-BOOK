@@ -2,6 +2,7 @@ package org.example.datnbbook.service;
 
 import lombok.RequiredArgsConstructor;
 import org.example.datnbbook.dto.ChiTietSanPhamDTO;
+import org.example.datnbbook.dto.SanPhamRequest;
 import org.example.datnbbook.model.ChatLieu;
 import org.example.datnbbook.model.ChiTietSanPham;
 import org.example.datnbbook.model.LoaiBia;
@@ -11,14 +12,23 @@ import org.example.datnbbook.model.NhaXuatBan;
 import org.example.datnbbook.model.SanPham;
 import org.example.datnbbook.model.TacGia;
 import org.example.datnbbook.model.TheLoai;
+import org.example.datnbbook.repository.ChatLieuRepository;
 import org.example.datnbbook.repository.ChiTietSanPhamRepository;
+import org.example.datnbbook.repository.LoaiBiaRepository;
+import org.example.datnbbook.repository.NgonNguRepository;
+import org.example.datnbbook.repository.NguoiDichRepository;
+import org.example.datnbbook.repository.NhaXuatBanRepository;
 import org.example.datnbbook.repository.SanPhamRepository;
+import org.example.datnbbook.repository.TacGiaRepository;
+import org.example.datnbbook.repository.TheLoaiRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,10 +47,11 @@ public class ChiTietSanPhamService {
     private final NguoiDichService nguoiDichService;
     private final NgonNguService ngonNguService;
     private final TheLoaiService theLoaiService;
+
     private ModelMapper modelMapper;
 
     public List<ChiTietSanPham> getAll() {
-        return repository.findByDeletedFalse();
+        return repository.findAllByDeletedFalseOrderByIdDesc();
     }
 
     public ChiTietSanPham getById(Integer id) {
@@ -56,74 +67,75 @@ public class ChiTietSanPhamService {
     }
 
 
-    public ChiTietSanPham createSanPhamAndChiTiet(String tenSanPham, String moTaSanPham,
-                                                  Integer idLoaiBia, Integer idTacGia, Integer idNhaXuatBan,
-                                                  Integer idChatLieu, Integer idNguoiDich, Integer idTheLoai,
-                                                  Integer idNgonNgu, BigDecimal gia, Integer soLuongTon,
-                                                  BigDecimal trongLuong, BigDecimal kichThuoc, String moTaChiTiet) {
-        // Tạo và lưu SanPham
-        SanPham sanPham = new SanPham();
-        sanPham.setMaSanPham(sanPhamRepository.getNextSequenceValue());
-        sanPham.setTenSanPham(tenSanPham);
-        sanPham.setMoTa(moTaSanPham);
-        sanPham.setDeleted(false);
-        SanPham savedSanPham = sanPhamRepository.save(sanPham);
+//    public ChiTietSanPham createSanPhamAndChiTiet(String tenSanPham, String moTaSanPham,
+//                                                  Integer idLoaiBia, Integer idTacGia, Integer idNhaXuatBan,
+//                                                  Integer idChatLieu, Integer idNguoiDich, Integer idTheLoai,
+//                                                  Integer idNgonNgu, BigDecimal gia, Integer soLuongTon,
+//                                                  BigDecimal trongLuong, BigDecimal kichThuoc, String moTaChiTiet) {
+//        // Tạo và lưu SanPham
+//        SanPham sanPham = new SanPham();
+//        sanPham.setMaSanPham(sanPhamRepository.getNextSequenceValue());
+//        sanPham.setTenSanPham(tenSanPham);
+//        sanPham.setMoTa(moTaSanPham);
+//        sanPham.setDeleted(false);
+//        SanPham savedSanPham = sanPhamRepository.save(sanPham);
+//
+//        // Tạo và lưu ChiTietSanPham
+//        ChiTietSanPham chiTietSanPham = new ChiTietSanPham();
+//        chiTietSanPham.setMaChiTietSanPham(repository.getNextCTSPSequenceValue());
+//        chiTietSanPham.setTenChiTietSanPham(tenSanPham); // Giống tenSanPham
+//        chiTietSanPham.setIdSanPham(savedSanPham);
+//
+//        // Gán các trường @ManyToOne
+//        if (idLoaiBia != null) {
+//            LoaiBia loaiBia = new LoaiBia();
+//            loaiBia.setId(idLoaiBia);
+//            chiTietSanPham.setIdLoaiBia(loaiBia);
+//        }
+//        if (idTacGia != null) {
+//            TacGia tacGia = new TacGia();
+//            tacGia.setId(idTacGia);
+//            chiTietSanPham.setIdTacGia(tacGia);
+//        }
+//        if (idNhaXuatBan != null) {
+//            NhaXuatBan nhaXuatBan = new NhaXuatBan();
+//            nhaXuatBan.setId(idNhaXuatBan);
+//            chiTietSanPham.setIdNhaXuatBan(nhaXuatBan);
+//        }
+//        if (idChatLieu != null) {
+//            ChatLieu chatLieu = new ChatLieu();
+//            chatLieu.setId(idChatLieu);
+//            chiTietSanPham.setIdChatLieu(chatLieu);
+//        }
+//        if (idNguoiDich != null) {
+//            NguoiDich nguoiDich = new NguoiDich();
+//            nguoiDich.setId(idNguoiDich);
+//            chiTietSanPham.setIdNguoiDich(nguoiDich);
+//        }
+//        if (idTheLoai != null) {
+//            TheLoai theLoai = new TheLoai();
+//            theLoai.setId(idTheLoai);
+//            chiTietSanPham.setIdTheLoai(theLoai);
+//        }
+//        if (idNgonNgu != null) {
+//            NgonNgu ngonNgu = new NgonNgu();
+//            ngonNgu.setId(idNgonNgu);
+//            chiTietSanPham.setIdNgonNgu(ngonNgu);
+//        }
+//
+//        chiTietSanPham.setGia(gia != null ? gia : BigDecimal.ZERO);
+//        chiTietSanPham.setSoLuongTon(soLuongTon != null ? soLuongTon : 0);
+//        chiTietSanPham.setTrongLuong(trongLuong != null ? trongLuong : BigDecimal.ZERO); // Thêm trongLuong
+//        chiTietSanPham.setKichThuoc(kichThuoc != null ? kichThuoc : BigDecimal.ZERO); // Thêm kichThuoc
+//        chiTietSanPham.setMoTa(moTaChiTiet);
+//        chiTietSanPham.setDeleted(false);
+//        chiTietSanPham.setTrangThai(true);
+//        chiTietSanPham.setCreatedAt(Instant.now());
+//        chiTietSanPham.setUpdatedAt(Instant.now());
+//
+//        return repository.save(chiTietSanPham);
+//    }
 
-        // Tạo và lưu ChiTietSanPham
-        ChiTietSanPham chiTietSanPham = new ChiTietSanPham();
-        chiTietSanPham.setMaChiTietSanPham(repository.getNextCTSPSequenceValue());
-        chiTietSanPham.setTenChiTietSanPham(tenSanPham); // Giống tenSanPham
-        chiTietSanPham.setIdSanPham(savedSanPham);
-
-        // Gán các trường @ManyToOne
-        if (idLoaiBia != null) {
-            LoaiBia loaiBia = new LoaiBia();
-            loaiBia.setId(idLoaiBia);
-            chiTietSanPham.setIdLoaiBia(loaiBia);
-        }
-        if (idTacGia != null) {
-            TacGia tacGia = new TacGia();
-            tacGia.setId(idTacGia);
-            chiTietSanPham.setTacGia(tacGia);
-        }
-        if (idNhaXuatBan != null) {
-            NhaXuatBan nhaXuatBan = new NhaXuatBan();
-            nhaXuatBan.setId(idNhaXuatBan);
-            chiTietSanPham.setIdNhaXuatBan(nhaXuatBan);
-        }
-        if (idChatLieu != null) {
-            ChatLieu chatLieu = new ChatLieu();
-            chatLieu.setId(idChatLieu);
-            chiTietSanPham.setIdChatLieu(chatLieu);
-        }
-        if (idNguoiDich != null) {
-            NguoiDich nguoiDich = new NguoiDich();
-            nguoiDich.setId(idNguoiDich);
-            chiTietSanPham.setIdNguoiDich(nguoiDich);
-        }
-        if (idTheLoai != null) {
-            TheLoai theLoai = new TheLoai();
-            theLoai.setId(idTheLoai);
-            chiTietSanPham.setIdTheLoai(theLoai);
-        }
-        if (idNgonNgu != null) {
-            NgonNgu ngonNgu = new NgonNgu();
-            ngonNgu.setId(idNgonNgu);
-            chiTietSanPham.setIdNgonNgu(ngonNgu);
-        }
-
-        chiTietSanPham.setGia(gia != null ? gia : BigDecimal.ZERO);
-        chiTietSanPham.setSoLuongTon(soLuongTon != null ? soLuongTon : 0);
-        chiTietSanPham.setTrongLuong(trongLuong != null ? trongLuong : BigDecimal.ZERO); // Thêm trongLuong
-        chiTietSanPham.setKichThuoc(kichThuoc != null ? kichThuoc : BigDecimal.ZERO); // Thêm kichThuoc
-        chiTietSanPham.setMoTa(moTaChiTiet);
-        chiTietSanPham.setDeleted(false);
-        chiTietSanPham.setTrangThai(true);
-        chiTietSanPham.setCreatedAt(Instant.now());
-        chiTietSanPham.setUpdatedAt(Instant.now());
-
-        return repository.save(chiTietSanPham);
-    }
 
 
     public ChiTietSanPham update(Integer id, ChiTietSanPham updatedData) {
@@ -154,12 +166,12 @@ public class ChiTietSanPhamService {
             existing.setIdLoaiBia(null);
         }
 
-        if (updatedData.getTacGia() != null) {
+        if (updatedData.getIdTacGia() != null) {
             TacGia tacGia = tacGiaService
-                    .getById(updatedData.getTacGia().getId());
-            existing.setTacGia(tacGia);
+                    .getById(updatedData.getIdTacGia().getId());
+            existing.setIdTacGia(tacGia);
         } else {
-            existing.setTacGia(null);
+            existing.setIdTacGia(null);
         }
 
         if (updatedData.getIdNhaXuatBan() != null) {
@@ -211,7 +223,8 @@ public class ChiTietSanPhamService {
     public List<ChiTietSanPham> getBySanPhamId(Integer idSanPham) {
         return repository.findByIdSanPham_Id(idSanPham)
                 .stream()
-                .filter(ctsp -> !ctsp.getDeleted())
+                .filter(ctsp -> !ctsp.getDeleted()) // Lọc deleted = false
+                .sorted(Comparator.comparing(ChiTietSanPham::getId, Comparator.reverseOrder())) // Sắp xếp theo id giảm dần
                 .collect(Collectors.toList());
     }
 
@@ -244,9 +257,9 @@ public class ChiTietSanPhamService {
             chiTietSanPham.setIdLoaiBia(loaiBia);
         }
 
-        if (newData.getTacGia() != null) {
-            TacGia tacGia = tacGiaService.getById(newData.getTacGia().getId());
-            chiTietSanPham.setTacGia(tacGia);
+        if (newData.getIdTacGia() != null) {
+            TacGia tacGia = tacGiaService.getById(newData.getIdTacGia().getId());
+            chiTietSanPham.setIdTacGia(tacGia);
         }
 
         if (newData.getIdNhaXuatBan() != null) {

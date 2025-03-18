@@ -19,13 +19,13 @@ public interface SanPhamRepository extends JpaRepository<SanPham, Integer> {
 
     List<SanPham> search(String keyword);
 
-    @Query(value = "SELECT 'SP' + RIGHT('-000' + CONVERT(NVARCHAR(5), NEXT VALUE FOR [dbo].[SPSeq]), 5)", nativeQuery = true)
+    @Query(value = "SELECT 'SP' + RIGHT('-00' + CONVERT(NVARCHAR(5), NEXT VALUE FOR [dbo].[SPSeq]), 5)", nativeQuery = true)
     String getNextSequenceValue();
 
-    @Query(value = "SELECT 'CTSP' + RIGHT('-000' + CONVERT(NVARCHAR(5), NEXT VALUE FOR [dbo].[CTSPSeq]), 5)", nativeQuery = true)
+    @Query(value = "SELECT 'CTSP' + RIGHT('-00' + CONVERT(NVARCHAR(5), NEXT VALUE FOR [dbo].[CTSPSeq]), 5)", nativeQuery = true)
     String getNextCTSPSequenceValue();
 
-    List<SanPham> findByDeletedFalse();
+    List<SanPham> findAllByDeletedFalseOrderByIdDesc();
 
 
     @Modifying

@@ -1,6 +1,7 @@
 package org.example.datnbbook.controller;
 
 import org.example.datnbbook.dto.SanPhamDTO;
+import org.example.datnbbook.dto.SanPhamRequest;
 import org.example.datnbbook.model.ChiTietSanPham;
 import org.example.datnbbook.model.SanPham;
 import org.example.datnbbook.service.ChiTietSanPhamService;
@@ -67,28 +68,33 @@ public class SanPhamController {
         return ResponseEntity.ok(sanPhamService.search(keyword));
     }
 
-    @PostMapping("/create-with-detail")
-    public ResponseEntity<ChiTietSanPham> createSanPhamAndChiTiet(
-            @RequestParam String tenSanPham,
-            @RequestParam(required = false) String moTaSanPham,
-            @RequestParam(required = false) Integer idLoaiBia,
-            @RequestParam(required = false) Integer idTacGia,
-            @RequestParam(required = false) Integer idNhaXuatBan,
-            @RequestParam(required = false) Integer idChatLieu,
-            @RequestParam(required = false) Integer idNguoiDich,
-            @RequestParam(required = false) Integer idTheLoai,
-            @RequestParam(required = false) Integer idNgonNgu,
-            @RequestParam(required = false) BigDecimal gia,
-            @RequestParam(required = false) Integer soLuongTon,
-            @RequestParam(required = false) BigDecimal trongLuong,
-            @RequestParam(required = false) BigDecimal kichThuoc,
-            @RequestParam(required = false) String moTaChiTiet) {
-        ChiTietSanPham result = chiTietSanPhamService.createSanPhamAndChiTiet(
-                tenSanPham, moTaSanPham, idLoaiBia, idTacGia, idNhaXuatBan,
-                idChatLieu, idNguoiDich, idTheLoai, idNgonNgu, gia, soLuongTon,
-                trongLuong, kichThuoc, moTaChiTiet);
-        return ResponseEntity.ok(result);
-    }
+//    @PostMapping("/create-with-detail")
+//    public ResponseEntity<ChiTietSanPham> createSanPhamAndChiTiet(
+//            @RequestParam String tenSanPham,
+//            @RequestParam(required = false) String moTaSanPham,
+//            @RequestParam(required = false) Integer idLoaiBia,
+//            @RequestParam(required = false) Integer idTacGia,
+//            @RequestParam(required = false) Integer idNhaXuatBan,
+//            @RequestParam(required = false) Integer idChatLieu,
+//            @RequestParam(required = false) Integer idNguoiDich,
+//            @RequestParam(required = false) Integer idTheLoai,
+//            @RequestParam(required = false) Integer idNgonNgu,
+//            @RequestParam(required = false) BigDecimal gia,
+//            @RequestParam(required = false) Integer soLuongTon,
+//            @RequestParam(required = false) BigDecimal trongLuong,
+//            @RequestParam(required = false) BigDecimal kichThuoc,
+//            @RequestParam(required = false) String moTaChiTiet) {
+//        ChiTietSanPham result = chiTietSanPhamService.createSanPhamAndChiTiet(
+//                tenSanPham, moTaSanPham, idLoaiBia, idTacGia, idNhaXuatBan,
+//                idChatLieu, idNguoiDich, idTheLoai, idNgonNgu, gia, soLuongTon,
+//                trongLuong, kichThuoc, moTaChiTiet);
+//        return ResponseEntity.ok(result);
+//    }
 
+    @PostMapping("/create-with-details")
+    public ResponseEntity<SanPham> createWithDetails(@RequestBody SanPhamRequest request) {
+        SanPham created = sanPhamService.createWithDetails(request);
+        return ResponseEntity.ok(created);
+    }
 
 }

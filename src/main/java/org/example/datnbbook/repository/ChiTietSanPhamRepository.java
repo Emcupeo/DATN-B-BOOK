@@ -15,7 +15,7 @@ import java.util.Optional;
 public interface ChiTietSanPhamRepository extends JpaRepository<ChiTietSanPham, Integer> {
     Optional<ChiTietSanPham> findByMaChiTietSanPham(String maChiTietSanPham);
 
-    List<ChiTietSanPham> findByDeletedFalse();
+    List<ChiTietSanPham> findAllByDeletedFalseOrderByIdDesc();
 
     @Query("SELECT c FROM ChiTietSanPham c WHERE " +
             "c.deleted = false AND " +
@@ -27,7 +27,7 @@ public interface ChiTietSanPhamRepository extends JpaRepository<ChiTietSanPham, 
 
     boolean existsByMaChiTietSanPham(String maChiTietSanPham);
 
-    @Query(value = "SELECT 'CTSP' + RIGHT('-000' + CONVERT(NVARCHAR(5), NEXT VALUE FOR [dbo].[CTSPSeq]), 5)", nativeQuery = true)
+    @Query(value = "SELECT 'CTSP' + RIGHT('-00' + CONVERT(NVARCHAR(5), NEXT VALUE FOR [dbo].[CTSPSeq]), 5)", nativeQuery = true)
     String getNextCTSPSequenceValue();
 
     List<ChiTietSanPham> findByIdSanPham_Id(Integer idSanPham);

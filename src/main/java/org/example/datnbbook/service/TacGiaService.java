@@ -16,7 +16,7 @@ public class TacGiaService {
 
 
     public List<TacGia> getAll() {
-        return tacGiaRepository.findByDeletedFalse();
+        return tacGiaRepository.findAllByDeletedFalseOrderByIdDesc();
     }
 
     public TacGia getById(Integer id) {

@@ -31,8 +31,8 @@ public class ChiTietSanPham {
     @Column(name = "id", nullable = false)
     private Integer id;
 
-    @ColumnDefault("'CTSP'+right('-000'+CONVERT([nvarchar](5), NEXT VALUE FOR [dbo].[CTSPSeq]), 5)")
-    @Column(name = "ma_chi_tiet_san_pham", length = 10)
+    @ColumnDefault("'CTSP'+right('-00'+CONVERT([nvarchar](5), NEXT VALUE FOR [dbo].[CTSPSeq]), 5)")
+    @Column(name = "ma_chi_tiet_san_pham", length = 15)
     private String maChiTietSanPham;
 
     @Nationalized
@@ -53,7 +53,7 @@ public class ChiTietSanPham {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_tac_gia")
-    private TacGia tacGia;
+    private TacGia idTacGia;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_chat_lieu")
@@ -122,8 +122,8 @@ public class ChiTietSanPham {
 //    @OneToMany(mappedBy = "idChiTietSanPham")
 //    private Set<GioHang> gioHangs = new LinkedHashSet<>();
 //
-    @OneToMany(mappedBy = "chiTietSanPham")
-    @JsonManagedReference
-    private Set<HoaDonChiTiet> hoaDonChiTiets = new LinkedHashSet<>();
+//    @OneToMany(mappedBy = "chiTietSanPham")
+//    @JsonManagedReference
+//    private Set<HoaDonChiTiet> hoaDonChiTiets = new LinkedHashSet<>();
 
 }

@@ -19,7 +19,7 @@ public class ChatLieuService {
 
 
     public List<ChatLieu> getAll() {
-        return chatLieuRepository.findByDeletedFalse();
+        return chatLieuRepository.findAllByDeletedFalseOrderByIdDesc();
     }
 
     public ChatLieu getById(Integer id) {

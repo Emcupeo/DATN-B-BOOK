@@ -19,7 +19,7 @@ public class LoaiBiaService {
 
 
     public List<LoaiBia> getAll() {
-        return loaiBiaRepository.findByDeletedFalse();
+        return loaiBiaRepository.findAllByDeletedFalseOrderByIdDesc();
     }
 
     public LoaiBia getById(Integer id) {

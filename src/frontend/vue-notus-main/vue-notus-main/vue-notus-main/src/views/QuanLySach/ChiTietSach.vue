@@ -1,129 +1,132 @@
 <template>
-  <div class="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded bg-white">
-    <!-- Header với nút back -->
-    <div class="rounded-t mb-0 px-4 py-3 border-0">
-      <div class="flex flex-wrap items-center justify-between">
-        <div class="relative w-full px-4 max-w-full flex-grow flex-1">
+  <div class="min-h-screen w-full bg-gray-100 font-roboto">
+    <div class="bg-white p-4 shadow rounded w-full">
+      <!-- Thanh tiêu đề và công cụ -->
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold">Chi tiết sách</h2>
+        <div class="flex items-center justify-between gap-3">
           <button
-              class="bg-indigo-500 text-white active:bg-indigo-600 text-xs font-bold uppercase px-3 py-1 rounded outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
-              type="button"
               @click="goBack"
+              type="button"
+              class="flex items-center gap-2 text-white bg-gradient-to-r from-indigo-500 via-indigo-600 to-indigo-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-indigo-300 dark:focus:ring-indigo-800 shadow-lg shadow-indigo-500/50 dark:shadow-lg dark:shadow-indigo-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2"
           >
-            <i class="fas fa-arrow-left mr-2"></i>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+            </svg>
             Quay lại
           </button>
-          <h3 class="font-semibold text-lg text-blueGray-700 mt-3">
-            Chi tiết sách
-          </h3>
-        </div>
-        <div class="relative w-full px-4 max-w-full flex-grow flex-1 text-right">
           <button
-              class="bg-green-500 text-white active:bg-green-600 text-xs font-bold uppercase px-3 py-1 rounded outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
-              type="button"
               @click="openAddModal"
+              type="button"
+              class="flex items-center gap-2 text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2"
           >
-            <i class="fas fa-plus mr-2"></i>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
             Tạo chi tiết sách
           </button>
         </div>
       </div>
-    </div>
 
-    <!-- Loading state -->
-    <div v-if="loading" class="p-4 text-center">
-      <i class="fas fa-spinner fa-spin mr-2"></i>
-      Đang tải...
-    </div>
-
-    <!-- Error state - Not Found -->
-    <div v-else-if="error && error.includes('không tìm thấy')" class="p-8 text-center">
-      <div class="mb-4">
-        <i class="fas fa-exclamation-circle text-4xl text-yellow-500 mb-4"></i>
-        <p class="text-lg text-gray-700 mb-6">
-          Chưa có chi tiết sản phẩm cho sách này
-        </p>
-        <button
-            @click="openAddModal"
-            class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors duration-200"
-        >
-          <i class="fas fa-plus mr-2"></i>
-          Thêm chi tiết sản phẩm
-        </button>
+      <!-- Loading state -->
+      <div v-if="loading" class="p-4 text-center">
+        <svg class="animate-spin inline-block w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12a8 8 0 1116 0 8 8 0 01-16 0z" />
+        </svg>
+        Đang tải...
       </div>
-    </div>
 
-    <!-- Other Error state -->
-    <div v-else-if="error" class="p-4 text-red-500">
-      <i class="fas fa-exclamation-circle mr-2"></i>
-      {{ error }}
-    </div>
+      <!-- Error state - Not Found -->
+      <div v-else-if="error && error.includes('không tìm thấy')" class="p-8 text-center">
+        <div class="mb-4">
+          <svg class="w-10 h-10 text-yellow-500 mb-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M12 3a9 9 0 110 18 9 9 0 010-18z" />
+          </svg>
+          <p class="text-lg text-gray-700 mb-6">
+            Chưa có chi tiết sản phẩm cho sách này
+          </p>
+          <button
+              @click="openAddModal"
+              class="flex items-center gap-2 text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center mx-auto"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Thêm chi tiết sản phẩm
+          </button>
+        </div>
+      </div>
 
-    <!-- Content -->
-    <div v-else class="block w-full overflow-x-auto p-4">
-      <table class="items-center w-full bg-transparent border-collapse">
-        <thead>
-        <tr>
-          <th class="px-6 py-3 text-xs uppercase font-semibold text-left border border-solid whitespace-nowrap bg-blueGray-50 text-blueGray-500 border-blueGray-100">Mã chi tiết sản phẩm</th>
-          <th class="px-6 py-3 text-xs uppercase font-semibold text-left border border-solid whitespace-nowrap bg-blueGray-50 text-blueGray-500 border-blueGray-100">Tên sách</th>
-          <th class="px-6 py-3 text-xs uppercase font-semibold text-left border border-solid whitespace-nowrap bg-blueGray-50 text-blueGray-500 border-blueGray-100">Giá</th>
-          <th class="px-6 py-3 text-xs uppercase font-semibold text-left border border-solid whitespace-nowrap bg-blueGray-50 text-blueGray-500 border-blueGray-100">Số lượng tồn</th>
-          <th class="px-6 py-3 text-xs uppercase font-semibold text-left border border-solid whitespace-nowrap bg-blueGray-50 text-blueGray-500 border-blueGray-100">Trọng lượng (gram)</th>
-          <th class="px-6 py-3 text-xs uppercase font-semibold text-left border border-solid whitespace-nowrap bg-blueGray-50 text-blueGray-500 border-blueGray-100">Kích thước (cm)</th>
-          <th class="px-6 py-3 text-xs uppercase font-semibold text-left border border-solid whitespace-nowrap bg-blueGray-50 text-blueGray-500 border-blueGray-100">Trạng thái</th>
-          <th class="px-6 py-3 text-xs uppercase font-semibold text-left border border-solid whitespace-nowrap bg-blueGray-50 text-blueGray-500 border-blueGray-100">Loại bìa</th>
-          <th class="px-6 py-3 text-xs uppercase font-semibold text-left border border-solid whitespace-nowrap bg-blueGray-50 text-blueGray-500 border-blueGray-100">Tác giả</th>
-          <th class="px-6 py-3 text-xs uppercase font-semibold text-left border border-solid whitespace-nowrap bg-blueGray-50 text-blueGray-500 border-blueGray-100">Nhà xuất bản</th>
-          <th class="px-6 py-3 text-xs uppercase font-semibold text-left border border-solid whitespace-nowrap bg-blueGray-50 text-blueGray-500 border-blueGray-100">Chất liệu</th>
-          <th class="px-6 py-3 text-xs uppercase font-semibold text-left border border-solid whitespace-nowrap bg-blueGray-50 text-blueGray-500 border-blueGray-100">Người dịch</th>
-          <th class="px-6 py-3 text-xs uppercase font-semibold text-left border border-solid whitespace-nowrap bg-blueGray-50 text-blueGray-500 border-blueGray-100">Thể loại</th>
-          <th class="px-6 py-3 text-xs uppercase font-semibold text-left border border-solid whitespace-nowrap bg-blueGray-50 text-blueGray-500 border-blueGray-100">Ngôn ngữ</th>
-          <th class="px-6 py-3 text-xs uppercase font-semibold text-left border border-solid whitespace-nowrap bg-blueGray-50 text-blueGray-500 border-blueGray-100">Hành động</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr v-for="chiTiet in chiTietSanPham" :key="chiTiet.id">
-          <td class="border-t-0 px-6 py-4 text-xs whitespace-nowrap">{{ chiTiet.maChiTietSanPham }}</td>
-          <td class="border-t-0 px-6 py-4 text-xs whitespace-nowrap">{{ chiTiet.tenChiTietSanPham }}</td>
-          <td class="border-t-0 px-6 py-4 text-xs whitespace-nowrap">{{ formatCurrency(chiTiet.gia) }}</td>
-          <td class="border-t-0 px-6 py-4 text-xs whitespace-nowrap">{{ chiTiet.soLuongTon }}</td>
-          <td class="border-t-0 px-6 py-4 text-xs whitespace-nowrap">{{ chiTiet.trongLuong }}</td>
-          <td class="border-t-0 px-6 py-4 text-xs whitespace-nowrap">{{ chiTiet.kichThuoc }}</td>
-          <td class="border-t-0 px-6 py-4 text-xs whitespace-nowrap">
-            <span
-                :class="[
-                  'px-2 inline-flex text-xs leading-5 font-semibold rounded-full',
-                  chiTiet.trangThai ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800',
-                ]"
-            >
-              {{ chiTiet.trangThai ? "Hoạt động" : "Không hoạt động" }}
-            </span>
-          </td>
-          <td class="border-t-0 px-6 py-4 text-xs whitespace-nowrap">{{ chiTiet.idLoaiBia?.tenLoaiBia || 'N/A' }}</td>
-          <td class="border-t-0 px-6 py-4 text-xs whitespace-nowrap">{{ chiTiet.idTacGia?.tenTacGia || 'N/A' }}</td>
-          <td class="border-t-0 px-6 py-4 text-xs whitespace-nowrap">{{ chiTiet.idNhaXuatBan?.tenNhaXuatBan || 'N/A' }}</td>
-          <td class="border-t-0 px-6 py-4 text-xs whitespace-nowrap">{{ chiTiet.idChatLieu?.tenChatLieu || 'N/A' }}</td>
-          <td class="border-t-0 px-6 py-4 text-xs whitespace-nowrap">{{ chiTiet.idNguoiDich?.tenNguoiDich || 'N/A' }}</td>
-          <td class="border-t-0 px-6 py-4 text-xs whitespace-nowrap">{{ chiTiet.idTheLoai?.tenTheLoai || 'N/A' }}</td>
-          <td class="border-t-0 px-6 py-4 text-xs whitespace-nowrap">{{ chiTiet.idNgonNgu?.tenNgonNgu || 'N/A' }}</td>
-          <td class="border-t-0 px-6 py-4 text-xs whitespace-nowrap">
-            <button
-                @click="openEditModal(chiTiet)"
-                class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition mr-2"
-            >
-              <i class="fas fa-edit mr-1"></i>
-              Sửa
-            </button>
-            <button
-                @click="deleteChiTietSach(chiTiet.id)"
-                class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition"
-            >
-              <i class="fas fa-trash mr-1"></i>
-              Xóa
-            </button>
-          </td>
-        </tr>
-        </tbody>
-      </table>
+      <!-- Other Error state -->
+      <div v-else-if="error" class="p-4 text-red-500 text-center">
+        <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M12 3a9 9 0 110 18 9 9 0 010-18z" />
+        </svg>
+        {{ error }}
+      </div>
+
+      <!-- Nội dung bảng -->
+      <div v-else class="relative overflow-x-auto sm:rounded-lg w-full h-[calc(100vh-200px)]">
+        <table class="w-full text-sm text-center text-gray-500">
+          <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+          <tr>
+            <th scope="col" class="px-6 py-3">STT</th>
+            <th scope="col" class="px-6 py-3">Mã chi tiết sản phẩm</th>
+            <th scope="col" class="px-6 py-3">Tên sách</th>
+            <th scope="col" class="px-6 py-3">Giá</th>
+            <th scope="col" class="px-6 py-3">Số lượng tồn</th>
+            <th scope="col" class="px-6 py-3">Trọng lượng (gram)</th>
+            <th scope="col" class="px-6 py-3">Kích thước (cm)</th>
+            <th scope="col" class="px-6 py-3">Trạng thái</th>
+            <th scope="col" class="px-6 py-3">Loại bìa</th>
+            <th scope="col" class="px-6 py-3">Tác giả</th>
+            <th scope="col" class="px-6 py-3">Nhà xuất bản</th>
+            <th scope="col" class="px-6 py-3">Chất liệu</th>
+            <th scope="col" class="px-6 py-3">Người dịch</th>
+            <th scope="col" class="px-6 py-3">Thể loại</th>
+            <th scope="col" class="px-6 py-3">Ngôn ngữ</th>
+            <th scope="col" class="px-6 py-3">Hành động</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr class="bg-white border-b hover:bg-gray-50" v-for="(chiTiet, index) in chiTietSanPham" :key="chiTiet.id">
+            <td class="px-6 py-4">{{ index + 1 }}</td>
+            <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ chiTiet.maChiTietSanPham }}</td>
+            <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ chiTiet.tenChiTietSanPham }}</td>
+            <td class="px-6 py-4">{{ formatCurrency(chiTiet.gia) }}</td>
+            <td class="px-6 py-4">{{ chiTiet.soLuongTon }}</td>
+            <td class="px-6 py-4">{{ chiTiet.trongLuong }}</td>
+            <td class="px-6 py-4">{{ chiTiet.kichThuoc }}</td>
+            <td class="px-6 py-4 text-center">
+                <span :class="chiTiet.trangThai
+                  ? 'bg-green-100 text-green-700 px-2 py-1 text-xs text-center font-semibold rounded-lg'
+                  : 'bg-red-100 text-red-700 px-2 py-1 text-xs text-center font-semibold rounded-lg'">
+                  {{ chiTiet.trangThai ? "Hoạt động" : "Không hoạt động" }}
+                </span>
+            </td>
+            <td class="px-6 py-4">{{ chiTiet.idLoaiBia?.tenLoaiBia || 'N/A' }}</td>
+            <td class="px-6 py-4">{{ chiTiet.idTacGia?.tenTacGia || 'N/A' }}</td>
+            <td class="px-6 py-4">{{ chiTiet.idNhaXuatBan?.tenNhaXuatBan || 'N/A' }}</td>
+            <td class="px-6 py-4">{{ chiTiet.idChatLieu?.tenChatLieu || 'N/A' }}</td>
+            <td class="px-6 py-4">{{ chiTiet.idNguoiDich?.tenNguoiDich || 'N/A' }}</td>
+            <td class="px-6 py-4">{{ chiTiet.idTheLoai?.tenTheLoai || 'N/A' }}</td>
+            <td class="px-6 py-4">{{ chiTiet.idNgonNgu?.tenNgonNgu || 'N/A' }}</td>
+            <td class="px-6 py-4 flex justify-center space-x-3">
+              <a href="#" @click="openEditModal(chiTiet)" class="text-blue-600 hover:text-blue-800">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 3.487a2.25 2.25 0 1 1 3.182 3.182L6.75 19.5l-4.5 1.5 1.5-4.5 13.294-13.294z" />
+                </svg>
+              </a>
+              <a href="#" @click="deleteChiTietSach(chiTiet.id)" class="text-red-600 hover:text-red-800">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+              </a>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Modal chỉnh sửa -->
@@ -241,7 +244,7 @@
                 </select>
               </div>
               <div>
-                <label class="block text- sm font-medium text-gray-700">Chất liệu</label>
+                <label class="block text-sm font-medium text-gray-700">Chất liệu</label>
                 <select
                     v-model="editForm.idChatLieu"
                     class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
@@ -794,3 +797,13 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+.font-roboto {
+  font-family: 'Roboto', sans-serif;
+}
+th {
+  min-width: 150px; /* Đặt chiều rộng tối thiểu cho mỗi cột */
+}
+</style>

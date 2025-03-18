@@ -19,5 +19,5 @@ public interface LoaiBiaRepository extends JpaRepository<LoaiBia, Integer> {
     @Query(value = "SELECT 'LB' + RIGHT('-000' + CONVERT(NVARCHAR(5), NEXT VALUE FOR [dbo].[LBSeq]), 5)", nativeQuery = true)
     String getNextSequenceValue();
 
-    List<LoaiBia> findByDeletedFalse();
+    List<LoaiBia> findAllByDeletedFalseOrderByIdDesc();
 }

@@ -16,7 +16,7 @@ public class NguoiDichService {
 
 
     public List<NguoiDich> getAll() {
-        return nguoiDichRepository.findByDeletedFalse();
+        return nguoiDichRepository.findAllByDeletedFalseOrderByIdDesc();
     }
 
     public NguoiDich getById(Integer id) {

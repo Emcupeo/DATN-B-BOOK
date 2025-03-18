@@ -16,7 +16,7 @@ public class NhaXuatBanService {
 
 
     public List<NhaXuatBan> getAll() {
-        return nhaXuatBanRepository.findByDeletedFalse();
+        return nhaXuatBanRepository.findAllByDeletedFalseOrderByIdDesc();
     }
 
     public NhaXuatBan getById(Integer id) {

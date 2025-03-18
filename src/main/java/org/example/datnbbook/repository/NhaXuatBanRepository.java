@@ -19,5 +19,5 @@ public interface NhaXuatBanRepository extends JpaRepository<NhaXuatBan, Integer>
     @Query(value = "SELECT 'NXB' + RIGHT('-000' + CONVERT(NVARCHAR(5), NEXT VALUE FOR [dbo].[NXBSeq]), 5)", nativeQuery = true)
     String getNextSequenceValue();
 
-    List<NhaXuatBan> findByDeletedFalse();
+    List<NhaXuatBan> findAllByDeletedFalseOrderByIdDesc();
 }

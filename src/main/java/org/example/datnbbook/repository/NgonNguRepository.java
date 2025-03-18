@@ -18,5 +18,5 @@ public interface NgonNguRepository extends JpaRepository<NgonNgu, Integer> {
     @Query(value = "SELECT 'NN' + RIGHT('-000' + CONVERT(NVARCHAR(5), NEXT VALUE FOR [dbo].[NNSeq]), 5)", nativeQuery = true)
     String getNextSequenceValue();
 
-    List<NgonNgu> findByDeletedFalse();
+    List<NgonNgu> findAllByDeletedFalseOrderByIdDesc();
 }

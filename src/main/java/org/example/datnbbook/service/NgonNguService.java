@@ -18,7 +18,7 @@ public class NgonNguService {
 
 
     public List<NgonNgu> getAll() {
-        return ngonNguRepository.findByDeletedFalse();
+        return ngonNguRepository.findAllByDeletedFalseOrderByIdDesc();
     }
 
     public NgonNgu getById(Integer id) {

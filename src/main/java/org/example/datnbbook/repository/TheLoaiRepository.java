@@ -19,5 +19,5 @@ public interface TheLoaiRepository extends JpaRepository<TheLoai, Integer> {
     @Query(value = "SELECT 'TL' + RIGHT('-000' + CONVERT(NVARCHAR(5), NEXT VALUE FOR [dbo].[TLSeq]), 5)", nativeQuery = true)
     String getNextSequenceValue();
 
-    List<TheLoai> findByDeletedFalse();
+    List<TheLoai> findAllByDeletedFalseOrderByIdDesc();
 }

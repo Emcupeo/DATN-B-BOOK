@@ -26,19 +26,6 @@
           />
         </div>
 
-        <!-- Loại bìa -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Loại bìa</label>
-          <select
-              v-model="formData.idLoaiBia"
-              class="mt-1 w-full border rounded px-3 py-2"
-          >
-            <option v-for="item in loaiBiaList" :key="item.id" :value="item.id">
-              {{ item.tenLoaiBia }}
-            </option>
-          </select>
-        </div>
-
         <!-- Tác giả -->
         <div>
           <label class="block text-sm font-medium text-gray-700">Tác giả</label>
@@ -61,19 +48,6 @@
           >
             <option v-for="item in nhaXuatBanList" :key="item.id" :value="item.id">
               {{ item.tenNhaXuatBan }}
-            </option>
-          </select>
-        </div>
-
-        <!-- Chất liệu -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Chất liệu</label>
-          <select
-              v-model="formData.idChatLieu"
-              class="mt-1 w-full border rounded px-3 py-2"
-          >
-            <option v-for="item in chatLieuList" :key="item.id" :value="item.id">
-              {{ item.tenChatLieu }}
             </option>
           </select>
         </div>
@@ -121,7 +95,7 @@
         <div>
           <label class="block text-sm font-medium text-gray-700">Giá</label>
           <input
-              v-model="formData.gia"
+              v-model.number="formData.gia"
               type="number"
               step="0.01"
               class="mt-1 w-full border rounded px-3 py-2"
@@ -133,7 +107,7 @@
         <div>
           <label class="block text-sm font-medium text-gray-700">Số lượng tồn</label>
           <input
-              v-model="formData.soLuongTon"
+              v-model.number="formData.soLuongTon"
               type="number"
               class="mt-1 w-full border rounded px-3 py-2"
               required
@@ -144,7 +118,7 @@
         <div>
           <label class="block text-sm font-medium text-gray-700">Trọng lượng (gram)</label>
           <input
-              v-model="formData.trongLuong"
+              v-model.number="formData.trongLuong"
               type="number"
               step="0.01"
               class="mt-1 w-full border rounded px-3 py-2"
@@ -156,7 +130,7 @@
         <div>
           <label class="block text-sm font-medium text-gray-700">Kích thước (cm)</label>
           <input
-              v-model="formData.kichThuoc"
+              v-model.number="formData.kichThuoc"
               type="number"
               step="0.01"
               class="mt-1 w-full border rounded px-3 py-2"
@@ -172,6 +146,68 @@
               class="mt-1 w-full border rounded px-3 py-2"
               rows="3"
           ></textarea>
+        </div>
+      </div>
+
+      <!-- Ô riêng cho Loại bìa và Chất liệu -->
+      <div class="mt-6 border-t pt-4">
+        <h4 class="font-semibold text-md text-gray-700 mb-4">Thuộc tính chi tiết</h4>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Loại bìa</label>
+            <button
+                type="button"
+                @click="openModal('loaiBia')"
+                class="mt-1 w-full border rounded px-3 py-2 bg-blue-500 text-white hover:bg-blue-600 flex items-center justify-center"
+            >
+              <span class="mr-2">+</span> Chọn loại bìa
+            </button>
+            <div class="mt-2" v-if="formData.idLoaiBiaList.length > 0">
+              <span v-for="id in formData.idLoaiBiaList" :key="id" class="inline-block bg-gray-200 rounded px-2 py-1 mr-2 mb-2">
+                {{ getLoaiBiaName(id) }}
+              </span>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Chất liệu</label>
+            <button
+                type="button"
+                @click="openModal('chatLieu')"
+                class="mt-1 w-full border rounded px-3 py-2 bg-blue-500 text-white hover:bg-blue-600 flex items-center justify-center"
+            >
+              <span class="mr-2">+</span> Chọn chất liệu
+            </button>
+            <div class="mt-2" v-if="formData.idChatLieuList.length > 0">
+              <span v-for="id in formData.idChatLieuList" :key="id" class="inline-block bg-gray-200 rounded px-2 py-1 mr-2 mb-2">
+                {{ getChatLieuName(id) }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bảng hiển thị ChiTietSanPham -->
+      <div class="mt-6" :class="{ 'opacity-50 pointer-events-none': showModal }" v-if="chiTietSanPhamList.length > 0">
+        <h4 class="font-semibold text-md text-gray-700 mb-4">Danh sách chi tiết sản phẩm</h4>
+        <div class="overflow-x-auto">
+          <table class="min-w-full bg-white border">
+            <thead class="bg-gray-100">
+            <tr>
+              <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">STT</th>
+              <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Tên chi tiết sản phẩm</th>
+              <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Số lượng</th>
+              <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Giá bán</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="(chiTiet, index) in chiTietSanPhamList" :key="index" class="border-t">
+              <td class="px-4 py-2">{{ index + 1 }}</td>
+              <td class="px-4 py-2">{{ chiTiet.tenChiTietSanPham }}</td>
+              <td class="px-4 py-2">{{ chiTiet.soLuongTon }}</td>
+              <td class="px-4 py-2">{{ formatCurrency(chiTiet.gia) }}</td>
+            </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -192,6 +228,45 @@
         </button>
       </div>
     </form>
+
+    <!-- Modal chọn Loại bìa/Chất liệu -->
+    <div v-if="showModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white p-6 rounded shadow-lg w-1/3">
+        <h3 class="text-lg font-semibold mb-4">{{ modalType === 'loaiBia' ? 'Chọn loại bìa' : 'Chọn chất liệu' }}</h3>
+        <div class="max-h-64 overflow-y-auto">
+          <div v-if="modalType === 'loaiBia'">
+            <label v-for="item in loaiBiaList" :key="item.id" class="block mb-2">
+              <input
+                  type="checkbox"
+                  :value="item.id"
+                  v-model="tempLoaiBiaList"
+                  class="mr-2"
+              />
+              {{ item.tenLoaiBia }}
+            </label>
+          </div>
+          <div v-else>
+            <label v-for="item in chatLieuList" :key="item.id" class="block mb-2">
+              <input
+                  type="checkbox"
+                  :value="item.id"
+                  v-model="tempChatLieuList"
+                  class="mr-2"
+              />
+              {{ item.tenChatLieu }}
+            </label>
+          </div>
+        </div>
+        <div class="flex justify-end space-x-3 mt-4">
+          <button @click="closeModal" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+            Hủy
+          </button>
+          <button @click="saveModalSelection" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            Xác nhận
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -213,10 +288,10 @@ export default {
       formData: {
         tenSanPham: "",
         moTaSanPham: "",
-        idLoaiBia: "",
+        idLoaiBiaList: [],
         idTacGia: "",
         idNhaXuatBan: "",
-        idChatLieu: "",
+        idChatLieuList: [],
         idNguoiDich: "",
         idTheLoai: "",
         idNgonNgu: "",
@@ -233,13 +308,23 @@ export default {
       nguoiDichList: [],
       theLoaiList: [],
       ngonNguList: [],
+      chiTietSanPhamList: [],
       loading: false,
       error: null,
+      showModal: false,
+      modalType: '',
+      tempLoaiBiaList: [],
+      tempChatLieuList: [],
     };
   },
 
   async created() {
     await this.loadInitialData();
+  },
+
+  watch: {
+    'formData.idLoaiBiaList': 'generateChiTietSanPham',
+    'formData.idChatLieuList': 'generateChiTietSanPham',
   },
 
   methods: {
@@ -254,11 +339,8 @@ export default {
         this.theLoaiList = await TheLoaiService.getAll();
         this.ngonNguList = await NgonNguService.getAll();
 
-        // Gán giá trị mặc định là bản ghi đầu tiên (mới nhất)
-        if (this.loaiBiaList.length > 0) this.formData.idLoaiBia = this.loaiBiaList[0].id;
         if (this.tacGiaList.length > 0) this.formData.idTacGia = this.tacGiaList[0].id;
         if (this.nhaXuatBanList.length > 0) this.formData.idNhaXuatBan = this.nhaXuatBanList[0].id;
-        if (this.chatLieuList.length > 0) this.formData.idChatLieu = this.chatLieuList[0].id;
         if (this.nguoiDichList.length > 0) this.formData.idNguoiDich = this.nguoiDichList[0].id;
         if (this.theLoaiList.length > 0) this.formData.idTheLoai = this.theLoaiList[0].id;
         if (this.ngonNguList.length > 0) this.formData.idNgonNgu = this.ngonNguList[0].id;
@@ -270,26 +352,87 @@ export default {
       }
     },
 
+    generateChiTietSanPham() {
+      this.chiTietSanPhamList = [];
+      const { idLoaiBiaList, idChatLieuList, tenSanPham, gia, soLuongTon } = this.formData;
+
+      if (idLoaiBiaList.length > 0 && idChatLieuList.length > 0) {
+        idLoaiBiaList.forEach(idLoaiBia => {
+          idChatLieuList.forEach(idChatLieu => {
+            this.chiTietSanPhamList.push({
+              tenChiTietSanPham: `${tenSanPham} (${this.getLoaiBiaName(idLoaiBia)} - ${this.getChatLieuName(idChatLieu)})`,
+              idLoaiBia,
+              idChatLieu,
+              gia,
+              soLuongTon,
+            });
+          });
+        });
+      }
+    },
+
+    getLoaiBiaName(id) {
+      const loaiBia = this.loaiBiaList.find(item => item.id === id);
+      return loaiBia ? loaiBia.tenLoaiBia : 'N/A';
+    },
+
+    getChatLieuName(id) {
+      const chatLieu = this.chatLieuList.find(item => item.id === id);
+      return chatLieu ? chatLieu.tenChatLieu : 'N/A';
+    },
+
+    formatCurrency(value) {
+      return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+    },
+
+    openModal(type) {
+      this.modalType = type;
+      this.showModal = true;
+      if (type === 'loaiBia') {
+        this.tempLoaiBiaList = [...this.formData.idLoaiBiaList];
+      } else {
+        this.tempChatLieuList = [...this.formData.idChatLieuList];
+      }
+    },
+
+    closeModal() {
+      this.showModal = false;
+      this.modalType = '';
+    },
+
+    saveModalSelection() {
+      if (this.modalType === 'loaiBia') {
+        this.formData.idLoaiBiaList = [...this.tempLoaiBiaList];
+      } else {
+        this.formData.idChatLieuList = [...this.tempChatLieuList];
+      }
+      this.closeModal();
+    },
+
     async saveSanPhamAndChiTiet() {
       try {
-        await api.post('/san-pham/create-with-detail', null, {
-          params: {
-            tenSanPham: this.formData.tenSanPham,
-            moTaSanPham: this.formData.moTaSanPham,
-            idLoaiBia: this.formData.idLoaiBia || null,
-            idTacGia: this.formData.idTacGia || null,
-            idNhaXuatBan: this.formData.idNhaXuatBan || null,
-            idChatLieu: this.formData.idChatLieu || null,
-            idNguoiDich: this.formData.idNguoiDich || null,
-            idTheLoai: this.formData.idTheLoai || null,
-            idNgonNgu: this.formData.idNgonNgu || null,
-            gia: this.formData.gia,
-            soLuongTon: this.formData.soLuongTon,
-            trongLuong: this.formData.trongLuong,
-            kichThuoc: this.formData.kichThuoc,
-            moTaChiTiet: this.formData.moTaChiTiet,
-          },
-        });
+        const payload = {
+          tenSanPham: this.formData.tenSanPham,
+          moTaSanPham: this.formData.moTaSanPham,
+          idTacGia: this.formData.idTacGia || null,
+          idNhaXuatBan: this.formData.idNhaXuatBan || null,
+          idNguoiDich: this.formData.idNguoiDich || null,
+          idTheLoai: this.formData.idTheLoai || null,
+          idNgonNgu: this.formData.idNgonNgu || null,
+          trongLuong: this.formData.trongLuong,
+          kichThuoc: this.formData.kichThuoc,
+          moTaChiTiet: this.formData.moTaChiTiet,
+          chiTietSanPhamList: this.chiTietSanPhamList.map(ctsp => ({
+            tenChiTietSanPham: ctsp.tenChiTietSanPham,
+            idLoaiBia: ctsp.idLoaiBia,
+            idChatLieu: ctsp.idChatLieu,
+            gia: ctsp.gia,
+            soLuongTon: ctsp.soLuongTon,
+          })),
+        };
+
+        // Sửa đường dẫn: loại bỏ /api vì baseURL đã chứa /api
+        await api.post('/san-pham/create-with-details', payload);
         alert("Thêm sách và chi tiết thành công!");
         this.goBack();
       } catch (error) {
@@ -306,5 +449,20 @@ export default {
 </script>
 
 <style scoped>
-/* CSS tùy chỉnh nếu cần */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th, td {
+  border: 1px solid #e5e7eb;
+}
+.opacity-50 {
+  opacity: 0.5;
+}
+.pointer-events-none {
+  pointer-events: none;
+}
+.z-50 {
+  z-index: 50;
+}
 </style>

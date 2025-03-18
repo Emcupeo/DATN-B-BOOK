@@ -32,7 +32,7 @@ public class SanPham {
     @Column(name = "id", nullable = false)
     private Integer id;
 
-    @ColumnDefault("'SP'+right('-000'+CONVERT([nvarchar](5), NEXT VALUE FOR [dbo].[SPSeq]), 5)")
+    @ColumnDefault("'SP'+right('-00'+CONVERT([nvarchar](5), NEXT VALUE FOR [dbo].[SPSeq]), 5)")
     @Column(name = "ma_san_pham", length = 10, nullable = false)
     private String maSanPham;
 
