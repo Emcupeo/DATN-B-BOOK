@@ -20,6 +20,13 @@ class HoaDonService {
             responseType: 'blob' // Đảm bảo nhận dữ liệu dạng blob cho file PDF
         });
     }
+
+    // Xuất danh sách hóa đơn ra Excel
+    exportToExcel() {
+        return axios.get(`${API_URL_ListHoaDon}/export-excel`, {
+            responseType: 'blob' // Đảm bảo nhận dữ liệu dạng blob cho file Excel
+        });
+    }
 }
 
 export default new HoaDonService();

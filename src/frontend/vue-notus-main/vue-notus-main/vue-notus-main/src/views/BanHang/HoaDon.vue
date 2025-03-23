@@ -99,7 +99,10 @@
         </div>
 
         <div class="flex items-center gap-2 mr-12">
-          <button class="bg-blue-500 text-white px-4 py-2 rounded text-sm hover:bg-blue-600 flex items-center">
+          <button
+              @click="exportToExcel"
+              class="bg-blue-500 text-white px-4 py-2 rounded text-sm hover:bg-blue-600 flex items-center"
+          >
             📥 Export Excel
           </button>
         </div>
@@ -317,10 +320,9 @@ export default {
     },
 
     invoiceCounts() {
-      // Nếu có qrResult, chỉ đếm dựa trên hóa đơn từ QR
       if (this.qrResult) {
         const counts = {
-          all: 1, // Luôn có 1 hóa đơn khi quét QR
+          all: 1,
           cancelled: 0,
           pending: 0,
           shipping: 0,
@@ -343,7 +345,6 @@ export default {
         return counts;
       }
 
-      // Nếu không có qrResult, đếm dựa trên filteredInvoices
       return this.filteredInvoices.reduce(
           (counts, invoice) => {
             const statusMapping = {
@@ -376,19 +377,16 @@ export default {
     },
 
     paginatedInvoices() {
-      // Nếu có qrResult, hiển thị trực tiếp hóa đơn từ QR
       if (this.qrResult) {
         return [this.qrResult];
       }
 
-      // Nếu không, hiển thị theo filter và phân trang
       const start = (this.currentPage - 1) * this.itemsPerPage;
       const end = start + this.itemsPerPage;
       return this.filteredInvoices.slice(start, end);
     },
 
     totalPages() {
-      // Nếu có qrResult, tổng số trang là 1
       if (this.qrResult) {
         return 1;
       }
@@ -404,7 +402,7 @@ export default {
 
     openQRScanner() {
       this.showQRScanner = true;
-      this.qrResult = null; // Reset qrResult khi mở scanner
+      this.qrResult = null;
       this.$nextTick(() => {
         this.startQRScanner();
       });
@@ -450,13 +448,12 @@ export default {
       const invoiceId = decodedText.trim();
       console.log("ID vừa quét được:", invoiceId);
 
-      // Tìm hóa đơn khớp với ID
       const matchedInvoice = this.invoices.find(inv => inv.id.toString() === invoiceId);
       console.log("Hóa đơn khớp:", matchedInvoice);
 
       if (matchedInvoice) {
-        this.qrResult = matchedInvoice; // Lưu hóa đơn vào qrResult
-        this.currentPage = 1; // Reset về trang 1
+        this.qrResult = matchedInvoice;
+        this.currentPage = 1;
       } else {
         alert("Không tìm thấy hóa đơn với ID này!");
       }
@@ -532,6 +529,29 @@ export default {
     nextPage() {
       if (this.currentPage < this.totalPages) this.currentPage++;
     },
+
+    exportToExcel() {
+      HoaDonService.exportToExcel()
+          .then(response => {
+            const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'danh_sach_hoa_don.xlsx');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+          })
+          .catch(error => {
+            console.error("Lỗi khi xuất Excel:", error);
+            if (error.response && error.response.status === 204) {
+              alert("Không có hóa đơn nào để xuất!");
+            } else {
+              alert("Có lỗi xảy ra khi xuất file Excel!");
+            }
+          });
+    }
   },
   created() {
     this.getListHoaDon();
