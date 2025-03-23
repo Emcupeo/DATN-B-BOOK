@@ -43,6 +43,7 @@ import CartPage from "./views/guest/Cart.vue";
 import BanHang from "@/views/BanHang/BanHangTaiQuay.vue";
 import HoaDon from "@/views/BanHang/HoaDon.vue";
 import PhieuGiamGia from "@/views/QuanLyGiamGia/PhieuGiamGia.vue";
+import PhieuGiamGiaForm from "@/views/QuanLyGiamGia/PhieuGiamGiaForm.vue";
 import DotGiamGia from "@/views/QuanLyGiamGia/DotGiamGia.vue";
 import DanhMuc from "@/views/QuanLySach/DanhMucSach.vue";
 import Sach from "@/views/QuanLySach/Sach.vue";
@@ -174,8 +175,20 @@ const routes = [
         component: PhieuGiamGia,
       },
 
+      {
+        path: '/admin/phieu-giam-gia/add',
+        name: 'PhieuGiamGiaAdd',
+        component: PhieuGiamGiaForm
+      },
+      {
+        path: '/admin/phieu-giam-gia/edit/:id',
+        name: 'PhieuGiamGiaEdit',
+        component: PhieuGiamGiaForm,
+        props: true
+      },
+
       { path: "/admin/dot-giam-gia", 
-        component: DotGiamGia }, // Thay bằng AdminDashboard nếu cần
+        component: DotGiamGia },
 
       {
         path: "/admin/nhan-vien",

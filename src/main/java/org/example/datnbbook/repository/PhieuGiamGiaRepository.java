@@ -12,6 +12,7 @@ public interface PhieuGiamGiaRepository extends JpaRepository<PhieuGiamGia, Long
     @Query("SELECT p FROM PhieuGiamGia p WHERE p.deleted = false")
     Page<PhieuGiamGia> findAllByDeletedFalse(Pageable pageable);
 
-    @Query(value = "SELECT 'PGG' + RIGHT('-000' + CONVERT(NVARCHAR(5), NEXT VALUE FOR [dbo].[PGGSeq]), 5)", nativeQuery = true)
+    @Query(value = "SELECT 'PGG-' + RIGHT('00000' + CONVERT(NVARCHAR, NEXT VALUE FOR [dbo].[PGGSeq]), 5)", nativeQuery = true)
     String getNextSequenceValue();
+
 }

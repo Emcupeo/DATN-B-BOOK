@@ -14,6 +14,7 @@ import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -38,7 +39,7 @@ public class PhieuGiamGiaKhachHang {
     private String maPhieuGiamGiaKhachHang;
 
     @Column(name = "ngay_su_dung")
-    private Instant ngaySuDung;
+    private LocalDateTime ngaySuDung;
 
     @Column(name = "so_luong")
     private Integer soLuong;
@@ -48,14 +49,14 @@ public class PhieuGiamGiaKhachHang {
 
     @ColumnDefault("getdate()")
     @Column(name = "created_at")
-    private Instant createdAt;
+    private LocalDateTime createdAt;
 
     @Column(name = "created_by")
     private String createdBy;
 
     @ColumnDefault("getdate()")
     @Column(name = "updated_at")
-    private Instant updatedAt;
+    private LocalDateTime updatedAt;
 
     @Column(name = "updated_by")
     private String updatedBy;

@@ -1,23 +1,17 @@
 package org.example.datnbbook.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Nationalized;
 
 import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.LocalDate;
+import java.time.LocalDateTime; // <-- sửa thành LocalDateTime
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -31,7 +25,7 @@ public class PhieuGiamGia {
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @ColumnDefault("'PGG'+right('-000'+CONVERT([nvarchar](5), NEXT VALUE FOR [dbo].[PGGSeq]), 5)")
+    @ColumnDefault("'PGG'+right('-000'+CONVERT( , NEXT VALUE FOR [dbo].[PGGSeq]), 5)")
     @Column(name = "ma_phieu_giam_gia", length = 10)
     private String maPhieuGiamGia;
 
@@ -53,21 +47,25 @@ public class PhieuGiamGia {
     private Boolean trangThai;
 
     @Column(name = "ngay_bat_dau")
-    private LocalDate ngayBatDau;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") // <-- Thêm định dạng JSON
+    private LocalDateTime ngayBatDau;
 
     @Column(name = "ngay_ket_thuc")
-    private LocalDate ngayKetThuc;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") // <-- Thêm định dạng JSON
+    private LocalDateTime ngayKetThuc;
 
     @ColumnDefault("getdate()")
     @Column(name = "created_at")
-    private LocalDate createdAt;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime createdAt;
 
     @Column(name = "created_by")
     private String createdBy;
 
     @ColumnDefault("getdate()")
     @Column(name = "updated_at")
-    private LocalDate updatedAt;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime updatedAt;
 
     @Column(name = "updated_by")
     private String updatedBy;
@@ -80,11 +78,10 @@ public class PhieuGiamGia {
     private Boolean deleted;
 
     @OneToMany(mappedBy = "phieuGiamGia")
-    @JsonBackReference
-    private Set<HoaDon> hoaDons = new LinkedHashSet<>();
-
     @JsonIgnore
-    @OneToMany(mappedBy = "phieuGiamGia")
+    private Set<HoaDon> hoaDons;
+    
+    @JsonIgnore
+    @OneToMany(mappedBy = "phieuGiamGia", fetch = FetchType.LAZY)
     private Set<PhieuGiamGiaKhachHang> phieuGiamGiaKhachHangs = new LinkedHashSet<>();
-
 }
