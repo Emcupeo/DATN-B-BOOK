@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Hóa Đơn - B-Book</title>
+    <style>
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            margin: 10px;
+            font-size: 12px;
+            background-color: #f5f5f5;
+            color: #1A3C5E;
+        }
+        .invoice-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            border: 1px solid #e0e0e0;
+            padding: 15px;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            border-radius: 6px;
+        }
+        .invoice-header {
+            border-bottom: 2px solid #1A3C5E;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .invoice-title {
+            text-align: center;
+            flex-grow: 1;
+        }
+        .invoice-title h1 {
+            margin: 8px 0 4px;
+            font-size: 24px;
+            color: #1A3C5E;
+            font-weight: 700;
+        }
+        .invoice-title p {
+            margin: 1px 0;
+            font-size: 11px;
+            color: #4A7BA6;
+        }
+        .logo-b-book {
+            margin-left: 50px;
+        }
+        .logo-ghn {
+            margin-left: 250px;
+        }
+        .info-section {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            gap: 10px;
+        }
+        .info-section .left, .info-section .right {
+            width: 48%;
+            background-color: #F5F9FF;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #A6C8E8;
+        }
+        .info-section p {
+            margin: 4px 0;
+            font-size: 11px;
+            color: #1A3C5E;
+        }
+        .info-section .bold {
+            font-weight: 600;
+            color: #1A3C5E;
+        }
+        .total-receivable {
+            text-align: right;
+            margin-bottom: 15px;
+            background-color: #F5F9FF;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #A6C8E8;
+        }
+        .total-receivable p {
+            margin: 4px 0;
+            font-size: 12px;
+            color: #1A3C5E;
+        }
+        .total-receivable .bold {
+            font-weight: 600;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        th, td {
+            border: 1px solid #e0e0e0;
+            padding: 6px;
+            text-align: left;
+            font-size: 11px;
+        }
+        th {
+            background-color: #1A3C5E;
+            color: #FFFFFF;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        td {
+            background-color: #fff;
+            color: #1A3C5E;
+        }
+        tr:nth-child(even) td {
+            background-color: #F5F9FF;
+        }
+        .footer {
+            margin-top: 15px;
+            font-size: 10px;
+            color: #4A7BA6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .footer-text {
+            text-align: left;
+        }
+        .qr-code img {
+            width: 100px;
+            height: 100px;
+            margin-left: 140px;
+        }
+        @media print {
+            body {
+                background-color: #fff;
+                margin: 0;
+            }
+            .invoice-container {
+                box-shadow: none;
+                border: 1px solid #000;
+            }
+            .info-section .left, .info-section .right, .total-receivable {
+                background-color: #fff;
+                border: 1px solid #ddd;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="invoice-container">
+    <!-- Header với logo và tiêu đề -->
+    <div class="invoice-header">
+        <!-- Logo B-Book sang trái -->
+        <div class="logo-b-book">
+            <img src="/assets/logo.png" alt="B-Book Logo" style="width: 70px;"/>
+        </div>
+        <!-- Logo GHN sang góc phải -->
+        <div class="logo-ghn">
+            <img src="/assets/ghn.png" alt="GHN Logo" style="width: 150px;"/>
+        </div>
+    </div>
+
+    <!-- Thông tin hóa đơn -->
+    <div class="info-section">
+        <div class="left">
+            <p><span class="bold">Từ:</span> Cửa hàng sách thiếu nhi B-Book</p>
+            <p>Địa chỉ: FPT Polytechnic, Trịnh Văn Bô, Xuân Phương, Nam Từ Liêm, Hà Nội</p>
+            <p>SDT: 0345512856</p>
+        </div>
+        <div class="right">
+            <p><span class="bold">Đến:</span> <span th:text="${hoaDon.tenNguoiNhan ?: 'Khách lẻ'}"></span></p>
+            <p>Địa chỉ: <span th:text="${hoaDon.diaChi ?: 'Không có'}"></span></p>
+            <p>SDT: <span th:text="${hoaDon.soDienThoaiNguoiNhan ?: 'Không có'}"></span></p>
+        </div>
+    </div>
+
+    <!-- Bảng danh sách sản phẩm -->
+    <table>
+        <thead>
+        <tr>
+            <th>STT</th>
+            <th>Tên sản phẩm</th>
+            <th>Tác giả</th>
+            <th>Giá</th>
+            <th>Số lượng</th>
+            <th>Tổng</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="item, iterStat : ${hoaDon.hoaDonChiTiets}">
+            <td th:text="${iterStat.count}"></td>
+            <td th:text="${item.chiTietSanPham?.tenChiTietSanPham ?: 'Không xác định'}"></td>
+            <td th:text="${item.chiTietSanPham?.idTacGia?.tenTacGia != null ? item.chiTietSanPham.idTacGia.tenTacGia : 'Không có'}"></td>
+            <td th:text="${#numbers.formatDecimal(item.giaSanPham, 0, 2, 'COMMA')} + ' VND'"></td>
+            <td th:text="${item.soLuong}"></td>
+            <td th:text="${#numbers.formatDecimal(item.giaSanPham * item.soLuong, 0, 2, 'COMMA')} + ' VND'"></td>
+        </tr>
+        <tr th:unless="${hoaDon.hoaDonChiTiets != null and !hoaDon.hoaDonChiTiets.isEmpty()}">
+            <td colspan="6" style="text-align: center;">Không có sản phẩm nào trong hóa đơn.</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <!-- Tổng tiền thu người nhận -->
+    <div class="total-receivable">
+        <p><span class="bold">Tiền thu người nhận:</span> <span th:text="${#numbers.formatDecimal(thanhTien, 0, 2, 'COMMA')} + ' VND'"></span></p>
+    </div>
+
+    <!-- Footer với QR Code -->
+    <div class="footer">
+        <div class="footer-text">
+            <p>Cảm ơn bạn đã mua sắm tại B-Book! Chúc bạn một ngày tốt lành!</p>
+            <p>Liên hệ: 0345512856 | Email: support@bbook.vn</p>
+        </div>
+        <div class="qr-code">
+            <img th:src="${qrCodeImage}" alt="QR Code"/>
+        </div>
+    </div>
+</div>
+</body>
+</html>
