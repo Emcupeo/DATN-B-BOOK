@@ -13,7 +13,7 @@ class NhaXuatBanService {
   }
 
   async create(nhaXuatBan) {
-    const response = await api.post('/nha-xuat-ban', nhaXuatBan.toJSON());
+    const response = await api.post('/nha-xuat-ban', nhaXuatBan);
     return new NhaXuatBan(response.data);
   }
 

@@ -13,7 +13,7 @@ class ChatLieuService {
   }
 
   async create(chatLieu) {
-    const response = await api.post('/chat-lieu', chatLieu.toJSON());
+    const response = await api.post('/chat-lieu', chatLieu);
     return new ChatLieu(response.data);
   }
 

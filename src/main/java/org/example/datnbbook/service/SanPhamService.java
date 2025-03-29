@@ -176,8 +176,8 @@ public class SanPhamService {
 
             ctsp.setGia(BigDecimal.valueOf(dto.getGia()));
             ctsp.setSoLuongTon(dto.getSoLuongTon());
-            ctsp.setTrongLuong(BigDecimal.valueOf(request.getTrongLuong()));
-            ctsp.setKichThuoc(BigDecimal.valueOf(request.getKichThuoc()));
+            ctsp.setTrongLuong(dto.getTrongLuong() != null ? BigDecimal.valueOf(dto.getTrongLuong()) : BigDecimal.ZERO);
+            ctsp.setKichThuoc(dto.getKichThuoc() != null ? BigDecimal.valueOf(dto.getKichThuoc()) : BigDecimal.ZERO); // Lấy từ DTO
             ctsp.setMoTa(request.getMoTaChiTiet());
             ctsp.setTrangThai(true);
             ctsp.setCreatedAt(Instant.now());

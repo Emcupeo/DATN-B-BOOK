@@ -28,6 +28,88 @@
         </div>
       </div>
 
+      <!-- Bộ lọc -->
+      <div v-if="!loading && !error" class="mb-4 grid grid-cols-5 gap-4">
+        <div class="col-span-1">
+          <label class="block text-sm font-medium text-gray-700">Tìm kiếm</label>
+          <input
+              v-model="filters.searchQuery"
+              type="text"
+              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="Tìm theo mã, tên, số lượng, trọng lượng, kích thước"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Giá tối thiểu</label>
+          <input
+              v-model.number="filters.minPrice"
+              type="number"
+              min="0"
+              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="0"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Giá tối đa</label>
+          <input
+              v-model.number="filters.maxPrice"
+              type="number"
+              min="0"
+              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="∞"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Loại bìa</label>
+          <select v-model="filters.idLoaiBia" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            <option :value="null">Tất cả</option>
+            <option v-for="item in loaiBiaList" :key="item.id" :value="item.id">{{ item.tenLoaiBia }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Tác giả</label>
+          <select v-model="filters.idTacGia" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            <option :value="null">Tất cả</option>
+            <option v-for="item in tacGiaList" :key="item.id" :value="item.id">{{ item.tenTacGia }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Nhà xuất bản</label>
+          <select v-model="filters.idNhaXuatBan" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            <option :value="null">Tất cả</option>
+            <option v-for="item in nhaXuatBanList" :key="item.id" :value="item.id">{{ item.tenNhaXuatBan }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Chất liệu</label>
+          <select v-model="filters.idChatLieu" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            <option :value="null">Tất cả</option>
+            <option v-for="item in chatLieuList" :key="item.id" :value="item.id">{{ item.tenChatLieu }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Người dịch</label>
+          <select v-model="filters.idNguoiDich" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            <option :value="null">Tất cả</option>
+            <option v-for="item in nguoiDichList" :key="item.id" :value="item.id">{{ item.tenNguoiDich }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Thể loại</label>
+          <select v-model="filters.idTheLoai" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            <option :value="null">Tất cả</option>
+            <option v-for="item in theLoaiList" :key="item.id" :value="item.id">{{ item.tenTheLoai }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Ngôn ngữ</label>
+          <select v-model="filters.idNgonNgu" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            <option :value="null">Tất cả</option>
+            <option v-for="item in ngonNguList" :key="item.id" :value="item.id">{{ item.tenNgonNgu }}</option>
+          </select>
+        </div>
+      </div>
+
       <!-- Loading state -->
       <div v-if="loading" class="p-4 text-center">
         <svg class="animate-spin inline-block w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -66,7 +148,7 @@
       </div>
 
       <!-- Nội dung bảng -->
-      <div v-else class="relative overflow-x-auto sm:rounded-lg w-full h-[calc(100vh-200px)]">
+      <div v-else class="relative overflow-x-auto sm:rounded-lg w-full h-[calc(100vh-250px)]">
         <table class="w-full text-sm text-center text-gray-500">
           <thead class="text-xs text-gray-700 uppercase bg-gray-50">
           <tr>
@@ -89,8 +171,8 @@
           </tr>
           </thead>
           <tbody>
-          <tr class="bg-white border-b hover:bg-gray-50" v-for="(chiTiet, index) in chiTietSanPham" :key="chiTiet.id">
-            <td class="px-6 py-4">{{ index + 1 }}</td>
+          <tr class="bg-white border-b hover:bg-gray-50" v-for="(chiTiet, index) in paginatedChiTietSanPham" :key="chiTiet.id">
+            <td class="px-6 py-4">{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
             <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ chiTiet.maChiTietSanPham }}</td>
             <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ chiTiet.tenChiTietSanPham }}</td>
             <td class="px-6 py-4">{{ formatCurrency(chiTiet.gia) }}</td>
@@ -98,11 +180,11 @@
             <td class="px-6 py-4">{{ chiTiet.trongLuong }}</td>
             <td class="px-6 py-4">{{ chiTiet.kichThuoc }}</td>
             <td class="px-6 py-4 text-center">
-                <span :class="chiTiet.trangThai
-                  ? 'bg-green-100 text-green-700 px-2 py-1 text-xs text-center font-semibold rounded-lg'
-                  : 'bg-red-100 text-red-700 px-2 py-1 text-xs text-center font-semibold rounded-lg'">
-                  {{ chiTiet.trangThai ? "Hoạt động" : "Không hoạt động" }}
-                </span>
+              <span :class="chiTiet.trangThai
+                ? 'bg-green-100 text-green-700 px-2 py-1 text-xs text-center font-semibold rounded-lg'
+                : 'bg-red-100 text-red-700 px-2 py-1 text-xs text-center font-semibold rounded-lg'">
+                {{ chiTiet.trangThai ? "Hoạt động" : "Không hoạt động" }}
+              </span>
             </td>
             <td class="px-6 py-4">{{ chiTiet.idLoaiBia?.tenLoaiBia || 'N/A' }}</td>
             <td class="px-6 py-4">{{ chiTiet.idTacGia?.tenTacGia || 'N/A' }}</td>
@@ -126,6 +208,31 @@
           </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Phân trang -->
+      <div v-if="!loading && !error" class="flex justify-center items-center mt-4 space-x-2">
+        <button
+            @click="prevPage"
+            :disabled="currentPage === 1"
+            class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm p-2 text-center flex items-center justify-center"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+          </svg>
+        </button>
+        <span class="text-xs font-semibold text-gray-700">
+          Trang {{ currentPage }} / {{ totalPages }}
+        </span>
+        <button
+            @click="nextPage"
+            :disabled="currentPage === totalPages"
+            class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm p-2 text-center flex items-center justify-center"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+          </svg>
+        </button>
       </div>
     </div>
 
@@ -246,6 +353,7 @@
               <div>
                 <label class="block text-sm font-medium text-gray-700">Chất liệu</label>
                 <select
+                    Fcn2
                     v-model="editForm.idChatLieu"
                     class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 >
@@ -543,6 +651,20 @@ export default {
       error: null,
       showEditModal: false,
       showAddModal: false,
+      currentPage: 1,
+      itemsPerPage: 6,
+      filters: {
+        searchQuery: '',
+        minPrice: null,
+        maxPrice: null,
+        idLoaiBia: null,
+        idTacGia: null,
+        idNhaXuatBan: null,
+        idChatLieu: null,
+        idNguoiDich: null,
+        idTheLoai: null,
+        idNgonNgu: null,
+      },
       editForm: {
         id: null,
         maChiTietSanPham: '',
@@ -590,6 +712,55 @@ export default {
       theLoaiList: [],
       ngonNguList: [],
     };
+  },
+
+  computed: {
+    filteredChiTietSanPham() {
+      return this.chiTietSanPham.filter(item => {
+        const query = this.filters.searchQuery.toLowerCase().trim();
+        const numericQuery = parseFloat(query);
+
+        const matchesSearchQuery = !query || (
+            item.maChiTietSanPham.toLowerCase().includes(query) ||
+            item.tenChiTietSanPham.toLowerCase().includes(query) ||
+            (isFinite(numericQuery) && (
+                item.soLuongTon === numericQuery ||
+                item.trongLuong === numericQuery ||
+                item.kichThuoc === numericQuery
+            ))
+        );
+
+        return (
+            matchesSearchQuery &&
+            (this.filters.minPrice === null || item.gia >= this.filters.minPrice) &&
+            (this.filters.maxPrice === null || item.gia <= this.filters.maxPrice) &&
+            (this.filters.idLoaiBia === null || (item.idLoaiBia && item.idLoaiBia.id === this.filters.idLoaiBia)) &&
+            (this.filters.idTacGia === null || (item.idTacGia && item.idTacGia.id === this.filters.idTacGia)) &&
+            (this.filters.idNhaXuatBan === null || (item.idNhaXuatBan && item.idNhaXuatBan.id === this.filters.idNhaXuatBan)) &&
+            (this.filters.idChatLieu === null || (item.idChatLieu && item.idChatLieu.id === this.filters.idChatLieu)) &&
+            (this.filters.idNguoiDich === null || (item.idNguoiDich && item.idNguoiDich.id === this.filters.idNguoiDich)) &&
+            (this.filters.idTheLoai === null || (item.idTheLoai && item.idTheLoai.id === this.filters.idTheLoai)) &&
+            (this.filters.idNgonNgu === null || (item.idNgonNgu && item.idNgonNgu.id === this.filters.idNgonNgu))
+        );
+      });
+    },
+    paginatedChiTietSanPham() {
+      const start = (this.currentPage - 1) * this.itemsPerPage;
+      const end = start + this.itemsPerPage;
+      return this.filteredChiTietSanPham.slice(start, end);
+    },
+    totalPages() {
+      return Math.ceil(this.filteredChiTietSanPham.length / this.itemsPerPage);
+    }
+  },
+
+  watch: {
+    'filters': {
+      handler() {
+        this.currentPage = 1; // Reset về trang đầu khi bộ lọc thay đổi
+      },
+      deep: true
+    }
   },
 
   async created() {
@@ -793,6 +964,14 @@ export default {
           alert("Có lỗi xảy ra khi xóa chi tiết sách");
         }
       }
+    },
+
+    prevPage() {
+      if (this.currentPage > 1) this.currentPage--;
+    },
+
+    nextPage() {
+      if (this.currentPage < this.totalPages) this.currentPage++;
     },
   },
 };

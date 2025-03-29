@@ -13,8 +13,6 @@ public class SanPhamRequest {
     private Integer idNguoiDich;
     private Integer idTheLoai;
     private Integer idNgonNgu;
-    private Double trongLuong;
-    private Double kichThuoc;
     private String moTaChiTiet;
     private List<ChiTietSanPhamDTO> chiTietSanPhamList;
 
@@ -25,5 +23,7 @@ public class SanPhamRequest {
         private Integer idChatLieu;
         private Double gia;
         private Integer soLuongTon;
+        private Double trongLuong;
+        private Double kichThuoc; // Thêm kichThuoc vào đây
     }
 }

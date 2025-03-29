@@ -13,7 +13,7 @@ class TacGiaService {
   }
 
   async create(tacGia) {
-    const response = await api.post('/tac-gia', tacGia.toJSON());
+    const response = await api.post('/tac-gia', tacGia);
     return new TacGia(response.data);
   }
 

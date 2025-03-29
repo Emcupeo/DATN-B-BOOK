@@ -1,179 +1,117 @@
 <template>
-  <div
-      class="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded"
-      :class="[color === 'light' ? 'bg-white' : 'bg-emerald-900 text-white']"
-  >
-    <!-- Thanh tiêu đề và công cụ -->
-    <div
-        class="rounded-t mb-0 px-4 py-3 border-0 flex flex-wrap items-center justify-between"
-    >
-      <div class="flex-1">
-        <h3
-            class="font-semibold text-lg"
-            :class="[color === 'light' ? 'text-blueGray-700' : 'text-white']"
-        >
-          Danh sách nhà xuất bản
-        </h3>
-      </div>
-      <div class="flex items-center space-x-2">
-        <div class="relative">
+  <div class="min-h-screen w-full bg-gray-100 font-roboto">
+    <div class="bg-white p-4 shadow rounded w-full">
+      <!-- Thanh tiêu đề và công cụ -->
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold">Danh sách nhà xuất bản</h2>
+        <div class="flex items-center justify-between gap-3">
           <input
-              type="text"
               v-model="searchQuery"
               @input="handleSearch"
-              placeholder="Tìm kiếm theo mã, tên nhà xuất bản ..."
-              class="border border-gray-300 rounded px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400 w-64"
+              type="text"
+              placeholder="Tìm kiếm theo mã, tên nhà xuất bản..."
+              class="block w-[300px] h-[40px] p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500 mb-2"
           />
-          <span class="absolute right-3 top-2.5 text-gray-400">
-            <i class="fas fa-search"></i>
-          </span>
+          <button
+              @click="addProduct"
+              type="button"
+              class="flex items-center gap-2 text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Thêm nhà xuất bản
+          </button>
         </div>
+      </div>
+
+      <!-- Nội dung bảng -->
+      <div class="relative overflow-x-auto sm:rounded-lg w-full h-[calc(100vh-120px)]">
+        <table class="w-full text-sm text-center text-gray-500">
+          <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+          <tr>
+            <th scope="col" class="px-6 py-3">
+              STT
+            </th>
+            <th scope="col" class="px-6 py-3 cursor-pointer" @click="sortBy('maNhaXuatBan')">
+              Mã nhà xuất bản
+              <span v-if="sortKey === 'maNhaXuatBan'" class="ml-1">
+                  <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortOrder === 1 ? 'M19 9l-7 7-7-7' : 'M5 15l7-7 7 7'"></path>
+                  </svg>
+                </span>
+            </th>
+            <th scope="col" class="px-6 py-3 cursor-pointer" @click="sortBy('tenNhaXuatBan')">
+              Tên nhà xuất bản
+              <span v-if="sortKey === 'tenNhaXuatBan'" class="ml-1">
+                  <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortOrder === 1 ? 'M19 9l-7 7-7-7' : 'M5 15l7-7 7 7'"></path>
+                  </svg>
+                </span>
+            </th>
+            <th scope="col" class="px-6 py-3">Hành động</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr class="bg-white border-b hover:bg-gray-50" v-for="(nhaXuatBan, index) in paginatedNhaXuatBan" :key="nhaXuatBan.id">
+            <td class="px-6 py-4">{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
+            <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ nhaXuatBan.maNhaXuatBan }}</td>
+            <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ nhaXuatBan.tenNhaXuatBan }}</td>
+            <td class="px-6 py-4 flex justify-center space-x-3">
+              <a href="#" @click="editNhaXuatBan(nhaXuatBan)" class="text-gray-600 hover:text-gray-800">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                </svg>
+              </a>
+              <a href="#" @click="deleteNhaXuatBan(nhaXuatBan.id)" class="text-red-600 hover:text-red-800">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+              </a>
+            </td>
+          </tr>
+          <tr class="bg-white border-b hover:bg-gray-50" v-if="paginatedNhaXuatBan.length == 0">
+            <td class="px-6 py-4" colspan="4" align="center">Không có dữ liệu</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Phân trang -->
+      <div class="flex justify-center items-center mt-4 space-x-2">
         <button
-            class="bg-green-500 text-white px-3 py-2 rounded hover:bg-green-600 transition"
-            @click="addProduct"
+            @click="prevPage"
+            :disabled="currentPage === 1"
+            class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm p-2 text-center flex items-center justify-center"
         >
-          Thêm nhà xuất bản
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+          </svg>
+        </button>
+        <span class="text-xs font-semibold text-gray-700">
+          Trang {{ currentPage }} / {{ totalPages }}
+        </span>
+        <button
+            @click="nextPage"
+            :disabled="currentPage === totalPages"
+            class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm p-2 text-center flex items-center justify-center"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+          </svg>
         </button>
       </div>
     </div>
 
-    <!-- Nội dung bảng -->
-    <div class="block w-full overflow-x-auto">
-      <table class="items-center w-full bg-transparent border-collapse">
-        <!-- Tiêu đề cột -->
-        <thead>
-        <tr>
-          <!-- Mã nhà xuất bản  -->
-          <th
-              class="px-6 py-3 text-xs uppercase font-semibold text-left border border-solid whitespace-nowrap cursor-pointer"
-              :class="
-                color === 'light'
-                  ? 'bg-blueGray-50 text-blueGray-500 border-blueGray-100'
-                  : 'bg-emerald-800 text-emerald-300 border-emerald-700'
-              "
-              @click="sortBy('maNhaXuatBan')"
-          >
-            Mã nhà xuất bản
-            <span>
-                <i
-                    v-if="sortKey === 'maNhaXuatBan' && sortOrder === 1"
-                    class="fas fa-sort-up ml-1"
-                ></i>
-                <i
-                    v-else-if="sortKey === 'maNhaXuatBan' && sortOrder === -1"
-                    class="fas fa-sort-down ml-1"
-                ></i>
-                <i v-else class="fas fa-sort ml-1"></i>
-              </span>
-          </th>
-          <!-- Tên nhà xuất bản  có sort -->
-          <th
-              class="px-6 py-3 text-xs uppercase font-semibold text-left border border-solid whitespace-nowrap cursor-pointer"
-              :class="
-                color === 'light'
-                  ? 'bg-blueGray-50 text-blueGray-500 border-blueGray-100'
-                  : 'bg-emerald-800 text-emerald-300 border-emerald-700'
-              "
-              @click="sortBy('tenNhaXuatBan')"
-          >
-            Tên nhà xuất bản
-            <span>
-                <i
-                    v-if="sortKey === 'tenNhaXuatBan' && sortOrder === 1"
-                    class="fas fa-sort-up ml-1"
-                ></i>
-                <i
-                    v-else-if="sortKey === 'tenNhaXuatBan' && sortOrder === -1"
-                    class="fas fa-sort-down ml-1"
-                ></i>
-                <i v-else class="fas fa-sort ml-1"></i>
-              </span>
-          </th>
-          <!-- Mô tả -->
-
-          <!-- Hành động -->
-          <th
-              class="px-6 py-3 text-xs uppercase font-semibold text-left border border-solid whitespace-nowrap"
-              :class="
-                color === 'light'
-                  ? 'bg-blueGray-50 text-blueGray-500 border-blueGray-100'
-                  : 'bg-emerald-800 text-emerald-300 border-emerald-700'
-              "
-          >
-            Hành động
-          </th>
-        </tr>
-        </thead>
-
-        <!-- Dữ liệu bảng (tbody) -->
-        <tbody>
-        <tr v-for="nhaXuatBan in paginatedNhaXuatBan" v-bind:key="nhaXuatBan.id">
-          <!-- Mã nhà xuất bản  -->
-          <td class="border-t-0 px-6 py-4 text-xs whitespace-nowrap">
-              <span class="font-semibold">
-                {{ nhaXuatBan.maNhaXuatBan }}
-              </span>
-          </td>
-          <!-- Tên nhà xuất bản  -->
-          <td class="border-t-0 px-6 py-4 text-xs whitespace-nowrap">
-              <span class="font-semibold">
-                {{ nhaXuatBan.tenNhaXuatBan }}
-              </span>
-          </td>
-          <!-- Mô tả -->
-
-          <!-- Hành động -->
-          <td class="border-t-0 px-6 py-4 text-xs whitespace-nowrap">
-            <button
-                class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition mr-2"
-                @click="editNhaXuatBan(nhaXuatBan)"
-            >
-              Sửa
-            </button>
-            <button
-                class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition"
-                @click="deleteNhaXuatBan(nhaXuatBan.id)"
-            >
-              Xoá
-            </button>
-          </td>
-        </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Phân trang -->
-    <div class="mt-4 px-4 py-2 flex justify-center items-center">
-      <button
-          class="bg-gray-300 text-gray-700 px-3 py-1 rounded-l hover:bg-gray-400 transition"
-          @click="prevPage"
-          :disabled="currentPage === 1"
-      >
-        Prev
-      </button>
-      <span class="mx-2 text-sm">
-        Trang {{ currentPage }} / {{ totalPages }}
-      </span>
-      <button
-          class="bg-gray-300 text-gray-700 px-3 py-1 rounded-r hover:bg-gray-400 transition"
-          @click="nextPage"
-          :disabled="currentPage === totalPages"
-      >
-        Next
-      </button>
-    </div>
-
-    <!-- Modal thêm/sửa nhà xuất bản  -->
+    <!-- Modal thêm/sửa nhà xuất bản -->
     <div v-if="showModal" class="fixed inset-0 bg-opacity-80 flex items-center justify-center backdrop-blur-sm z-50">
-      <div class="bg-white p-6 rounded-lg w-1/2 shadow-[0_10px_30px_rgba(0,0,0,0.4)] ">
-        <h2 class="text-xl font-bold mb-4">{{ isEditing ? 'Sửa nhà xuất bản ' : 'Thêm nhà xuất bản ' }}</h2>
+      <div class="bg-white p-6 rounded-lg w-1/2 shadow-[0_10px_30px_rgba(0,0,0,0.4)]">
+        <h2 class="text-xl font-bold mb-4">{{ isEditing ? 'Sửa nhà xuất bản' : 'Thêm nhà xuất bản' }}</h2>
         <form @submit.prevent="validateAndSave">
-          <!-- Bỏ trường Mã nhà xuất bản  -->
           <div class="mb-4">
-            <label class="block text-sm font-medium mb-1">Tên nhà xuất bản </label>
+            <label class="block text-sm font-medium mb-1">Tên nhà xuất bản</label>
             <input v-model="formData.tenNhaXuatBan" type="text" class="w-full border rounded px-3 py-2" required>
           </div>
-
           <div class="flex justify-end">
             <button type="button" @click="closeModal" class="bg-gray-500 text-white px-4 py-2 rounded mr-2">Hủy</button>
             <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Lưu</button>
@@ -252,8 +190,8 @@ export default {
       try {
         this.listNhaXuatBan = await NhaXuatBanService.getAll();
       } catch (error) {
-        console.error('Error loading nha xuat ban:', error);
-        alert('Có lỗi xảy ra khi tải danh sách nhà xuất bản ');
+        console.error('Error loading chat lieu:', error);
+        alert('Có lỗi xảy ra khi tải danh sách nhà xuất bản');
       }
     },
 
@@ -267,8 +205,8 @@ export default {
           try {
             this.listNhaXuatBan = await NhaXuatBanService.search(this.searchQuery.trim());
           } catch (error) {
-            console.error('Error searching nha xuat ban:', error);
-            alert('Có lỗi xảy ra khi tìm kiếm nhà xuất bản ');
+            console.error('Error searching chat lieu:', error);
+            alert('Có lỗi xảy ra khi tìm kiếm nhà xuất bản');
           }
         } else {
           await this.loadNhaXuatBans();
@@ -295,14 +233,13 @@ export default {
         if (this.isEditing) {
           await NhaXuatBanService.update(this.editingId, this.formData);
         } else {
-          // Khi tạo mới, không cần gửi maNhaXuatBan, backend sẽ tự xử lý
           await NhaXuatBanService.create(this.formData);
         }
         this.closeModal();
         await this.loadNhaXuatBans();
       } catch (error) {
-        console.error('Error saving nha xuat ban:', error);
-        alert('Có lỗi xảy ra khi lưu nhà xuất bản ');
+        console.error('Error saving chat lieu:', error);
+        alert('Có lỗi xảy ra khi lưu nhà xuất bản');
       }
     },
 
@@ -312,8 +249,8 @@ export default {
           await NhaXuatBanService.delete(id);
           await this.loadNhaXuatBans();
         } catch (error) {
-          console.error('Error deleting nha xuat ban:', error);
-          alert('Có lỗi xảy ra khi xóa nhà xuất bản ');
+          console.error('Error deleting chat lieu:', error);
+          alert('Có lỗi xảy ra khi xóa nhà xuất bản');
         }
       }
     },
@@ -324,8 +261,7 @@ export default {
       this.editingId = null;
     },
 
-    async validateAndSave() {
-      // Bỏ logic kiểm tra maNhaXuatBan vì backend sẽ tự sinh
+    validateAndSave() {
       this.saveNhaXuatBan();
     },
 
@@ -350,7 +286,6 @@ export default {
     nextPage() {
       if (this.currentPage < this.totalPages) this.currentPage++;
     },
-
   },
   created() {
     this.loadNhaXuatBans();
@@ -359,5 +294,8 @@ export default {
 </script>
 
 <style scoped>
-/* CSS tùy chỉnh nếu cần */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+.font-roboto {
+  font-family: 'Roboto', sans-serif;
+}
 </style>
