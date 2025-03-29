@@ -123,7 +123,7 @@ public class PhieuGiamGiaService {
         PhieuGiamGia phieu = phieuGiamGiaRepository.findById(dto.getId())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy phiếu giảm giá"));
 
-        // Cập nhật các trường
+        // Cập nhật các trường phiếu giảm giá
         phieu.setSoPhanTramGiam(dto.getSoPhanTramGiam());
         phieu.setGiaTriGiam(dto.getGiaTriGiam());
         phieu.setGiaTriDonHangToiThieu(dto.getGiaTriDonHangToiThieu());
@@ -133,31 +133,43 @@ public class PhieuGiamGiaService {
         phieu.setNgayKetThuc(dto.getNgayKetThuc());
         phieu.setSoLuong(dto.getSoLuong());
 
-        // --- Xử lý phần liên kết khách hàng ---
+        // Xử lý phần liên kết khách hàng
         List<PhieuGiamGiaKhachHang> danhSachCu = phieuGiamGiaKhachHangService.findByPhieuGiamGiaId(phieu.getId());
 
         if (dto.getKhachHangId() != null) {
-            // Nếu là khách hàng cụ thể → xóa liên kết cũ và tạo mới
-            danhSachCu.forEach(pggkh -> phieuGiamGiaKhachHangService.deleteByPhieuGiamGiaId(Long.valueOf(pggkh.getId())));
             var kh = khachHangRepository.findById(dto.getKhachHangId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng"));
-            PhieuGiamGiaKhachHang link = new PhieuGiamGiaKhachHang();
-            link.setPhieuGiamGia(phieu);
-            link.setKhachHang(kh);
-            link.setCreatedAt(LocalDateTime.now());
-            link.setDeleted(false);
-            link.setTrangThai(true);
-            link.setSoLuong(1);
-            phieuGiamGiaKhachHangService.save(link);
+
+            if (danhSachCu.isEmpty()) {
+                // Nếu chưa có liên kết: tạo mới
+                PhieuGiamGiaKhachHang link = new PhieuGiamGiaKhachHang();
+                link.setPhieuGiamGia(phieu);
+                link.setKhachHang(kh);
+                link.setCreatedAt(LocalDateTime.now());
+                link.setDeleted(false);
+                link.setTrangThai(true);
+                link.setSoLuong(1);
+                phieuGiamGiaKhachHangService.save(link);
+                System.out.println("Tạo mới liên kết với khách hàng: " + kh.getId());
+            } else {
+                // Nếu đã có liên kết: cập nhật khách hàng mới vào bản ghi đầu tiên
+                PhieuGiamGiaKhachHang link = danhSachCu.get(0); // Giả sử chỉ có 1 liên kết
+                link.setKhachHang(kh);
+                phieuGiamGiaKhachHangService.save(link);
+                System.out.println("Cập nhật liên kết từ khách hàng cũ sang khách hàng mới: " + kh.getId());
+            }
         } else {
-            // Nếu là công khai → xóa hết các liên kết khách hàng cũ
-            danhSachCu.forEach(pggkh -> phieuGiamGiaKhachHangService.deleteByPhieuGiamGiaId(Long.valueOf(pggkh.getId())));
+            // Nếu là công khai: xóa hết liên kết cũ
+            if (!danhSachCu.isEmpty()) {
+                System.out.println("Chuyển sang công khai, xóa liên kết cũ cho phiếu: " + phieu.getId());
+                phieuGiamGiaKhachHangService.deleteByPhieuGiamGiaId(phieu.getId());
+            }
         }
 
-        // Lưu lại
+        // Lưu phiếu giảm giá đã cập nhật
         PhieuGiamGia updated = phieuGiamGiaRepository.save(phieu);
 
-        // Trả về DTO
+        // Trả về DTO với danh sách liên kết mới
         List<PhieuGiamGiaKhachHang> danhSachMoi = phieuGiamGiaKhachHangService.findByPhieuGiamGiaId(phieu.getId());
         return PhieuGiamGiaMapper.toDTO(updated, danhSachMoi);
     }

@@ -24,5 +24,5 @@ public interface PhieuGiamGiaKhachHangRepository extends JpaRepository<PhieuGiam
     List<PhieuGiamGiaKhachHang> findByKhachHangId(Long khachHangId);
 
     List<PhieuGiamGiaKhachHang> findByPhieuGiamGiaIdAndDeletedFalse(Long phieuId);
-
+    void deleteByPhieuGiamGiaId(Long phieuGiamGiaId);
 }
