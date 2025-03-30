@@ -134,15 +134,11 @@
         <button
             v-for="tab in tabs"
             :key="tab.value"
-            @click="selectedTab = tab.value"
+            @click="selectTab(tab.value)"
             class="relative px-4 py-2 flex items-center gap-2 transition-all duration-200 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none"
             :class="selectedTab === tab.value ? 'after:absolute after:left-0 after:bottom-0 after:w-full after:h-0.5 after:bg-blue-500 text-blue-500 font-semibold' : 'text-black'"
-        >
-          {{ tab.label }}
-          <span
-              v-if="invoiceCounts[tab.value] > 0"
-              class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full min-w-[22px] text-center shadow-md"
-          >
+            >{{ tab.label }}
+          <span v-if="invoiceCounts[tab.value] > 0" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full min-w-[22px] text-center shadow-md">
             {{ invoiceCounts[tab.value] }}
           </span>
         </button>
@@ -292,7 +288,7 @@ export default {
       if (this.searchName) {
         const searchLower = this.searchName.toLowerCase();
         result = result.filter((inv) =>
-            inv.id === searchLower ||
+            inv.id.toString() === searchLower ||
             inv.maHoaDon.toLowerCase().includes(searchLower) ||
             inv.tenNguoiNhan.toLowerCase().includes(searchLower) ||
             inv.soDienThoaiNguoiNhan.includes(searchLower) ||
@@ -378,12 +374,12 @@ export default {
 
     paginatedInvoices() {
       if (this.qrResult) {
-        return [this.qrResult];
+        return [this.qrResult]; // Hiển thị kết quả QR nếu có
       }
 
       const start = (this.currentPage - 1) * this.itemsPerPage;
       const end = start + this.itemsPerPage;
-      return this.filteredInvoices.slice(start, end);
+      return this.filteredInvoices.slice(start, end); // Hiển thị danh sách phân trang nếu không có QR
     },
 
     totalPages() {
@@ -551,7 +547,15 @@ export default {
               alert("Có lỗi xảy ra khi xuất file Excel!");
             }
           });
-    }
+    },
+
+    // Hàm xử lý khi chọn tab
+    selectTab(tabValue) {
+      this.selectedTab = tabValue;
+      if (tabValue === "all") {
+        this.qrResult = null; // Reset qrResult khi chọn tab "TẤT CẢ"
+      }
+    },
   },
   created() {
     this.getListHoaDon();

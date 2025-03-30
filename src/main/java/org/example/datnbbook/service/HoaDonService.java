@@ -7,6 +7,7 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.itextpdf.html2pdf.ConverterProperties;
 import com.itextpdf.html2pdf.HtmlConverter;
+import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.example.datnbbook.model.HoaDon;
@@ -97,7 +98,7 @@ public class HoaDonService {
 
     public ByteArrayOutputStream exportHoaDonToExcel() throws IOException {
         List<HoaDon> hoaDons = getAllHoaDon().stream()
-                .filter(hd -> "Đã thanh toán".equals(hd.getTrangThai()))
+                .filter(hd -> "Hoàn thành".equals(hd.getTrangThai()))
                 .toList();
 
         System.out.println("Số lượng hóa đơn: " + hoaDons.size());
@@ -109,8 +110,16 @@ public class HoaDonService {
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Danh sách hóa đơn");
 
+            // Tạo kiểu cho hyperlink
+            CellStyle hyperlinkStyle = workbook.createCellStyle();
+            Font hyperlinkFont = workbook.createFont();
+            hyperlinkFont.setUnderline(Font.U_SINGLE);
+            hyperlinkFont.setColor(IndexedColors.BLUE.getIndex());
+            hyperlinkStyle.setFont(hyperlinkFont);
+
+            // Tạo header
             Row headerRow = sheet.createRow(0);
-            String[] columns = {"ID", "Mã HĐ", "Ngày Tạo", "Ngày Thanh Toán", "Tổng Thanh Tiền", "Mã Nhân Viên", "Tên Khách Hàng", "Địa Chỉ", "Số Điện Thoại", "Trạng Thái"};
+            String[] columns = {"ID", "Mã HĐ", "Ngày Tạo", "Ngày Đặt Hàng", "Tổng Thanh Tiền", "Mã Nhân Viên", "Tên Khách Hàng", "Địa Chỉ", "Số Điện Thoại", "Trạng Thái"};
             CellStyle headerStyle = workbook.createCellStyle();
             headerStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
             headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
@@ -128,27 +137,22 @@ public class HoaDonService {
             SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
             int rowIndex = 1;
 
-            for (HoaDon hoaDon : hoaDons) {
-                System.out.println("Hóa đơn ID: " + hoaDon.getId());
-                System.out.println("Mã HĐ: " + hoaDon.getMaHoaDon());
-                System.out.println("Ngày Tạo: " + hoaDon.getNgayTao());
-                System.out.println("Ngày Thanh Toán: " + hoaDon.getNgayDatHang()); // Sử dụng ngayDatHang thay vì ngayThanhToan
-                System.out.println("Nhân Viên: " + (hoaDon.getNhanVien() != null ? hoaDon.getNhanVien().getMaNhanVien() : "N/A"));
-                System.out.println("Tên Khách Hàng: " + hoaDon.getTenNguoiNhan());
-                System.out.println("Địa Chỉ: " + hoaDon.getDiaChi());
-                System.out.println("Số Điện Thoại: " + hoaDon.getSoDienThoaiNguoiNhan());
-                System.out.println("Trạng Thái: " + hoaDon.getTrangThai());
-                System.out.println("Số lượng chi tiết hóa đơn: " + (hoaDon.getHoaDonChiTiets() != null ? hoaDon.getHoaDonChiTiets().size() : "null"));
+            // Tạo Hyperlink CreationHelper
+            CreationHelper creationHelper = workbook.getCreationHelper();
 
+            for (HoaDon hoaDon : hoaDons) {
                 Row row = sheet.createRow(rowIndex++);
 
-                row.createCell(0).setCellValue(hoaDon.getId());
+                // Cột ID với hyperlink
+                Cell idCell = row.createCell(0);
+                idCell.setCellValue(hoaDon.getId());
+                Hyperlink hyperlink = creationHelper.createHyperlink(HyperlinkType.DOCUMENT);
+                hyperlink.setAddress("'Chi tiết hóa đơn - " + hoaDon.getId() + "'!A1"); // Liên kết đến ô A1 của sheet chi tiết
+                idCell.setHyperlink(hyperlink);
+                idCell.setCellStyle(hyperlinkStyle); // Áp dụng kiểu hyperlink
+
                 row.createCell(1).setCellValue(hoaDon.getMaHoaDon() != null ? hoaDon.getMaHoaDon() : "N/A");
-
-                // Chuyển đổi Instant sang Date để định dạng
                 row.createCell(2).setCellValue(hoaDon.getNgayTao() != null ? dateFormat.format(Date.from(hoaDon.getNgayTao())) : "N/A");
-
-                // Sử dụng ngayDatHang thay vì ngayThanhToan (vì không có field ngayThanhToan trong entity)
                 row.createCell(3).setCellValue(hoaDon.getNgayDatHang() != null ? dateFormat.format(Date.from(hoaDon.getNgayDatHang())) : "N/A");
 
                 BigDecimal tongThanhTien = hoaDon.getHoaDonChiTiets() != null ?
@@ -156,14 +160,13 @@ public class HoaDonService {
                                 .map(item -> item.getGiaSanPham() != null ? item.getGiaSanPham().multiply(BigDecimal.valueOf(item.getSoLuong())) : BigDecimal.ZERO)
                                 .reduce(BigDecimal.ZERO, BigDecimal::add) : BigDecimal.ZERO;
                 row.createCell(4).setCellValue(tongThanhTien.doubleValue());
-                System.out.println("Tổng Thanh Tiền: " + tongThanhTien);
-
                 row.createCell(5).setCellValue(hoaDon.getNhanVien() != null && hoaDon.getNhanVien().getMaNhanVien() != null ? hoaDon.getNhanVien().getMaNhanVien() : "N/A");
                 row.createCell(6).setCellValue(hoaDon.getTenNguoiNhan() != null ? hoaDon.getTenNguoiNhan() : "N/A");
                 row.createCell(7).setCellValue(hoaDon.getDiaChi() != null ? hoaDon.getDiaChi() : "N/A");
                 row.createCell(8).setCellValue(hoaDon.getSoDienThoaiNguoiNhan() != null ? hoaDon.getSoDienThoaiNguoiNhan() : "N/A");
                 row.createCell(9).setCellValue(hoaDon.getTrangThai() != null ? hoaDon.getTrangThai() : "N/A");
 
+                // Tạo sheet chi tiết hóa đơn
                 Sheet chiTietSheet = workbook.createSheet("Chi tiết hóa đơn - " + hoaDon.getId());
                 Row chiTietHeaderRow = chiTietSheet.createRow(0);
                 String[] chiTietHeaders = {"ID Hóa Đơn", "Tên Sản Phẩm", "Chất liệu", "Loại bìa", "Ngôn ngữ", "Tác giả", "Số Lượng", "Giá Bán", "Tổng Tiền"};
@@ -176,22 +179,6 @@ public class HoaDonService {
                 int chiTietRowIndex = 1;
                 if (hoaDon.getHoaDonChiTiets() != null) {
                     for (HoaDonChiTiet chiTiet : hoaDon.getHoaDonChiTiets()) {
-                        System.out.println("Chi tiết hóa đơn - ID Hóa Đơn: " + (chiTiet.getHoaDon() != null ? chiTiet.getHoaDon().getId() : "N/A"));
-                        System.out.println("Tên Sản Phẩm: " + (chiTiet.getChiTietSanPham() != null && chiTiet.getChiTietSanPham().getIdSanPham() != null ?
-                                chiTiet.getChiTietSanPham().getIdSanPham().getTenSanPham() : "N/A"));
-                        System.out.println("Chất liệu: " + (chiTiet.getChiTietSanPham() != null && chiTiet.getChiTietSanPham().getIdChatLieu() != null ?
-                                chiTiet.getChiTietSanPham().getIdChatLieu().getTenChatLieu() : "N/A"));
-                        System.out.println("Loại bìa: " + (chiTiet.getChiTietSanPham() != null && chiTiet.getChiTietSanPham().getIdLoaiBia() != null ?
-                                chiTiet.getChiTietSanPham().getIdLoaiBia().getTenLoaiBia() : "N/A"));
-                        System.out.println("Ngôn ngữ: " + (chiTiet.getChiTietSanPham() != null && chiTiet.getChiTietSanPham().getIdNgonNgu() != null ?
-                                chiTiet.getChiTietSanPham().getIdNgonNgu().getTenNgonNgu() : "N/A"));
-                        System.out.println("Tác giả: " + (chiTiet.getChiTietSanPham() != null && chiTiet.getChiTietSanPham().getIdTacGia() != null ?
-                                chiTiet.getChiTietSanPham().getIdTacGia().getTenTacGia() : "N/A"));
-                        System.out.println("Số Lượng: " + chiTiet.getSoLuong());
-                        System.out.println("Giá Bán: " + (chiTiet.getGiaSanPham() != null ? chiTiet.getGiaSanPham().doubleValue() : "N/A"));
-                        System.out.println("Tổng Tiền: " + (chiTiet.getGiaSanPham() != null ?
-                                chiTiet.getGiaSanPham().multiply(BigDecimal.valueOf(chiTiet.getSoLuong())).doubleValue() : "N/A"));
-
                         Row chiTietRow = chiTietSheet.createRow(chiTietRowIndex++);
                         chiTietRow.createCell(0).setCellValue(chiTiet.getHoaDon() != null ? chiTiet.getHoaDon().getId() : 0);
                         chiTietRow.createCell(1).setCellValue(chiTiet.getChiTietSanPham() != null && chiTiet.getChiTietSanPham().getIdSanPham() != null ?
@@ -209,8 +196,6 @@ public class HoaDonService {
                         chiTietRow.createCell(8).setCellValue(chiTiet.getGiaSanPham() != null ?
                                 chiTiet.getGiaSanPham().multiply(BigDecimal.valueOf(chiTiet.getSoLuong())).doubleValue() : 0.0);
                     }
-                } else {
-                    System.out.println("Hóa đơn " + hoaDon.getId() + " không có chi tiết hóa đơn.");
                 }
 
                 for (int i = 0; i < chiTietHeaders.length; i++) {
@@ -232,4 +217,6 @@ public class HoaDonService {
             throw new IOException("Lỗi khi tạo file Excel", e);
         }
     }
+
+
 }

@@ -28,14 +28,24 @@
       </div>
 
       <!-- Nút điều khiển trạng thái đơn hàng -->
-      <div class="bg-white p-6 rounded-lg shadow-md d-flex mt-4">
-        <button v-if="order.trangThai === 'Chờ xác nhận'" @click="xacNhanHoaDon" class="px-4 py-2 border border-green-500 text-green-500 rounded-lg">Xác nhận hóa đơn</button>
-        <button v-if="order.trangThai === 'Chờ xác nhận' || order.trangThai === 'Chờ giao hàng' || order.trangThai === 'Đang vận chuyển'"
-                @click="huyDon" class="px-4 py-2 border border-red-500 text-red-500 rounded-lg ml-2">Hủy đơn</button>
-        <button v-if="order.trangThai === 'Chờ giao hàng'" @click="xacNhanGiaoHang" class="px-4 py-2 border border-blue-500 text-blue-500 rounded-lg">Xác nhận giao hàng</button>
-        <button v-if="order.trangThai === 'Đang vận chuyển'" @click="xacNhanLayHang" class="px-4 py-2 border border-yellow-500 text-yellow-500 rounded-lg">Xác nhận lấy hàng</button>
-        <button v-if="order.trangThai === 'Hoàn thành'" @click="openHistoryModal" class="px-4 py-2 border border-orange-400 text-orange-400 rounded-lg">Chi tiết</button>
-        <button v-if="order.trangThai === 'Hoàn thành'" @click="printInvoice" class="px-4 py-2 border border-orange-400 text-orange-400 rounded-lg ml-2">In hóa đơn</button>
+      <div class="bg-white p-6 rounded-lg shadow-md mt-4 flex justify-between items-center">
+        <div class="flex gap-2">
+          <!-- Các nút điều khiển trạng thái -->
+          <button v-if="order.trangThai === 'Chờ xác nhận'" @click="xacNhanHoaDon" class="px-4 py-2 border border-green-500 text-green-500 rounded-lg">Xác nhận hóa đơn</button>
+          <button v-if="order.trangThai === 'Chờ xác nhận' || order.trangThai === 'Chờ giao hàng' || order.trangThai === 'Đang vận chuyển'"
+                  @click="huyDon" class="px-4 py-2 border border-red-500 text-red-500 rounded-lg">Hủy đơn</button>
+          <button v-if="order.trangThai === 'Chờ giao hàng'" @click="xacNhanGiaoHang" class="px-4 py-2 border border-blue-500 text-blue-500 rounded-lg">Xác nhận giao hàng</button>
+          <button v-if="order.trangThai === 'Đang vận chuyển'" @click="xacNhanLayHang" class="px-4 py-2 border border-yellow-500 text-yellow-500 rounded-lg">Xác nhận lấy hàng</button>
+          <!-- Nút "In hóa đơn" và "Chi tiết" ở trạng thái "Hoàn thành" -->
+          <template v-if="order.trangThai === 'Hoàn thành'">
+            <button @click="printInvoice" class="px-4 py-2 border border-orange-400 text-orange-400 rounded-lg">In hóa đơn</button>
+            <button @click="openHistoryModal" class="px-4 py-2 border border-orange-400 text-orange-400 rounded-lg">Chi tiết</button>
+          </template>
+        </div>
+        <!-- Nút "Chi tiết" ở các trạng thái khác ngoài "Hoàn thành" -->
+        <div v-if="order.trangThai !== 'Hoàn thành'">
+          <button @click="openHistoryModal" class="px-4 py-2 border border-orange-400 text-orange-400 rounded-lg">Chi tiết</button>
+        </div>
       </div>
 
       <!-- Modal hiển thị chi tiết lịch sử hóa đơn -->
@@ -336,8 +346,35 @@ export default {
       this.showHistoryModal = false;
     },
 
-    xacNhanHoaDon() {
-      console.log("Xác nhận hóa đơn");
+    async xacNhanHoaDon() {
+      try {
+        const orderId = this.$route.params.id;
+        if (!orderId) {
+          console.error("Thiếu ID hóa đơn để xác nhận");
+          alert("Không tìm thấy ID hóa đơn!");
+          return;
+        }
+
+        // Gọi service để cập nhật trạng thái (không có ghi chú)
+        const response = await HoaDonService.updateTrangThaiHoaDon(orderId, "Chờ giao hàng");
+
+        if (response.status === 200) {
+          console.log("Cập nhật trạng thái thành công:", response.data);
+          alert("Xác nhận hóa đơn thành công!");
+
+          // Làm mới dữ liệu hóa đơn sau khi cập nhật
+          await this.fetchOrder();
+        } else {
+          console.error("Cập nhật trạng thái thất bại:", response.status);
+          alert("Có lỗi xảy ra khi xác nhận hóa đơn!");
+        }
+      } catch (error) {
+        console.error("Lỗi khi xác nhận hóa đơn:", error);
+        if (error.response) {
+          console.error("Chi tiết lỗi từ server:", error.response.status, error.response.data);
+        }
+        alert("Có lỗi xảy ra khi xác nhận hóa đơn. Vui lòng thử lại!");
+      }
     },
 
     huyDon() {

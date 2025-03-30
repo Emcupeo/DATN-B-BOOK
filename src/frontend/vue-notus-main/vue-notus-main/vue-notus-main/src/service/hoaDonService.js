@@ -27,6 +27,12 @@ class HoaDonService {
             responseType: 'blob' // Đảm bảo nhận dữ liệu dạng blob cho file Excel
         });
     }
+
+    // updateTrangThaiHoaDon(id, trangThaiMoi) {
+    //     return axios.put(`${API_URL}/hoa-don/${id}/cap-nhat-trang-thai`, {
+    //         trangThaiMoi
+    //     });
+    // }
 }
 
 export default new HoaDonService();
