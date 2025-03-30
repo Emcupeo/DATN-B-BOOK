@@ -26,7 +26,7 @@
       </div>
 
       <!-- Nội dung bảng -->
-      <div class="relative overflow-x-auto sm:rounded-lg w-full h-[calc(100vh-200px)]">
+      <div class="relative overflow-x-auto sm:rounded-lg w-full h-[calc(100vh-120px)]">
         <table class="w-full text-sm text-center text-gray-500">
           <thead class="text-xs text-gray-700 uppercase bg-gray-50">
           <tr>
@@ -142,7 +142,7 @@ export default {
       listSanPham: [],
       searchQuery: "",
       currentPage: 1,
-      itemsPerPage: 14,
+      itemsPerPage: 10,
       sortKey: "",
       sortOrder: 1,
       searchTimeout: null,

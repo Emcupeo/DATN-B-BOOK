@@ -13,7 +13,7 @@ class NguoiDichService {
   }
 
   async create(nguoiDich) {
-    const response = await api.post('/nguoi-dich', nguoiDich.toJSON());
+    const response = await api.post('/nguoi-dich', nguoiDich);
     return new NguoiDich(response.data);
   }
 

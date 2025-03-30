@@ -610,9 +610,9 @@ export default {
                     ngayKetThuc: toIsoString(this.newPhieu.ngayKetThuc),
                     trangThai: this.newPhieu.trangThai === 'true',
                     moTa: this.newPhieu.moTa.trim(),
-                    // 👇 chỉ gửi ID nếu là khách hàng cụ thể
                     khachHangId: this.loaiApDung === 'khachHang' ? this.khachHangDaChon : null
                 };
+
 
 
                 fetch(apiUrl, {

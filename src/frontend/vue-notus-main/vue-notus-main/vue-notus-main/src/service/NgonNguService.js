@@ -13,7 +13,7 @@ class NgonNguService {
   }
 
   async create(ngonNgu) {
-    const response = await api.post('/ngon-ngu', ngonNgu.toJSON());
+    const response = await api.post('/ngon-ngu', ngonNgu);
     return new NgonNgu(response.data);
   }
 

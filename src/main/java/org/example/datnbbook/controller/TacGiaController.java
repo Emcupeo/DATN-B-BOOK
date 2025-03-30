@@ -28,7 +28,7 @@ public class TacGiaController {
     TacGiaService tacGiaService;
 
     @GetMapping
-    public List<TacGia> getAlTacGia() {
+    public List<TacGia> getAllTacGia() {
         return tacGiaService.getAll();
     }
 

@@ -13,7 +13,7 @@ class TheLoaiService {
   }
 
   async create(theLoai) {
-    const response = await api.post('/the-loai', theLoai.toJSON());
+    const response = await api.post('/the-loai', theLoai);
     return new TheLoai(response.data);
   }
 

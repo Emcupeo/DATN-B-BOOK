@@ -13,7 +13,7 @@ class LoaiBiaService {
   }
 
   async create(loaiBia) {
-    const response = await api.post('/loai-bia', loaiBia.toJSON());
+    const response = await api.post('/loai-bia', loaiBia);
     return new LoaiBia(response.data);
   }
 
