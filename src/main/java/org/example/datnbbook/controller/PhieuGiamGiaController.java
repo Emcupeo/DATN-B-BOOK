@@ -28,6 +28,7 @@ public class PhieuGiamGiaController {
     private PhieuGiamGiaService phieuGiamGiaService;
 
     // ✅ Lấy danh sách DTO kèm thông tin khách hàng nếu có
+
     @GetMapping
     public ResponseEntity<Page<PhieuGiamGiaDTO>> getAll(
             @RequestParam(defaultValue = "0") int page,
@@ -35,12 +36,9 @@ public class PhieuGiamGiaController {
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir) {
 
-        // Allow sorting by 'tenPhieuGiamGia' as well
-        if (!sortBy.equals("id") && !sortBy.equals("tenPhieuGiamGia")) {
-            return ResponseEntity.badRequest().body(null);
-        }
-
-        Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name()) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name())
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<PhieuGiamGiaDTO> dtoPage = phieuGiamGiaService.getAllDTO(pageable);
         return ResponseEntity.ok(dtoPage);
@@ -81,7 +79,7 @@ public class PhieuGiamGiaController {
 
         // Only check for duplicate maPhieuGiamGia if it's being changed
         if (!dto.getMaPhieuGiamGia().equals(existingPhieu.getMaPhieuGiamGia()) &&
-            phieuGiamGiaService.existsByMaPhieuGiamGia(dto.getMaPhieuGiamGia())) {
+                phieuGiamGiaService.existsByMaPhieuGiamGia(dto.getMaPhieuGiamGia())) {
             return ResponseEntity.badRequest().body("Error: Duplicate maPhieuGiamGia");
         }
 
@@ -113,12 +111,10 @@ public class PhieuGiamGiaController {
                     emailRequest.getTo(),
                     emailRequest.getCustomerName(),
                     emailRequest.getVoucherType(),
-                    emailRequest.getVoucherValue()
-            );
+                    emailRequest.getVoucherValue());
             return ResponseEntity.ok("Email gửi thành công");
         } catch (MessagingException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi gửi email: " + e.getMessage());
         }
     }
 }
-
