@@ -198,13 +198,8 @@
           <table class="w-full text-sm text-center text-gray-500">
             <thead class="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('id')">
+                <th scope="col" class="px-6 py-3 cursor-pointer">
                   #
-                  <span v-if="sortKey === 'id'" class="ml-1">
-                    <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortDirection === 'asc' ? 'M19 9l-7 7-7-7' : 'M5 15l7-7 7 7'"></path>
-                    </svg>
-                  </span>
                 </th>
                 <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('maPhieuGiamGia')">
                   Mã phiếu
