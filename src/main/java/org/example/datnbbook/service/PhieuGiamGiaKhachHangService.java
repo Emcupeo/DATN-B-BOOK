@@ -24,10 +24,18 @@ public class PhieuGiamGiaKhachHangService {
         return repository.findByPhieuGiamGiaIdAndDeletedFalse(phieuId);
     }
 
+    // Soft delete tất cả liên kết theo phieuGiamGiaId
     public void deleteByPhieuGiamGiaId(Long phieuGiamGiaId) {
         List<PhieuGiamGiaKhachHang> danhSach = repository.findByPhieuGiamGiaId(phieuGiamGiaId);
-        danhSach.forEach(item -> repository.deleteById(item.getId()));
-
+        for (PhieuGiamGiaKhachHang item : danhSach) {
+            item.setDeleted(true); // Đánh dấu là đã xóa
+            repository.save(item); // Lưu lại thay vì xóa cứng
+        }
     }
 
+    // Thêm phương thức xóa một bản ghi cụ thể (nếu cần)
+    public void delete(PhieuGiamGiaKhachHang entity) {
+        entity.setDeleted(true);
+        repository.save(entity);
+    }
 }

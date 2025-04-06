@@ -81,6 +81,10 @@
                   <td class="p-2">{{ selectedPhieu?.maPhieuGiamGia }}</td>
                 </tr>
                 <tr>
+                  <td class="p-2 font-semibold">Tên phiếu</td>
+                  <td class="p-2">{{ selectedPhieu?.tenPhieuGiamGia }}</td>
+                </tr>
+                <tr>
                   <td class="p-2 font-semibold">Mô tả</td>
                   <td class="p-2">{{ selectedPhieu?.moTa }}</td>
                 </tr>
@@ -113,7 +117,7 @@
                   <td class="p-2">{{ formatDate(selectedPhieu?.ngayKetThuc) }}</td>
                 </tr>
                 <tr>
-                  <td class="p-2 font-semibold">Trạng thái</td>
+                  <td class="p-2 font-semibold">Tình trạng</td>
                   <td class="p-2">
                     <span :class="{
                       'bg-green-100 text-green-700 px-2 py-1 text-xs font-semibold rounded-lg': getTrangThaiHienTai(selectedPhieu) === 'Hoạt động',
@@ -203,7 +207,7 @@
               </select>
               <select v-model="filterStatus"
                 class="block w-[150px] h-[40px] p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500">
-                <option value="">Tất cả trạng thái</option>
+                <option value="">Tất cả tình trạng</option>
                 <option value="Hoạt động">Hoạt động</option>
                 <option value="Đang chờ">Đang chờ</option>
                 <option value="Hết hạn">Hết hạn</option>
@@ -263,9 +267,10 @@
                     </svg>
                   </span>
                 </th>
+                <th scope="col" class="px-6 py-3">Tên phiếu</th>
                 <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('loaiApDung')">
                   Loại áp dụng
-                  <span v-if="sortKey === 'maPhieuGiamGia'" class="ml-1">
+                  <span v-if="sortKey === 'loaiApDung'" class="ml-1">
                     <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                       xmlns="http://www.w3.org/2000/svg">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -285,7 +290,7 @@
                 </th>
                 <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('loaiPhieu')">
                   Loại phiếu
-                  <span v-if="sortKey === 'moTa'" class="ml-1">
+                  <span v-if="sortKey === 'loaiPhieu'" class="ml-1">
                     <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                       xmlns="http://www.w3.org/2000/svg">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -295,7 +300,7 @@
                 </th>
                 <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('giaTriGiam')">
                   Giá trị giảm
-                  <span v-if="sortKey === 'moTa'" class="ml-1">
+                  <span v-if="sortKey === 'giaTriGiam'" class="ml-1">
                     <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                       xmlns="http://www.w3.org/2000/svg">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -314,7 +319,7 @@
                   </span>
                 </th>
                 <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('trangThai')">
-                  Trạng thái
+                  tình trạng
                   <span v-if="sortKey === 'trangThai'" class="ml-1">
                     <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                       xmlns="http://www.w3.org/2000/svg">
@@ -323,6 +328,7 @@
                     </svg>
                   </span>
                 </th>
+                <th scope="col" class="px-6 py-3">Trạng thái</th>
                 <th scope="col" class="px-6 py-3">Hành động</th>
               </tr>
             </thead>
@@ -330,7 +336,9 @@
               <tr class="bg-white border-b hover:bg-gray-50" v-for="(phieu, index) in filteredPhieuGiamGias"
                 :key="phieu.id">
                 <td class="px-6 py-4">{{ (currentPage * itemsPerPage) + index + 1 }}</td>
+                
                 <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ phieu.maPhieuGiamGia }}</td>
+                <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ phieu.tenPhieuGiamGia }}</td>
                 <td class="px-6 py-4 text-center">
                   <span :class="{
                     'bg-orange-100 text-orange-700 px-2 py-1 text-xs font-semibold rounded-lg': phieu.loaiApDung === 'Khách hàng cụ thể',
@@ -365,20 +373,71 @@
                     {{ phieu.trangThaiPhieu }}
                   </span>
                 </td>
-
-
+                <td class="px-6 py-4 text-center">
+                  <div class="flex items-center justify-center">
+                    <label class="flex items-center cursor-pointer select-none text-dark dark:text-white">
+                      <div class="relative">
+                        <input 
+                          type="checkbox" 
+                          :checked="phieu.trangThai === true || phieu.trangThai === 1" 
+                          @change="toggleStatus(phieu)" 
+                          class="sr-only" 
+                        />
+                        <div 
+                          :class="[
+                            'block h-8 rounded-full w-14 transition-colors duration-300 ease-in-out',
+                            (phieu.trangThai === true || phieu.trangThai === 1) ? 'bg-blue-50' : 'bg-red-100'
+                          ]"
+                        ></div>
+                        <div
+                          :class="{ 
+                            'translate-x-full !bg-blue-500': phieu.trangThai === true || phieu.trangThai === 1,
+                            'bg-white': phieu.trangThai !== true && phieu.trangThai !== 1
+                          }"
+                          class="absolute flex items-center justify-center w-6 h-6 transition-all duration-300 ease-in-out bg-white rounded-full dot left-1 top-1 shadow-md"
+                        >
+                          <span v-if="phieu.trangThai === true || phieu.trangThai === 1" class="text-white">
+                            <svg
+                              width="11"
+                              height="8"
+                              viewBox="0 0 11 8"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M10.0915 0.951972L10.0867 0.946075L10.0813 0.940568C9.90076 0.753564 9.61034 0.753146 9.42927 0.939309L4.16201 6.22962L1.58507 3.63469C1.40401 3.44841 1.11351 3.44879 0.932892 3.63584C0.755703 3.81933 0.755703 4.10875 0.932892 4.29224L0.932878 4.29225L0.934851 4.29424L3.58046 6.95832C3.73676 7.11955 3.94983 7.2 4.1473 7.2C4.36196 7.2 4.55963 7.11773 4.71406 6.9584L10.0468 1.60234C10.2436 1.4199 10.2421 1.1339 10.0915 0.951972ZM4.2327 6.30081L4.2317 6.2998C4.23206 6.30015 4.23237 6.30049 4.23269 6.30082L4.2327 6.30081Z"
+                                fill="white"
+                                stroke="white"
+                                stroke-width="0.4"
+                              />
+                            </svg>
+                          </span>
+                          <span v-else class="text-red-500">
+                            <svg
+                              class="w-4 h-4 stroke-current"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"
+                              ></path>
+                            </svg>
+                          </span>
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+                </td>
                 <td class="px-6 py-4 flex justify-center space-x-3">
                   <a href="#" @click="goToEdit(phieu.id)" class="text-blue-600 hover:text-blue-800">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                       stroke="currentColor" class="w-5 h-5">
                       <path stroke-linecap="round" stroke-linejoin="round"
                         d="M16.862 3.487a2.25 2.25 0 1 1 3.182 3.182L6.75 19.5l-4.5 1.5 1.5-4.5 13.294-13.294z" />
-                    </svg>
-                  </a>
-                  <a href="#" @click="xoaPhieu(phieu.id)" class="text-red-600 hover:text-red-800">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                      stroke="currentColor" class="w-5 h-5">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                     </svg>
                   </a>
                   <a href="#" @click="showDetail(phieu)" class="text-gray-600 hover:text-gray-800">
@@ -544,10 +603,7 @@ export default {
     },
   },
 
-
-
   methods: {
-
     async sendEmailAPI(email, customerName, voucherType, voucherValue) {
       try {
         const response = await axios.post('/api/admin/send-voucher-email', {
@@ -575,7 +631,7 @@ export default {
         'Số Lượng': item.soLuong,
         'Ngày Bắt Đầu': this.formatDate(item.ngayBatDau),
         'Ngày Kết Thúc': this.formatDate(item.ngayKetThuc),
-        'Trạng Thái': item.trangThaiPhieu
+        'tình trạng': item.trangThaiPhieu
       }));
 
       // Create the worksheet
@@ -590,7 +646,7 @@ export default {
         { wch: 10 }, // Số Lượng
         { wch: 20 }, // Ngày Bắt Đầu
         { wch: 20 }, // Ngày Kết Thúc
-        { wch: 15 }  // Trạng Thái
+        { wch: 15 }  // tình trạng
       ];
       ws['!cols'] = wscols;
 
@@ -628,7 +684,7 @@ export default {
         'Không xác định': { fill: { patternType: "solid", fgColor: { rgb: "D0D0D0" } } }
       };
 
-      // Style for 'Trạng Thái' column
+      // Style for 'tình trạng' column
       const trangThaiStyle = {
         'Hoạt động': { fill: { patternType: "solid", fgColor: { rgb: "81C784" } } },
         'Đang chờ': { fill: { patternType: "solid", fgColor: { rgb: "FFF176" } } },
@@ -636,7 +692,7 @@ export default {
         'Không xác định': { fill: { patternType: "solid", fgColor: { rgb: "BDBDBD" } } }
       };
 
-      // Apply conditional formatting to 'Loại Phiếu' and 'Trạng Thái' columns
+      // Apply conditional formatting to 'Loại Phiếu' and 'tình trạng' columns
       for (let rowIndex = 2; rowIndex <= data.length + 1; rowIndex++) {
         const loaiPhieu = ws[`C${rowIndex}`]?.v;
         const trangThai = ws[`H${rowIndex}`]?.v;
@@ -738,7 +794,7 @@ export default {
         this.errors.moTa = 'Mô tả không được để trống.';
       }
       if (this.newPhieu.trangThai === '') {
-        this.errors.trangThai = 'Vui lòng chọn trạng thái.';
+        this.errors.trangThai = 'Vui lòng chọn tình trạng.';
       }
 
       return Object.keys(this.errors).length === 0;
@@ -768,7 +824,6 @@ export default {
         this.currentPage = prev;
       }
     },
-
 
     showDetail(phieu) {
       this.selectedPhieu = { ...phieu };
@@ -804,7 +859,6 @@ export default {
       });
     },
 
-
     async fetchData() {
       try {
         const res = await phieuGiamGiaService.getAll(this.currentPage, this.itemsPerPage);
@@ -818,7 +872,6 @@ export default {
         this.showToastMessage("Lỗi khi tải dữ liệu: " + (error.response?.data || error.message), "error");
       }
     },
-
 
     showConfirmModalWithAction(callback) {
       this.showConfirmModal = true;
@@ -904,7 +957,6 @@ export default {
       }
     },
 
-
     async xoaPhieu(id) {
       this.showConfirmModalWithAction(async () => {
         try {
@@ -916,6 +968,41 @@ export default {
           this.showToastMessage("Lỗi khi xóa: " + (error.response?.data || error.message), "error");
         }
       });
+    },
+
+    async toggleStatus(phieu) {
+      try {
+        // Toggle the status - ensure we're working with boolean values
+        const currentStatus = phieu.trangThai === true || phieu.trangThai === 1;
+        const newStatus = !currentStatus;
+        
+        // Update the local state immediately for better UX
+        phieu.trangThai = newStatus;
+        
+        // Create a copy of the phieu object with the updated status
+        const updatedPhieu = { ...phieu, trangThai: newStatus };
+        
+        // Call the API to update the status
+        await phieuGiamGiaService.update(phieu.id, updatedPhieu);
+        
+        // Show success message
+        this.showToastMessage(
+          newStatus 
+            ? "Đã kích hoạt phiếu giảm giá!" 
+            : "Đã ngưng hoạt động phiếu giảm giá!", 
+          "success"
+        );
+        
+        // Refresh the data while maintaining the current page
+        const currentPage = this.currentPage;
+        await this.fetchPhieuGiamGia(currentPage);
+        
+      } catch (error) {
+        console.error("Lỗi khi cập nhật trạng thái:", error);
+        this.showToastMessage("Lỗi khi cập nhật trạng thái: " + (error.response?.data || error.message), "error");
+        // Revert the local state in case of error
+        phieu.trangThai = !phieu.trangThai;
+      }
     },
   },
 
@@ -988,5 +1075,21 @@ input[type="date"]:not(:placeholder-shown)+label {
   font-size: 12px;
   color: #3b82f6;
   margin-left: -6px;
+}
+
+/* Toggle Switch Styles */
+.dot {
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Active state styling */
+input:checked + .block {
+  background-color: rgba(59, 130, 246, 0.2);
+}
+
+/* Inactive state styling */
+input:not(:checked) + .block {
+  background-color: rgba(229, 231, 235, 0.8);
 }
 </style>

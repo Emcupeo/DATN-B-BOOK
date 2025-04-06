@@ -11,6 +11,8 @@ import org.example.datnbbook.service.PhieuGiamGiaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,9 +31,18 @@ public class PhieuGiamGiaController {
     @GetMapping
     public ResponseEntity<Page<PhieuGiamGiaDTO>> getAll(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "12") int size) {
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir) {
 
-        Page<PhieuGiamGiaDTO> dtoPage = phieuGiamGiaService.getAllDTO(PageRequest.of(page, size));
+        // Allow sorting by 'tenPhieuGiamGia' as well
+        if (!sortBy.equals("id") && !sortBy.equals("tenPhieuGiamGia")) {
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name()) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<PhieuGiamGiaDTO> dtoPage = phieuGiamGiaService.getAllDTO(pageable);
         return ResponseEntity.ok(dtoPage);
     }
 
@@ -47,19 +58,34 @@ public class PhieuGiamGiaController {
     @PostMapping
     public ResponseEntity<?> create(@RequestBody PhieuGiamGiaDTO dto) {
         try {
+            if (phieuGiamGiaService.existsByMaPhieuGiamGia(dto.getMaPhieuGiamGia())) {
+                return ResponseEntity.badRequest().body("Error: Duplicate maPhieuGiamGia");
+            }
             PhieuGiamGiaDTO result = phieuGiamGiaService.createPhieuGiamGiaAndReturnDTO(dto);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Lỗi khi tạo phiếu giảm giá: " + e.getMessage());
+            return ResponseEntity.badRequest().body("Error creating voucher: " + e.getMessage());
         }
     }
 
     // ✅ Cập nhật (nếu cần DTO thì refactor thêm)
     @PutMapping("/{id}")
-    public ResponseEntity<PhieuGiamGiaDTO> update(@PathVariable Long id, @RequestBody PhieuGiamGiaDTO dto) {
+    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody PhieuGiamGiaDTO dto) throws MessagingException {
         if (!phieuGiamGiaService.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
+
+        // Fetch the existing voucher
+        PhieuGiamGia existingPhieu = phieuGiamGiaService.getById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy phiếu giảm giá"));
+
+        // Only check for duplicate maPhieuGiamGia if it's being changed
+        if (!dto.getMaPhieuGiamGia().equals(existingPhieu.getMaPhieuGiamGia()) &&
+            phieuGiamGiaService.existsByMaPhieuGiamGia(dto.getMaPhieuGiamGia())) {
+            return ResponseEntity.badRequest().body("Error: Duplicate maPhieuGiamGia");
+        }
+
+        // Update the voucher
         dto.setId(id);
         PhieuGiamGiaDTO updated = phieuGiamGiaService.updatePhieuGiamGia(dto);
         return ResponseEntity.ok(updated);

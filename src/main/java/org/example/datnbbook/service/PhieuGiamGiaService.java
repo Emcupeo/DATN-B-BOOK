@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Service;
 
@@ -66,6 +67,17 @@ public class PhieuGiamGiaService {
     // ✅ Tạo mới và trả về DTO
     public PhieuGiamGiaDTO createPhieuGiamGiaAndReturnDTO(PhieuGiamGiaDTO dto) {
         PhieuGiamGia phieu = new PhieuGiamGia();
+
+        // Sử dụng maPhieuGiamGia được cung cấp nếu có, nếu không thì tạo mới
+        if (dto.getMaPhieuGiamGia() != null && !dto.getMaPhieuGiamGia().isEmpty()) {
+            phieu.setMaPhieuGiamGia(dto.getMaPhieuGiamGia());
+        } else {
+            // Tạo mã mới nếu không được cung cấp
+            String nextCode = phieuGiamGiaRepository.getNextSequenceValue();
+            phieu.setMaPhieuGiamGia(nextCode);
+        }
+
+        phieu.setTenPhieuGiamGia(dto.getTenPhieuGiamGia());
         phieu.setSoPhanTramGiam(dto.getSoPhanTramGiam());
         phieu.setGiaTriGiam(dto.getGiaTriGiam());
         phieu.setGiaTriDonHangToiThieu(dto.getGiaTriDonHangToiThieu());
@@ -77,14 +89,10 @@ public class PhieuGiamGiaService {
         phieu.setCreatedAt(LocalDateTime.now());
         phieu.setDeleted(false);
 
-        // Sinh mã phiếu giảm giá
-        String nextCode = phieuGiamGiaRepository.getNextSequenceValue();
-        phieu.setMaPhieuGiamGia(nextCode);
-
-        // Lưu phiếu
+        // Lưu phiếu giảm giá
         phieu = phieuGiamGiaRepository.save(phieu);
 
-        // Nếu có khách hàng cụ thể
+        // Xử lý logic khách hàng cụ thể nếu cần
         if (dto.getKhachHangId() != null) {
             var khach = khachHangRepository.findById(dto.getKhachHangId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng"));
@@ -97,9 +105,6 @@ public class PhieuGiamGiaService {
             link.setTrangThai(true);
             link.setSoLuong(1);
             phieuGiamGiaKhachHangService.save(link);
-            System.out.println("Sending email to: " + khach.getEmail());
-            System.out.println("Voucher type: " + (dto.getSoPhanTramGiam() != null ? "Giảm theo phần trăm" : "Giảm theo giá trị tiền"));
-            System.out.println("Voucher value: " + dto.getGiaTriGiam());
 
             try {
                 emailService.sendVoucherEmail(khach.getEmail(), khach.getHoTen(),
@@ -113,65 +118,79 @@ public class PhieuGiamGiaService {
 
         List<PhieuGiamGiaKhachHang> danhSach = phieuGiamGiaKhachHangService.findByPhieuGiamGiaId(phieu.getId());
         return PhieuGiamGiaMapper.toDTO(phieu, danhSach);
-
-
-
     }
 
     // ✅ Cập nhật và trả về DTO
-    public PhieuGiamGiaDTO updatePhieuGiamGia(PhieuGiamGiaDTO dto) {
-        PhieuGiamGia phieu = phieuGiamGiaRepository.findById(dto.getId())
+    public PhieuGiamGiaDTO updatePhieuGiamGia(PhieuGiamGiaDTO dto) throws MessagingException {
+        PhieuGiamGia existingPhieu = phieuGiamGiaRepository.findById(dto.getId())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy phiếu giảm giá"));
 
-        // Cập nhật các trường phiếu giảm giá
-        phieu.setSoPhanTramGiam(dto.getSoPhanTramGiam());
-        phieu.setGiaTriGiam(dto.getGiaTriGiam());
-        phieu.setGiaTriDonHangToiThieu(dto.getGiaTriDonHangToiThieu());
-        phieu.setMoTa(dto.getMoTa());
-        phieu.setTrangThai(dto.getTrangThai());
-        phieu.setNgayBatDau(dto.getNgayBatDau());
-        phieu.setNgayKetThuc(dto.getNgayKetThuc());
-        phieu.setSoLuong(dto.getSoLuong());
+        // If maPhieuGiamGia is provided, use it; otherwise, generate a new one
+        if (dto.getMaPhieuGiamGia() != null && !dto.getMaPhieuGiamGia().isEmpty()) {
+            existingPhieu.setMaPhieuGiamGia(dto.getMaPhieuGiamGia());
+        } else {
+            String nextCode = phieuGiamGiaRepository.getNextSequenceValue();
+            existingPhieu.setMaPhieuGiamGia(nextCode);
+        }
 
-        // Xử lý phần liên kết khách hàng
-        List<PhieuGiamGiaKhachHang> danhSachCu = phieuGiamGiaKhachHangService.findByPhieuGiamGiaId(phieu.getId());
+        // Update other fields
+        existingPhieu.setTenPhieuGiamGia(dto.getTenPhieuGiamGia());
+        existingPhieu.setSoPhanTramGiam(dto.getSoPhanTramGiam());
+        existingPhieu.setGiaTriGiam(dto.getGiaTriGiam());
+        existingPhieu.setGiaTriDonHangToiThieu(dto.getGiaTriDonHangToiThieu());
+        existingPhieu.setMoTa(dto.getMoTa());
+        existingPhieu.setTrangThai(dto.getTrangThai());
+        existingPhieu.setNgayBatDau(dto.getNgayBatDau());
+        existingPhieu.setNgayKetThuc(dto.getNgayKetThuc());
+        existingPhieu.setSoLuong(dto.getSoLuong());
 
-        if (dto.getKhachHangId() != null) {
+        // Kiểm tra và cập nhật liên kết khách hàng
+        List<PhieuGiamGiaKhachHang> danhSachCu = phieuGiamGiaKhachHangService.findByPhieuGiamGiaId(existingPhieu.getId());
+        Long oldCustomerId = danhSachCu.isEmpty() ? null : Long.valueOf(danhSachCu.get(0).getKhachHang().getId());
+
+        if (dto.getKhachHangId() != null && !dto.getKhachHangId().equals(oldCustomerId)) {
+            // Cập nhật hoặc tạo mới liên kết khách hàng
             var kh = khachHangRepository.findById(dto.getKhachHangId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng"));
 
             if (danhSachCu.isEmpty()) {
-                // Nếu chưa có liên kết: tạo mới
                 PhieuGiamGiaKhachHang link = new PhieuGiamGiaKhachHang();
-                link.setPhieuGiamGia(phieu);
+                link.setPhieuGiamGia(existingPhieu);
                 link.setKhachHang(kh);
                 link.setCreatedAt(LocalDateTime.now());
                 link.setDeleted(false);
                 link.setTrangThai(true);
                 link.setSoLuong(1);
                 phieuGiamGiaKhachHangService.save(link);
-                System.out.println("Tạo mới liên kết với khách hàng: " + kh.getId());
             } else {
-                // Nếu đã có liên kết: cập nhật khách hàng mới vào bản ghi đầu tiên
-                PhieuGiamGiaKhachHang link = danhSachCu.get(0); // Giả sử chỉ có 1 liên kết
+                PhieuGiamGiaKhachHang link = danhSachCu.get(0);
                 link.setKhachHang(kh);
                 phieuGiamGiaKhachHangService.save(link);
-                System.out.println("Cập nhật liên kết từ khách hàng cũ sang khách hàng mới: " + kh.getId());
             }
-        } else {
-            // Nếu là công khai: xóa hết liên kết cũ
-            if (!danhSachCu.isEmpty()) {
-                System.out.println("Chuyển sang công khai, xóa liên kết cũ cho phiếu: " + phieu.getId());
-                phieuGiamGiaKhachHangService.deleteByPhieuGiamGiaId(phieu.getId());
+
+            // Gửi email cho khách hàng mới
+            emailService.sendVoucherEmail(kh.getEmail(), kh.getHoTen(), existingPhieu.getTenPhieuGiamGia(), existingPhieu.getGiaTriGiam().doubleValue());
+        } else if (dto.getKhachHangId() == null && !danhSachCu.isEmpty()) {
+            // Xóa liên kết khách hàng cũ nếu chuyển sang công khai
+            for (PhieuGiamGiaKhachHang link : danhSachCu) {
+                phieuGiamGiaKhachHangService.delete(link); // Giả sử có phương thức delete trong service
             }
         }
 
-        // Lưu phiếu giảm giá đã cập nhật
-        PhieuGiamGia updated = phieuGiamGiaRepository.save(phieu);
+        // Save the updated voucher
+        PhieuGiamGia updated = phieuGiamGiaRepository.save(existingPhieu);
 
-        // Trả về DTO với danh sách liên kết mới
-        List<PhieuGiamGiaKhachHang> danhSachMoi = phieuGiamGiaKhachHangService.findByPhieuGiamGiaId(phieu.getId());
+        // Return DTO with new linkages
+        List<PhieuGiamGiaKhachHang> danhSachMoi = phieuGiamGiaKhachHangService.findByPhieuGiamGiaId(updated.getId());
         return PhieuGiamGiaMapper.toDTO(updated, danhSachMoi);
+    }
+
+    public boolean existsByMaPhieuGiamGia(String maPhieuGiamGia) {
+        return phieuGiamGiaRepository.existsByMaPhieuGiamGia(maPhieuGiamGia);
+    }
+
+    public Optional<PhieuGiamGia> getById(Long id) {
+        return phieuGiamGiaRepository.findById(id);
     }
 
 }

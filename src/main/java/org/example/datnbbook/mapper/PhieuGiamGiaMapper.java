@@ -12,6 +12,7 @@ public class PhieuGiamGiaMapper {
         PhieuGiamGiaDTO dto = new PhieuGiamGiaDTO();
         dto.setId(entity.getId());
         dto.setMaPhieuGiamGia(entity.getMaPhieuGiamGia());
+        dto.setTenPhieuGiamGia(entity.getTenPhieuGiamGia()); // ✅ FIXED
         dto.setSoPhanTramGiam(entity.getSoPhanTramGiam());
         dto.setGiaTriGiam(entity.getGiaTriGiam());
         dto.setGiaTriDonHangToiThieu(entity.getGiaTriDonHangToiThieu());
@@ -34,5 +35,6 @@ public class PhieuGiamGiaMapper {
 
         return dto;
     }
+
 }
 
