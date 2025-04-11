@@ -84,4 +84,7 @@ public class PhieuGiamGia {
     @JsonIgnore
     @OneToMany(mappedBy = "phieuGiamGia", fetch = FetchType.LAZY)
     private Set<PhieuGiamGiaKhachHang> phieuGiamGiaKhachHangs = new LinkedHashSet<>();
+
+    @Column(name = "ten_phieu_giam_gia")
+    private String tenPhieuGiamGia;
 }

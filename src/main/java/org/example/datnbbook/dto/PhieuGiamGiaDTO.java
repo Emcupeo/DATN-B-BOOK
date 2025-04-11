@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 public class PhieuGiamGiaDTO {
     private Long id;
     private String maPhieuGiamGia;
+    private String tenPhieuGiamGia;
     private String tenKhachHang;
     private String email;
     private String sdt;
