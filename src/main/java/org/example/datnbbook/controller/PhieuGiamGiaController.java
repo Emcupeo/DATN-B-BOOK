@@ -34,13 +34,14 @@ public class PhieuGiamGiaController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size,
             @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir) {
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) String searchQuery) {
 
         Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name())
                 ? Sort.by(sortBy).ascending()
                 : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<PhieuGiamGiaDTO> dtoPage = phieuGiamGiaService.getAllDTO(pageable);
+        Page<PhieuGiamGiaDTO> dtoPage = phieuGiamGiaService.getAllDTO(pageable, searchQuery);
         return ResponseEntity.ok(dtoPage);
     }
 

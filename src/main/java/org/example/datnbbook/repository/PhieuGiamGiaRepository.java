@@ -17,4 +17,7 @@ public interface PhieuGiamGiaRepository extends JpaRepository<PhieuGiamGia, Long
     String getNextSequenceValue();
 
     boolean existsByMaPhieuGiamGia(String maPhieuGiamGia);
+
+    @Query("SELECT p FROM PhieuGiamGia p WHERE p.deleted = false AND (p.maPhieuGiamGia LIKE %:searchQuery% OR p.tenPhieuGiamGia LIKE %:searchQuery% OR p.moTa LIKE %:searchQuery%)")
+    Page<PhieuGiamGia> findByMaPhieuGiamGiaContainingIgnoreCaseOrTenPhieuGiamGiaContainingIgnoreCaseOrMoTaContainingIgnoreCase(String searchQuery, Pageable pageable);
 }

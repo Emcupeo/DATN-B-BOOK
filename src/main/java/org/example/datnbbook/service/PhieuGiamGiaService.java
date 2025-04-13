@@ -46,8 +46,13 @@ public class PhieuGiamGiaService {
     }
 
     // ✅ Lấy danh sách phiếu giảm giá kèm thông tin khách hàng nếu có
-    public Page<PhieuGiamGiaDTO> getAllDTO(Pageable pageable) {
-        Page<PhieuGiamGia> pageEntity = phieuGiamGiaRepository.findAllByDeletedFalse(pageable);
+    public Page<PhieuGiamGiaDTO> getAllDTO(Pageable pageable, String searchQuery) {
+        Page<PhieuGiamGia> pageEntity;
+        if (searchQuery != null && !searchQuery.isEmpty()) {
+            pageEntity = phieuGiamGiaRepository.findByMaPhieuGiamGiaContainingIgnoreCaseOrTenPhieuGiamGiaContainingIgnoreCaseOrMoTaContainingIgnoreCase(searchQuery, pageable);
+        } else {
+            pageEntity = phieuGiamGiaRepository.findAllByDeletedFalse(pageable);
+        }
         return pageEntity.map(phieu -> {
             List<PhieuGiamGiaKhachHang> danhSachKhach = phieuGiamGiaKhachHangService.findByPhieuGiamGiaId(phieu.getId());
             return PhieuGiamGiaMapper.toDTO(phieu, danhSachKhach);

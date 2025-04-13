@@ -1,16 +1,17 @@
-import axios from "axios";
+// phieuGiamGiaService.js
+import axios from 'axios';
 
-const API_URL = "http://localhost:8080/api/admin/phieu-giam-gia";
+const API_URL = 'http://localhost:8080/api/admin/phieu-giam-gia';
 
 export default {
-  getAll(page = 0, size = 12, sortBy = 'id', sortDir = 'asc') {
+  getAll(page = 0, size = 12, sortBy = 'id', sortDir = 'asc', searchQuery = '') {
     return axios.get(API_URL, {
       params: {
         page,
         size,
-        sortBy,
-        sortDir
-      }
+        sort: `${sortBy},${sortDir}`, // Gộp sortBy và sortDir thành sort
+        searchQuery,
+      },
     });
   },
   getById(id) {
