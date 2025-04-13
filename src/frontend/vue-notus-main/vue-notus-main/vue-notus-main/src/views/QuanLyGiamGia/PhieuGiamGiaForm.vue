@@ -227,6 +227,7 @@
                       placeholder="Nhập mô tả"></textarea>
                     <p v-if="errors.moTa" class="text-red-500 text-xs mt-1">{{ errors.moTa }}</p>
                   </div>
+                  
                 </div>
                 <button type="button" @click="showConfirmModal = true"
                   class="flex items-center gap-2 text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 shadow-lg font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2">
@@ -506,19 +507,25 @@ export default {
       return Object.keys(this.errors).length === 0;
     },
     async handleSubmit() {
-      if (!this.validateForm()) {
+    if (!this.validateForm()) {
         this.showNotification('Vui lòng kiểm tra lại thông tin.', 'warning');
         return;
-      }
+    }
 
-      this.isLoading = true;
-      const apiUrl = this.isEdit
+    this.isLoading = true;
+    const apiUrl = this.isEdit
         ? `http://localhost:8080/api/admin/phieu-giam-gia/${this.id}`
         : 'http://localhost:8080/api/admin/phieu-giam-gia';
-      const method = this.isEdit ? 'PUT' : 'POST';
-      const toIsoString = (date) => new Date(date).toISOString().slice(0, 19);
+    const method = this.isEdit ? 'PUT' : 'POST';
 
-      const requestBody = {
+    // Hàm định dạng thời gian giữ nguyên múi giờ địa phương
+    const formatLocalDateTime = (date) => {
+        const d = new Date(date);
+        const pad = (n) => n.toString().padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    };
+
+    const requestBody = {
         ...this.newPhieu,
         tenPhieuGiamGia: this.newPhieu.tenPhieuGiamGia.trim(),
         maPhieuGiamGia: this.newPhieu.maPhieuGiamGia.trim(),
@@ -526,44 +533,45 @@ export default {
         giaTriGiam: Number(this.newPhieu.giaTriGiam) || 0,
         giaTriDonHangToiThieu: Number(this.newPhieu.giaTriDonHangToiThieu) || 0,
         soLuong: Number(this.newPhieu.soLuong) || 0,
-        ngayBatDau: toIsoString(this.newPhieu.ngayBatDau),
-        ngayKetThuc: toIsoString(this.newPhieu.ngayKetThuc),
+        ngayBatDau: formatLocalDateTime(this.newPhieu.ngayBatDau),
+        ngayKetThuc: formatLocalDateTime(this.newPhieu.ngayKetThuc),
         trangThai: this.isEdit ? this.newPhieu.trangThai === 'true' : true,
         moTa: this.newPhieu.moTa.trim(),
         khachHangId: this.loaiApDung === 'khachHang' ? this.khachHangDaChon : null,
-      };
+        loaiPhieu: this.loaiGiamGia === 'phanTram' ? 'PERCENT' : 'AMOUNT',
+        loaiApDung: this.loaiApDung === 'congKhai' ? 'PUBLIC' : 'CUSTOMER',
+    };
 
-      try {
+    try {
         const response = await fetch(apiUrl, {
-          method,
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          body: JSON.stringify(requestBody),
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
         });
 
         if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(errorText || 'Lỗi từ server');
+            const errorText = await response.text();
+            throw new Error(errorText || 'Lỗi từ server');
         }
 
         await response.json();
-        // Thêm query parameters khi chuyển hướng
         this.$router.push({
-          path: '/admin/phieu-giam-gia',
-          query: {
-            message: this.isEdit ? 'Cập nhật phiếu giảm giá thành công!' : 'Thêm phiếu giảm giá thành công!',
-            type: 'success',
-          },
+            path: '/admin/phieu-giam-gia',
+            query: {
+                message: this.isEdit ? 'Cập nhật phiếu giảm giá thành công!' : 'Thêm phiếu giảm giá thành công!',
+                type: 'success',
+            },
         });
-      } catch (error) {
+    } catch (error) {
         console.error('Lỗi API:', error);
         this.showNotification(`Lỗi: ${error.message}`, 'error');
-      } finally {
+    } finally {
         this.isLoading = false;
-      }
-    },
+    }
+},
     confirmSubmit() {
       this.showConfirmModal = false;
       this.handleSubmit();

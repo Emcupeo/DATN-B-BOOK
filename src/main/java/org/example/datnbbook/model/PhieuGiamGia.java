@@ -87,4 +87,13 @@ public class PhieuGiamGia {
 
     @Column(name = "ten_phieu_giam_gia")
     private String tenPhieuGiamGia;
+
+    @Column(name = "loai_ap_dung")
+    private String loaiApDung;
+
+    @Column(name = "loai_phieu")
+    private String loaiPhieu;
+
+    @Column(name = "tinh_trang", insertable = false, updatable = false)
+    private String tinhTrang;
 }

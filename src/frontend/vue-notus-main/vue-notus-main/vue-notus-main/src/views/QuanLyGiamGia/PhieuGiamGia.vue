@@ -75,67 +75,59 @@
               <tbody>
                 <tr>
                   <td class="p-2 font-semibold">Mã phiếu</td>
-                  <td class="p-2">{{ selectedPhieu?.maPhieuGiamGia }}</td>
+                  <td class="p-2">{{ selectedPhieu.maPhieuGiamGia }}</td>
                 </tr>
                 <tr>
                   <td class="p-2 font-semibold">Tên phiếu</td>
-                  <td class="p-2">{{ selectedPhieu?.tenPhieuGiamGia }}</td>
-                </tr>
-                <tr>
-                  <td class="p-2 font-semibold">Mô tả</td>
-                  <td class="p-2">{{ selectedPhieu?.moTa }}</td>
+                  <td class="p-2">{{ selectedPhieu.tenPhieuGiamGia }}</td>
                 </tr>
                 <tr>
                   <td class="p-2 font-semibold">Loại phiếu</td>
-                  <td class="p-2">
-                    <span :class="{
-                      'bg-blue-100 text-blue-700 px-2 py-1 text-xs font-semibold rounded-lg': selectedPhieu.discountDisplay === 'Giảm theo phần trăm',
-                      'bg-purple-100 text-purple-700 px-2 py-1 text-xs font-semibold rounded-lg': selectedPhieu.discountDisplay === 'Giảm theo giá trị tiền',
-                      'bg-gray-100 text-gray-700 px-2 py-1 text-xs font-semibold rounded-lg': selectedPhieu.discountDisplay === 'Không xác định'
-                    }">
-                      {{ selectedPhieu.discountDisplay }}
-                    </span>
-                  </td>
+                  <td class="p-2">{{ selectedPhieu.discountDisplay }}</td>
                 </tr>
-                <tr v-if="selectedPhieu.discountValue && selectedPhieu.discountValue !== 'Không xác định'">
+                <tr>
                   <td class="p-2 font-semibold">Giá trị giảm</td>
                   <td class="p-2">{{ selectedPhieu.discountValue }}</td>
                 </tr>
                 <tr>
                   <td class="p-2 font-semibold">Số lượng</td>
-                  <td class="p-2">{{ selectedPhieu?.soLuong }}</td>
+                  <td class="p-2">{{ selectedPhieu.soLuong }}</td>
                 </tr>
                 <tr>
                   <td class="p-2 font-semibold">Ngày bắt đầu</td>
-                  <td class="p-2">{{ formatDate(selectedPhieu?.ngayBatDau) }}</td>
+                  <td class="p-2">{{ formatDate(selectedPhieu.ngayBatDau) }}</td>
                 </tr>
                 <tr>
                   <td class="p-2 font-semibold">Ngày kết thúc</td>
-                  <td class="p-2">{{ formatDate(selectedPhieu?.ngayKetThuc) }}</td>
+                  <td class="p-2">{{ formatDate(selectedPhieu.ngayKetThuc) }}</td>
                 </tr>
                 <tr>
                   <td class="p-2 font-semibold">Tình trạng</td>
                   <td class="p-2">
-                    <span :class="{
-                      'bg-green-100 text-green-700 px-2 py-1 text-xs font-semibold rounded-lg': getTrangThaiHienTai(selectedPhieu) === 'Hoạt động',
-                      'bg-yellow-100 text-yellow-700 px-2 py-1 text-xs font-semibold rounded-lg': getTrangThaiHienTai(selectedPhieu) === 'Đang chờ',
-                      'bg-red-100 text-red-700 px-2 py-1 text-xs font-semibold rounded-lg': getTrangThaiHienTai(selectedPhieu) === 'Hết hạn',
-                      'bg-gray-100 text-gray-700 px-2 py-1 text-xs font-semibold rounded-lg': getTrangThaiHienTai(selectedPhieu) === 'Không xác định'
+                    <span class="px-2 py-1 text-xs font-semibold rounded-lg" :class="{
+                      'bg-yellow-100 text-yellow-700': selectedPhieu.tinhTrang === 'Chưa bắt đầu',
+                      'bg-green-100 text-green-700': selectedPhieu.tinhTrang === 'Đang diễn ra',
+                      'bg-red-100 text-red-700': selectedPhieu.tinhTrang === 'Đã kết thúc'
                     }">
-                      {{ getTrangThaiHienTai(selectedPhieu) }}
+                      {{ selectedPhieu.tinhTrang }}
                     </span>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-semibold">Loại áp dụng</td>
+                  <td class="p-2">
+                    {{ selectedPhieu.loaiApDung === 'PUBLIC' ? 'Công khai' : 'Khách hàng cụ thể' }}
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
-          <div v-if="selectedPhieu.loaiApDung === 'Khách hàng cụ thể'">
+          <div v-if="selectedPhieu.loaiApDung === 'CUSTOMER'">
             <table class="w-full text-sm">
               <tbody>
                 <tr>
                   <td class="p-2 font-semibold">Loại áp dụng</td>
-                  <td class="bg-orange-100 text-orange-700 px-2 py-1 text-xs font-semibold rounded-lg">Khách hàng cụ thể
-                  </td>
+                  <td class="p-2">Khách hàng cụ thể</td>
                 </tr>
                 <tr v-if="selectedPhieu.tenKhachHang">
                   <td class="p-2 font-semibold">Tên khách hàng</td>
@@ -166,38 +158,38 @@
             <div class="flex flex-wrap gap-2 items-center mt-5">
               <div class="relative w-[150px]">
                 <input type="date" v-model="filterFromDate" id="date-from"
-                  class="block w-full h-[40px] p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500" />
-                <label for="date-from"
-                  class="absolute left-2 top-2 text-gray-500 text-xs transition-all duration-300">Chọn ngày bắt
-                  đầu</label>
+                  class="block w-full h-[40px] p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500"
+                  @change="validateDates" />
+                <label for="date-from" class="absolute left-2 top-2 text-gray-500 text-xs transition-all duration-300"
+                  :class="{ 'top-[-20px] text-blue-600': filterFromDate }">Chọn ngày bắt đầu</label>
               </div>
               <div class="relative w-[150px]">
                 <input type="date" v-model="filterToDate" id="date-to"
-                  class="block w-full h-[40px] p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500" />
-                <label for="date-to"
-                  class="absolute left-2 top-2 text-gray-500 text-xs transition-all duration-300">Chọn ngày kết
-                  thúc</label>
+                  class="block w-full h-[40px] p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500"
+                  @change="validateDates" />
+                <label for="date-to" class="absolute left-2 top-2 text-gray-500 text-xs transition-all duration-300"
+                  :class="{ 'top-[-20px] text-blue-600': filterToDate }">Chọn ngày kết thúc</label>
               </div>
-              <select v-model="filterLoaiPhieu"
+              <select v-model="filterLoaiPhieu" @change="fetchPhieuGiamGia"
                 class="block w-[150px] h-[40px] p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500">
                 <option value="">Tất cả loại phiếu</option>
-                <option value="Giảm theo phần trăm">Giảm theo phần trăm</option>
-                <option value="Giảm theo giá trị tiền">Giảm theo giá trị tiền</option>
+                <option value="PERCENT">Giảm theo phần trăm</option>
+                <option value="AMOUNT">Giảm theo giá trị tiền</option>
               </select>
-              <select v-model="filterLoaiApDung"
+              <select v-model="filterLoaiApDung" @change="fetchPhieuGiamGia"
                 class="block w-[150px] h-[40px] p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500">
                 <option value="">Tất cả cách áp dụng</option>
-                <option value="Công khai">Công khai</option>
-                <option value="Khách hàng cụ thể">Khách hàng cụ thể</option>
+                <option value="PUBLIC">Công khai</option>
+                <option value="CUSTOMER">Khách hàng cụ thể</option>
               </select>
-              <select v-model="filterStatus"
+              <select v-model="filterStatus" @change="fetchPhieuGiamGia"
                 class="block w-[150px] h-[40px] p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500">
                 <option value="">Tất cả tình trạng</option>
-                <option value="Hoạt động">Hoạt động</option>
-                <option value="Đang chờ">Đang chờ</option>
-                <option value="Hết hạn">Hết hạn</option>
+                <option value="Chưa bắt đầu">Chưa bắt đầu</option>
+                <option value="Đang diễn ra">Đang diễn ra</option>
+                <option value="Đã kết thúc">Đã kết thúc</option>
               </select>
-              <input v-model="searchQuery" type="text" placeholder="Tìm kiếm..."
+              <input v-model="searchQuery" @input="fetchPhieuGiamGia" type="text" placeholder="Tìm kiếm..."
                 class="block w-[345px] h-[40px] p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500" />
             </div>
             <button type="button" @click="exportToExcel"
@@ -224,184 +216,207 @@
           </div>
         </div>
         <div class="relative overflow-x-auto sm:rounded-lg w-full h-[calc(100vh-272px)]">
-          <table class="w-full text-sm text-center text-gray-500">
-            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-              <tr>
-                <th scope="col" class="px-6 py-3 cursor-pointer">
-                  #
-                </th>
-                <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('maPhieuGiamGia')">
-                  Mã phiếu
-                  <span v-if="sortKey === 'maPhieuGiamGia'" class="ml-1">
-                    <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        :d="sortDirection === 'asc' ? 'M19 9l-7 7-7-7' : 'M5 15l7-7 7 7'"></path>
-                    </svg>
-                  </span>
-                </th>
-                <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('tenPhieuGiamGia')">
-                  Tên phiếu
-                  <span v-if="sortKey === 'tenPhieuGiamGia'" class="ml-1">
-                    <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        :d="sortDirection === 'asc' ? 'M19 9l-7 7-7-7' : 'M5 15l7-7 7 7'"></path>
-                    </svg>
-                  </span>
-                </th>
-                <!-- Loại áp dụng: Bỏ sort -->
-                <th scope="col" class="px-6 py-3">
-                  Loại áp dụng
-                </th>
-                <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('moTa')">
-                  Mô tả
-                  <span v-if="sortKey === 'moTa'" class="ml-1">
-                    <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        :d="sortDirection === 'asc' ? 'M19 9l-7 7-7-7' : 'M5 15l7-7 7 7'"></path>
-                    </svg>
-                  </span>
-                </th>
-                <!-- Loại phiếu: Bỏ sort -->
-                <th scope="col" class="px-6 py-3">
-                  Loại phiếu
-                </th>
-                <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('giaTriGiam')">
-                  Giá trị giảm
-                  <span v-if="sortKey === 'giaTriGiam'" class="ml-1">
-                    <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        :d="sortDirection === 'asc' ? 'M19 9l-7 7-7-7' : 'M5 15l7-7 7 7'"></path>
-                    </svg>
-                  </span>
-                </th>
-                <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('soLuong')">
-                  Số lượng
-                  <span v-if="sortKey === 'soLuong'" class="ml-1">
-                    <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        :d="sortDirection === 'asc' ? 'M19 9l-7 7-7-7' : 'M5 15l7-7 7 7'"></path>
-                    </svg>
-                  </span>
-                </th>
-                <!-- Tình trạng: Bỏ sort -->
-                <th scope="col" class="px-6 py-3">
-                  Tình trạng
-                </th>
-                <th scope="col" class="px-6 py-3">Trạng thái</th>
-                <th scope="col" class="px-6 py-3">Hành động</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr class="bg-white border-b hover:bg-gray-50" v-for="(phieu, index) in filteredPhieuGiamGias"
-                :key="phieu.id">
-                <td class="px-6 py-4">{{ (currentPage * itemsPerPage) + index + 1 }}</td>
-                <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ phieu.maPhieuGiamGia }}</td>
-                <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ phieu.tenPhieuGiamGia }}</td>
-                <td class="px-6 py-4 text-center">
-                  <span :class="{
-                    'bg-orange-100 text-orange-700 px-2 py-1 text-xs font-semibold rounded-lg': phieu.loaiApDung === 'Khách hàng cụ thể',
-                    'bg-blue-100 text-blue-700 px-2 py-1 text-xs font-semibold rounded-lg': phieu.loaiApDung === 'Công khai'
-                  }">
-                    {{ phieu.loaiApDung }}
-                  </span>
-                </td>
-                <td class="px-6 py-4">{{ phieu.moTa }}</td>
-                <td class="px-6 py-4 text-center">
-                  <span :class="{
-                    'bg-blue-100 text-blue-700': phieu.discountDisplay === 'Giảm theo phần trăm',
-                    'bg-purple-100 text-purple-700': phieu.discountDisplay === 'Giảm theo giá trị tiền',
-                    'bg-gray-100 text-gray-700': phieu.discountDisplay === 'Không xác định'
-                  }" class="px-2 py-1 text-xs font-semibold rounded-lg">
-                    {{ phieu.discountDisplay }}
-                  </span>
-                </td>
-                <td class="px-6 py-4 text-center text-sm font-medium text-gray-900">{{ phieu.discountValue }}</td>
-                <td class="px-6 py-4">{{ phieu.soLuong }}</td>
-                <td class="px-6 py-4 text-center">
-                  <span :class="{
-                    'bg-green-100 text-green-700 px-2 py-1 text-xs font-semibold rounded-lg': phieu.trangThaiPhieu === 'Hoạt động',
-                    'bg-yellow-100 text-yellow-700 px-2 py-1 text-xs font-semibold rounded-lg': phieu.trangThaiPhieu === 'Đang chờ',
-                    'bg-red-100 text-red-700 px-2 py-1 text-xs font-semibold rounded-lg': phieu.trangThaiPhieu === 'Hết hạn',
-                    'bg-gray-100 text-gray-700 px-2 py-1 text-xs font-semibold rounded-lg': phieu.trangThaiPhieu === 'Không xác định'
-                  }">
-                    {{ phieu.trangThaiPhieu }}
-                  </span>
-                </td>
-                <td class="px-6 py-4 text-center">
-                  <div class="flex items-center justify-center">
-                    <label class="flex items-center cursor-pointer select-none text-dark dark:text-white">
-                      <div class="relative">
-                        <input type="checkbox" :checked="phieu.trangThai === true || phieu.trangThai === 1"
-                          @change="toggleStatus(phieu)" class="sr-only" />
-                        <div
-                          :class="['block h-8 rounded-full w-14 transition-colors duration-300 ease-in-out', (phieu.trangThai === true || phieu.trangThai === 1) ? 'bg-blue-50' : 'bg-red-100']">
-                        </div>
-                        <div
-                          :class="{ 'translate-x-full !bg-blue-500': phieu.trangThai === true || phieu.trangThai === 1, 'bg-white': phieu.trangThai !== true && phieu.trangThai !== 1 }"
-                          class="absolute flex items-center justify-center w-6 h-6 transition-all duration-300 ease-in-out bg-white rounded-full dot left-1 top-1 shadow-md">
-                          <span v-if="phieu.trangThai === true || phieu.trangThai === 1" class="text-white">
-                            <svg width="11" height="8" viewBox="0 0 11 8" fill="none"
-                              xmlns="http://www.w3.org/2000/svg">
-                              <path
-                                d="M10.0915 0.951972L10.0867 0.946075L10.0813 0.940568C9.90076 0.753564 9.61034 0.753146 9.42927 0.939309L4.16201 6.22962L1.58507 3.63469C1.40401 3.44841 1.11351 3.44879 0.932892 3.63584C0.755703 3.81933 0.755703 4.10875 0.932892 4.29224L0.932878 4.29225L0.934851 4.29424L3.58046 6.95832C3.73676 7.11955 3.94983 7.2 4.1473 7.2C4.36196 7.2 4.55963 7.11773 4.71406 6.9584L10.0468 1.60234C10.2436 1.4199 10.2421 1.1339 10.0915 0.951972ZM4.2327 6.30081L4.2317 6.2998C4.23206 6.30015 4.23237 6.30049 4.23269 6.30082L4.2327 6.30081Z"
-                                fill="white" stroke="white" stroke-width="0.4" />
-                            </svg>
-                          </span>
-                          <span v-else class="text-red-500">
-                            <svg class="w-4 h-4 stroke-current" fill="none" viewBox="0 0 24 24"
-                              xmlns="http://www.w3.org/2000/svg">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                          </span>
-                        </div>
-                      </div>
-                    </label>
+  <table class="w-full text-sm text-center text-gray-500">
+    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+      <tr>
+        <th scope="col" class="px-6 py-3">#</th>
+        <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('maPhieuGiamGia')">
+          Mã phiếu
+          <span v-if="sortBy === 'maPhieuGiamGia'" class="ml-1">
+            <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortDir === 'asc' ? 'M19 9l-7 7-7-7' : 'M5 15l7-7 7 7'"></path>
+            </svg>
+          </span>
+        </th>
+        <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('tenPhieuGiamGia')">
+          Tên phiếu
+          <span v-if="sortBy === 'tenPhieuGiamGia'" class="ml-1">
+            <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortDir === 'asc' ? 'M19 9l-7 7-7-7' : 'M5 15l7-7 7 7'"></path>
+            </svg>
+          </span>
+        </th>
+        <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('loaiApDung')">
+          Loại áp dụng
+          <span v-if="sortBy === 'loaiApDung'" class="ml-1">
+            <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortDir === 'asc' ? 'M19 9l-7 7-7-7' : 'M5 15l7-7 7 7'"></path>
+            </svg>
+          </span>
+        </th>
+        <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('moTa')">
+          Mô tả
+          <span v-if="sortBy === 'moTa'" class="ml-1">
+            <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortDir === 'asc' ? 'M19 9l-7 7-7-7' : 'M5 15l7-7 7 7'"></path>
+            </svg>
+          </span>
+        </th>
+        <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('loaiPhieu')">
+          Loại phiếu
+          <span v-if="sortBy === 'loaiPhieu'" class="ml-1">
+            <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortDir === 'asc' ? 'M19 9l-7 7-7-7' : 'M5 15l7-7 7 7'"></path>
+            </svg>
+          </span>
+        </th>
+        <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('soLuong')">
+          Số lượng
+          <span v-if="sortBy === 'soLuong'" class="ml-1">
+            <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortDir === 'asc' ? 'M19 9l-7 7-7-7' : 'M5 15l7-7 7 7'"></path>
+            </svg>
+          </span>
+        </th>
+        <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('discountValue')">
+          Giá trị giảm
+          <span v-if="sortBy === 'discountValue'" class="ml-1">
+            <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortDir === 'asc' ? 'M19 9l-7 7-7-7' : 'M5 15l7-7 7 7'"></path>
+            </svg>
+          </span>
+        </th>
+        <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('ngayBatDau')">
+          Ngày bắt đầu
+          <span v-if="sortBy === 'ngayBatDau'" class="ml-1">
+            <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortDir === 'asc' ? 'M19 9l-7 7-7-7' : 'M5 15l7-7 7 7'"></path>
+            </svg>
+          </span>
+        </th>
+        <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('ngayKetThuc')">
+          Ngày kết thúc
+          <span v-if="sortBy === 'ngayKetThuc'" class="ml-1">
+            <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortDir === 'asc' ? 'M19 9l-7 7-7-7' : 'M5 15l7-7 7 7'"></path>
+            </svg>
+          </span>
+        </th>
+        <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('tinhTrang')">
+          Tình trạng
+          <span v-if="sortBy === 'tinhTrang'" class="ml-1">
+            <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortDir === 'asc' ? 'M19 9l-7 7-7-7' : 'M5 15l7-7 7 7'"></path>
+            </svg>
+          </span>
+        </th>
+        <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('trangThai')">
+          Trạng thái
+          <span v-if="sortBy === 'trangThai'" class="ml-1">
+            <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortDir === 'asc' ? 'M19 9l-7 7-7-7' : 'M5 15l7-7 7 7'"></path>
+            </svg>
+          </span>
+        </th>
+        <th scope="col" class="px-6 py-3">Hành động</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="bg-white border-b hover:bg-gray-50" v-if="isLoading">
+        <td colspan="13" class="text-center py-4">
+          <div class="flex justify-center items-center">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            <span class="ml-2">Đang tải dữ liệu...</span>
+          </div>
+        </td>
+      </tr>
+      <tr class="bg-white border-b hover:bg-gray-50" v-else-if="!phieuGiamGias || phieuGiamGias.length === 0">
+        <td colspan="13" class="text-center py-4">Không có dữ liệu phù hợp với bộ lọc</td>
+      </tr>
+      <template v-else>
+        <tr class="bg-white border-b hover:bg-gray-50" v-for="(phieu, index) in phieuGiamGias" :key="phieu.id">
+          <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
+            {{ ((currentPage - 1) * itemsPerPage) + index + 1 }}
+          </td>
+          <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ phieu.maPhieuGiamGia }}</td>
+          <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ phieu.tenPhieuGiamGia }}</td>
+          <td class="px-6 py-4 text-center">
+            <svg v-if="phieu.loaiApDung === 'PUBLIC'" class="w-6 h-6 inline text-blue-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" />
+            </svg>
+            <svg v-else class="w-6 h-6 inline text-gray-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+            </svg>
+          </td>
+          <td class = "px-6 py-4">{{ phieu.moTa }}</td>
+          <td class="px-6 py-4 text-center">
+            <svg v-if="phieu.loaiPhieu === 'PERCENT'" class="w-6 h-6 inline text-green-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m8.99 14.993 6-6m6 3.001c0 1.268-.63 2.39-1.593 3.069a3.746 3.746 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043 3.745 3.745 0 0 1-3.068 1.593c-1.268 0-2.39-.63-3.068-1.593a3.745 3.745 0 0 1-3.296-1.043 3.746 3.746 0 0 1-1.043-3.297 3.746 3.746 0 0 1-1.593-3.068c0-1.268.63-2.39 1.593-3.068a3.746 3.746 0 0 1 1.043-3.297 3.745 3.745 0 0 1 3.296-1.042 3.745 3.745 0 0 1 3.068-1.594c1.268 0 2.39.63 3.068 1.593a3.745 3.745 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.297 3.746 3.746 0 0 1 1.593 3.068ZM9.74 9.743h.008v.007H9.74v-.007Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm4.125 4.5h.008v.008h-.008v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+            </svg>
+            <svg v-else class="w-6 h-6 inline text-yellow-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+          </td>
+          <td class="px-6 py-4 text-center">{{ phieu.soLuong }}</td>
+          <td class="px-6 py-4">
+            <span v-if="phieu.loaiPhieu === 'PERCENT'">{{ phieu.soPhanTramGiam }}%</span>
+            <span v-else>{{ formatNumber(phieu.giaTriGiam) }}đ</span>
+          </td>
+          <td class="px-6 py-4">{{ formatDate(phieu.ngayBatDau) }}</td>
+          <td class="px-6 py-4">{{ formatDate(phieu.ngayKetThuc) }}</td>
+          <td class="px-6 py-4 text-center">
+            <svg v-if="phieu.tinhTrang === 'Chưa bắt đầu'" class="w-6 h-6 inline text-gray-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+            <svg v-else-if="phieu.tinhTrang === 'Đang diễn ra'" class="w-6 h-6 inline text-green-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.91 11.672a.375.375 0 0 1 0 .656l-5.603 3.113a.375.375 0 0 1-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112Z" />
+            </svg>
+            <svg v-else class="w-6 h-6 inline text-red-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+          </td>
+          <td class="px-6 py-4 text-center">
+            <div class="flex items-center justify-center">
+              <label class="flex items-center cursor-pointer select-none text-dark dark:text-white">
+                <div class="relative">
+                  <input type="checkbox" :checked="phieu.trangThai === true || phieu.trangThai === 1" @change="toggleStatus(phieu)" class="sr-only" />
+                  <div :class="['block h-8 rounded-full w-14 transition-colors duration-300 ease-in-out', (phieu.trangThai === true || phieu.trangThai === 1) ? 'bg-blue-100' : 'bg-red-100']"></div>
+                  <div :class="{ 'translate-x-full !bg-blue-500': phieu.trangThai === true || phieu.trangThai === 1, 'bg-white': phieu.trangThai !== true && phieu.trangThai !== 1 }" class="absolute flex items-center justify-center w-6 h-6 transition-all duration-300 ease-in-out bg-white rounded-full dot left-1 top-1 shadow-md">
+                    <span v-if="phieu.trangThai === true || phieu.trangThai === 1" class="text-white">
+                      <svg width="11" height="8" viewBox="0 0 11 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10.0915 0.951972L10.0867 0.946075L10.0813 0.940568C9.90076 0.753564 9.61034 0.753146 9.42927 0.939309L4.16201 6.22962L1.58507 3.63469C1.40401 3.44841 1.11351 3.44879 0.932892 3.63584C0.755703 3.81933 0.755703 4.10875 0.932892 4.29224L0.932878 4.29225L0.934851 4.29424L3.58046 6.95832C3.73676 7.11955 3.94983 7.2 4.1473 7.2C4.36196 7.2 4.55963 7.11773 4.71406 6.9584L10.0468 1.60234C10.2436 1.4199 10.2421 1.1339 10.0915 0.951972ZM4.2327 6.30081L4.2317 6.2998C4.23206 6.30015 4.23237 6.30049 4.23269 6.30082L4.2327 6.30081Z" fill="white" stroke="white" stroke-width="0.4" />
+                      </svg>
+                    </span>
+                    <span v-else class="text-red-500">
+                      <svg class="w-4 h-4 stroke-current" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                      </svg>
+                    </span>
                   </div>
-                </td>
-                <td class="px-6 py-4 flex justify-center space-x-3">
-                  <a href="#" @click="goToEdit(phieu.id)" class="text-blue-600 hover:text-blue-800">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                      stroke="currentColor" class="w-5 h-5">
-                      <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M16.862 3.487a2.25 2.25 0 1 1 3.182 3.182L6.75 19.5l-4.5 1.5 1.5-4.5 13.294-13.294z" />
-                    </svg>
-                  </a>
-                  <a href="#" @click="showDetail(phieu)" class="text-gray-600 hover:text-gray-800">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                      stroke="currentColor" class="w-5 h-5">
-                      <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M12 5c7 0 10 7 10 7s-3 7-10 7-10-7-10-7 3-7 10-7z" />
-                      <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M12 9c1.657 0 3 1.343 3 3s-1.343 3-3 3-3-1.343-3-3 1.343-3 3-3z" />
-                    </svg>
-                  </a>
-                </td>
-              </tr>
-              <tr class="bg-white border-b hover:bg-gray-50" v-if="filteredPhieuGiamGias.length == 0">
-                <td class="px-6 py-4" colspan="6" align="center">Không có dữ liệu</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+                </div>
+              </label>
+            </div>
+          </td>
+          <td class="px-6 py-4 flex justify-center space-x-3">
+            <a href="#" @click="goToEdit(phieu.id)" class="text-blue-600 hover:text-blue-800">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 3.487a2.25 2.25 0 1 1 3.182 3.182L6.75 19.5l-4.5 1.5 1.5-4.5 13.294-13.294z" />
+              </svg>
+            </a>
+            <a href="#" @click="showDetail(phieu)" class="text-gray-600 hover:text-gray-800">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 5c7 0 10 7 10 7s-3 7-10 7-10-7-10-7 3-7 10-7z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9c1.657 0 3 1.343 3 3s-1.343 3-3 3-3-1.343-3-3 1.343-3 3-3z" />
+              </svg>
+            </a>
+          </td>
+        </tr>
+      </template>
+    </tbody>
+  </table>
+</div>
         <div class="flex justify-center items-center mt-4 space-x-2">
-          <button @click="prevPage" :disabled="currentPage <= 0"
-            class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm p-2 text-center flex items-center justify-center">
+          <button @click="previousPage" :disabled="currentPage <= 1"
+            class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 shadow-lg font-medium rounded-lg text-sm p-2 flex items-center justify-center disabled:opacity-50">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
               stroke="currentColor" class="w-4 h-4">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
             </svg>
           </button>
-          <span class="text-xs font-semibold text-gray-700">
-            Trang {{ currentPage + 1 }} / {{ totalPages }}
-          </span>
-          <button @click="nextPage" :disabled="currentPage >= totalPages - 1"
-            class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm p-2 text-center flex items-center justify-center">
+          <span class="text-xs font-semibold text-gray-700">Trang {{ currentPage }} / {{ totalPages }}</span>
+          <button @click="nextPage" :disabled="currentPage >= totalPages"
+            class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 shadow-lg font-medium rounded-lg text-sm p-2 flex items-center justify-center disabled:opacity-50">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
               stroke="currentColor" class="w-4 h-4">
               <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
@@ -412,6 +427,7 @@
     </div>
   </div>
 </template>
+
 <script>
 import phieuGiamGiaService from '../../service/phieuGiamGiaService';
 import * as XLSX from 'xlsx';
@@ -420,154 +436,173 @@ export default {
   data() {
     return {
       phieuGiamGias: [],
-      currentPage: 0,
-      itemsPerPage: 12,
-      searchQuery: '',
-      filterStatus: '',
-      filterLoaiPhieu: '',
-      filterLoaiApDung: '',
-      filterFromDate: '',
-      filterToDate: '',
-      showModalDetail: false,
-      selectedPhieu: null,
-      sortKey: 'id',
-      sortDirection: 'asc',
+      currentPage: 1,
+      itemsPerPage: 10,
+      totalPages: 1,
+      totalElements: 0,
+      sortBy: 'id',
+      sortDir: 'desc',
+      isLoading: false,
       showToast: false,
       toastMessage: '',
       toastType: 'success',
       showConfirmModal: false,
-      confirmActionCallback: null,
-      totalElements: 0,
+      showModalDetail: false,
+      selectedPhieu: null,
+      filterFromDate: '',
+      filterToDate: '',
+      filterLoaiPhieu: '',
+      filterLoaiApDung: '',
+      filterStatus: '',
+      searchQuery: '',
     };
   },
 
   computed: {
-    phieuGiamGiasWithStatus() {
-      return this.phieuGiamGias.map(phieu => {
-        const now = new Date();
-        const start = new Date(phieu.ngayBatDau);
-        const end = new Date(phieu.ngayKetThuc);
-
-        if (!phieu.ngayBatDau || !phieu.ngayKetThuc) {
-          phieu.trangThaiPhieu = 'Không xác định';
-        } else if (now < start) {
-          phieu.trangThaiPhieu = 'Đang chờ';
-        } else if (now >= start && now <= end) {
-          phieu.trangThaiPhieu = 'Hoạt động';
-        } else {
-          phieu.trangThaiPhieu = 'Hết hạn';
-        }
-
-        if (phieu.soPhanTramGiam > 0) {
-          phieu.discountDisplay = 'Giảm theo phần trăm';
-          phieu.discountValue = `${phieu.soPhanTramGiam}%`;
-        } else if (phieu.giaTriGiam > 0) {
-          phieu.discountDisplay = 'Giảm theo giá trị tiền';
-          phieu.discountValue = new Intl.NumberFormat('vi-VN', {
-            style: 'currency',
-            currency: 'VND',
-          }).format(phieu.giaTriGiam);
-        } else {
-          phieu.discountDisplay = 'Không xác định';
-          phieu.discountValue = 'Không xác định';
-        }
-
-        phieu.loaiApDung = phieu.khachHangId ? 'Khách hàng cụ thể' : 'Công khai';
-        return phieu;
-      });
+    formatNumber() {
+      return (number) => {
+        return new Intl.NumberFormat('vi-VN').format(number);
+      };
     },
 
-    filteredPhieuGiamGias() {
-      let result = [...this.phieuGiamGiasWithStatus];
-
-      if (this.filterStatus) {
-        result = result.filter(p => p.trangThaiPhieu === this.filterStatus);
-      }
-      if (this.filterLoaiPhieu) {
-        result = result.filter(p => p.discountDisplay === this.filterLoaiPhieu);
-      }
-      if (this.filterLoaiApDung) {
-        result = result.filter(p => p.loaiApDung === this.filterLoaiApDung);
-      }
-      if (this.filterFromDate) {
-        const from = new Date(this.filterFromDate);
-        result = result.filter(p => new Date(p.ngayBatDau) >= from);
-      }
-      if (this.filterToDate) {
-        const to = new Date(this.filterToDate);
-        result = result.filter(p => new Date(p.ngayKetThuc) <= to);
-      }
-      if (this.searchQuery) {
-        const query = this.searchQuery.toLowerCase();
-        result = result.filter(p =>
-          Object.values(p).some(v => (v ?? '').toString().toLowerCase().includes(query)) ||
-          (p.moTa?.toLowerCase().includes(query))
-        );
-      }
-
-      return result;
+    computedFilterLoaiPhieu() {
+      return this.filterLoaiPhieu || null;
     },
 
-    totalPages() {
-      return Math.max(1, Math.ceil(this.totalElements / this.itemsPerPage));
+    computedFilterLoaiApDung() {
+      return this.filterLoaiApDung || null;
+    },
+
+    computedFilterStatus() {
+      return this.filterStatus || null;
     },
   },
 
   methods: {
-    async fetchData(page = 0, searchQuery = '') {
+    async fetchPhieuGiamGia() {
       try {
-        const res = await phieuGiamGiaService.getAll(
-          page,
-          this.itemsPerPage,
-          this.sortKey,
-          this.sortDirection,
-          searchQuery || this.searchQuery
-        );
-        const data = res.data;
+        this.isLoading = true;
+        const params = {
+          page: this.currentPage - 1,
+          size: this.itemsPerPage,
+          sortBy: this.sortBy,
+          sortDir: this.sortDir,
+          loaiApDung: this.computedFilterLoaiApDung,
+          loaiPhieu: this.computedFilterLoaiPhieu,
+          tinhTrang: this.computedFilterStatus,
+          searchQuery: this.searchQuery || null,
+          fromDate: this.filterFromDate || null,
+          toDate: this.filterToDate || null,
+        };
 
-        console.log('API Response:', JSON.stringify(data, null, 2));
-        console.log('Total Elements:', data.totalElements || data.page?.totalElements || 0);
+        console.log('Fetching with params:', JSON.stringify(params, null, 2));
+        const response = await phieuGiamGiaService.getAll(params);
+        console.log('API response:', response.data);
 
-        this.phieuGiamGias = data.content || data.page?.content || [];
-        this.currentPage = data.number || data.page?.number || page;
-        this.totalElements = data.totalElements || data.page?.totalElements || 0;
+        const data = response.data;
 
-        if (!this.totalElements) {
-          this.showToastMessage('Không có dữ liệu phiếu giảm giá hoặc lỗi phân trang', 'warning');
+        if (data && data.content) {
+          this.phieuGiamGias = data.content;
+          this.totalElements = data.page?.totalElements || 0;
+          this.totalPages = data.page?.totalPages || 1;
+          console.log('Pagination info:', {
+            totalElements: this.totalElements,
+            totalPages: this.totalPages,
+            currentPage: this.currentPage,
+            itemsPerPage: this.itemsPerPage,
+            searchQuery: this.searchQuery,
+          });
+          if (this.phieuGiamGias.length === 0) {
+            this.showNotification('Không có phiếu giảm giá phù hợp với bộ lọc', 'warning');
+          }
+          // Adjust currentPage if out of bounds
+          if (this.currentPage > this.totalPages && this.totalPages > 0) {
+            this.currentPage = this.totalPages;
+            await this.fetchPhieuGiamGia();
+          } else if (this.totalPages === 0) {
+            this.currentPage = 1;
+          }
+        } else {
+          console.warn('No content in response');
+          this.phieuGiamGias = [];
+          this.totalElements = 0;
+          this.totalPages = 1;
+          this.currentPage = 1;
+          this.showNotification('Không có phiếu giảm giá phù hợp với bộ lọc', 'warning');
         }
       } catch (error) {
         console.error('Lỗi khi tải dữ liệu:', error);
-        this.showToastMessage('Lỗi khi tải dữ liệu: ' + (error.response?.data?.message || error.message), 'error');
+        this.showNotification('Lỗi khi tải dữ liệu: ' + (error.response?.data?.message || error.message), 'error');
+        this.phieuGiamGias = [];
+        this.totalElements = 0;
+        this.totalPages = 1;
+        this.currentPage = 1;
+      } finally {
+        this.isLoading = false;
       }
     },
 
-    sort(key) {
-      if (this.sortKey === key) {
-        this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
-      } else {
-        this.sortKey = key;
-        this.sortDirection = 'asc';
+    validateDates() {
+      if (this.filterFromDate && this.filterToDate && this.filterFromDate > this.filterToDate) {
+        this.showNotification('Ngày bắt đầu không thể lớn hơn ngày kết thúc', 'error');
+        this.filterToDate = '';
       }
-      this.currentPage = 0;
-      this.fetchData(0);
+      this.currentPage = 1;
+      this.fetchPhieuGiamGia();
+    },
+
+    previousPage() {
+      if (this.currentPage > 1) {
+        this.currentPage--;
+        console.log('Navigating to previous page:', this.currentPage);
+        this.fetchPhieuGiamGia();
+      }
     },
 
     nextPage() {
-      if (this.currentPage < this.totalPages - 1) {
+      if (this.currentPage < this.totalPages) {
         this.currentPage++;
-        this.fetchData(this.currentPage);
+        console.log('Navigating to next page:', this.currentPage);
+        this.fetchPhieuGiamGia();
       }
     },
 
-    prevPage() {
-      if (this.currentPage > 0) {
-        this.currentPage--;
-        this.fetchData(this.currentPage);
+    async changePage(page) {
+      if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
+        this.currentPage = page;
+        console.log('Changing to page:', page);
+        await this.fetchPhieuGiamGia();
       }
+    },
+
+    sort(column) {
+      if (this.sortBy === column) {
+        this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        this.sortBy = column;
+        this.sortDir = 'asc';
+      }
+      this.currentPage = 1;
+      console.log('Sorting by:', column, 'Direction:', this.sortDir);
+      this.fetchPhieuGiamGia();
     },
 
     showDetail(phieu) {
-      this.selectedPhieu = { ...phieu };
+      this.selectedPhieu = {
+        ...phieu,
+        discountDisplay:
+          phieu.loaiPhieu === 'PERCENT'
+            ? 'Giảm theo phần trăm'
+            : phieu.loaiPhieu === 'AMOUNT'
+              ? 'Giảm theo giá trị tiền'
+              : 'Không xác định',
+        discountValue:
+          phieu.loaiPhieu === 'PERCENT'
+            ? `${phieu.soPhanTramGiam}%`
+            : phieu.loaiPhieu === 'AMOUNT'
+              ? `${this.formatNumber(phieu.giaTriGiam)}đ`
+              : 'Không xác định',
+      };
       this.showModalDetail = true;
     },
 
@@ -592,10 +627,13 @@ export default {
           newStatus ? 'Đã kích hoạt phiếu giảm giá!' : 'Đã ngưng hoạt động phiếu giảm giá!',
           'success'
         );
-        this.fetchData(this.currentPage);
+        this.fetchPhieuGiamGia();
       } catch (error) {
         console.error('Lỗi khi cập nhật trạng thái:', error);
-        this.showToastMessage('Lỗi khi cập nhật trạng thái: ' + (error.response?.data?.message || error.message), 'error');
+        this.showToastMessage(
+          'Lỗi khi cập nhật trạng thái: ' + (error.response?.data?.message || error.message),
+          'error'
+        );
         phieu.trangThai = !phieu.trangThai;
       }
     },
@@ -609,20 +647,14 @@ export default {
       }, 3000);
     },
 
-    getTrangThaiHienTai(phieu) {
-      if (!phieu?.ngayBatDau || !phieu?.ngayKetThuc) return 'Không xác định';
-      const now = new Date();
-      const ngayBatDau = new Date(phieu.ngayBatDau);
-      const ngayKetThuc = new Date(phieu.ngayKetThuc);
-
-      if (now >= ngayBatDau && now <= ngayKetThuc) return 'Hoạt động';
-      else if (now < ngayBatDau) return 'Đang chờ';
-      else return 'Hết hạn';
+    showNotification(message, type) {
+      this.showToastMessage(message, type);
     },
 
     formatDate(dateStr) {
       if (!dateStr) return '';
       const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return '';
       const pad = (num) => num.toString().padStart(2, '0');
       return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(
         date.getMinutes()
@@ -630,17 +662,21 @@ export default {
     },
 
     exportToExcel() {
-      const data = this.filteredPhieuGiamGias.map(item => ({
+      const data = this.phieuGiamGias.map((item) => ({
         'Mã Phiếu': item.maPhieuGiamGia,
         'Tên Phiếu': item.tenPhieuGiamGia,
         'Mô Tả': item.moTa,
-        'Loại Phiếu': item.discountDisplay,
-        'Giá Trị Giảm': item.discountValue,
+        'Loại Phiếu':
+          item.loaiPhieu === 'PERCENT' ? 'Giảm theo phần trăm' : 'Giảm theo giá trị tiền',
+        'Giá Trị Giảm':
+          item.loaiPhieu === 'PERCENT'
+            ? `${item.soPhanTramGiam}%`
+            : `${this.formatNumber(item.giaTriGiam)}đ`,
         'Số Lượng': item.soLuong,
         'Ngày Bắt Đầu': this.formatDate(item.ngayBatDau),
         'Ngày Kết Thúc': this.formatDate(item.ngayKetThuc),
-        'Tình Trạng': item.trangThaiPhieu,
-        'Loại Áp Dụng': item.loaiApDung,
+        'Tình Trạng': item.tinhTrang,
+        'Loại Áp Dụng': item.loaiApDung === 'PUBLIC' ? 'Công khai' : 'Khách hàng cụ thể',
       }));
 
       const ws = XLSX.utils.json_to_sheet(data);
@@ -664,7 +700,7 @@ export default {
         alignment: { horizontal: 'center', vertical: 'center' },
       };
 
-      ['A1', 'B1', 'C1', 'D1', 'E1', 'F1', 'G1', 'H1', 'I1', 'J1'].forEach(cell => {
+      ['A1', 'B1', 'C1', 'D1', 'E1', 'F1', 'G1', 'H1', 'I1', 'J1'].forEach((cell) => {
         if (ws[cell]) ws[cell].s = headerStyle;
       });
 
@@ -682,7 +718,6 @@ export default {
 
     closeConfirmModal() {
       this.showConfirmModal = false;
-      this.confirmActionCallback = null;
     },
 
     confirmAction() {
@@ -691,10 +726,26 @@ export default {
       }
       this.closeConfirmModal();
     },
+
+    async createPhieuGiamGia() {
+      const newPhieu = {
+        khachHangId: this.selectedKhachHangId,
+      };
+
+      try {
+        await phieuGiamGiaService.create(newPhieu);
+        this.showToastMessage('Tạo phiếu giảm giá thành công!', 'success');
+        this.fetchPhieuGiamGia();
+      } catch (error) {
+        console.error('Lỗi khi tạo phiếu:', error);
+        this.showToastMessage('Lỗi khi tạo phiếu: ' + error.message, 'error');
+      }
+    },
   },
 
-  mounted() {
-    this.fetchData(0);
+  async mounted() {
+    console.log('Component mounted, fetching initial data');
+    await this.fetchPhieuGiamGia();
     const message = this.$route.query.message;
     const type = this.$route.query.type || 'success';
     if (message) {
@@ -704,28 +755,49 @@ export default {
   },
 
   watch: {
-    filterStatus() {
-      // Không gọi fetchData, vì lọc client-side
+    currentPage(newVal) {
+      console.log('currentPage changed:', newVal);
+      this.fetchPhieuGiamGia();
     },
-    filterLoaiPhieu() {
-      // Không gọi fetchData
+    itemsPerPage(newVal) {
+      console.log('itemsPerPage changed:', newVal);
+      this.currentPage = 1;
+      this.fetchPhieuGiamGia();
     },
-    filterLoaiApDung() {
-      // Không gọi fetchData
+    filterFromDate(newVal) {
+      console.log('filterFromDate changed:', newVal);
+      this.currentPage = 1;
+      this.validateDates();
     },
-    filterFromDate() {
-      // Không gọi fetchData
+    filterToDate(newVal) {
+      console.log('filterToDate changed:', newVal);
+      this.currentPage = 1;
+      this.validateDates();
     },
-    filterToDate() {
-      // Không gọi fetchData
+    filterLoaiPhieu(newVal) {
+      console.log('filterLoaiPhieu changed:', newVal);
+      this.currentPage = 1;
+      this.fetchPhieuGiamGia();
     },
-    searchQuery(newQuery) {
-      this.currentPage = 0;
-      this.fetchData(0, newQuery);
+    filterLoaiApDung(newVal) {
+      console.log('filterLoaiApDung changed:', newVal);
+      this.currentPage = 1;
+      this.fetchPhieuGiamGia();
+    },
+    filterStatus(newVal) {
+      console.log('filterStatus changed:', newVal);
+      this.currentPage = 1;
+      this.fetchPhieuGiamGia();
+    },
+    searchQuery(newVal) {
+      console.log('searchQuery changed:', newVal);
+      this.currentPage = 1;
+      this.fetchPhieuGiamGia();
     },
   },
 };
 </script>
+
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
 
@@ -803,5 +875,10 @@ input:checked+.block {
 
 input:not(:checked)+.block {
   background-color: rgba(229, 231, 235, 0.8);
+}
+
+.small-font-table {
+  font-size: 0.75rem;
+  /* This is equivalent to text-xs in Tailwind CSS */
 }
 </style>
