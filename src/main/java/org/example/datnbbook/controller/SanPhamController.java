@@ -1,36 +1,40 @@
 package org.example.datnbbook.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.datnbbook.dto.SanPhamDTO;
 import org.example.datnbbook.dto.SanPhamRequest;
-import org.example.datnbbook.model.ChiTietSanPham;
-import org.example.datnbbook.model.SanPham;
+import org.example.datnbbook.model.*;
+import org.example.datnbbook.repository.ChiTietSanPhamAnhRepository;
+import org.example.datnbbook.repository.ChiTietSanPhamRepository;
+import org.example.datnbbook.repository.LoaiBiaRepository;
+import org.example.datnbbook.service.AnhSanPhamService;
 import org.example.datnbbook.service.ChiTietSanPhamService;
 import org.example.datnbbook.service.SanPhamService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @CrossOrigin(origins = {"http://localhost:3000"})
 @RestController
 @RequestMapping("/api/san-pham")
 public class SanPhamController {
+    private static final Logger logger = LoggerFactory.getLogger(SanPhamController.class);
+
     private final SanPhamService sanPhamService;
     private final ChiTietSanPhamService chiTietSanPhamService;
+
+    @Autowired
+    private ChiTietSanPhamRepository chiTietSanPhamRepository;
+    @Autowired
+    private AnhSanPhamService anhSanPhamService;
+    @Autowired
+    private LoaiBiaRepository loaiBiaRepository;
+    @Autowired
+    private ChiTietSanPhamAnhRepository chiTietSanPhamAnhRepository;
 
     public SanPhamController(SanPhamService sanPhamService, ChiTietSanPhamService chiTietSanPhamService) {
         this.sanPhamService = sanPhamService;
@@ -39,62 +43,136 @@ public class SanPhamController {
 
     @GetMapping
     public ResponseEntity<List<SanPham>> getAll() {
-        return ResponseEntity.ok(sanPhamService.getAll());
+        logger.info("[INFO] Fetching all SanPham");
+        List<SanPham> sanPhams = sanPhamService.getAll();
+        logger.debug("[DEBUG] Retrieved {} SanPham records", sanPhams.size());
+        return ResponseEntity.ok(sanPhams);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<SanPham> getById(@PathVariable Integer id) {
-        return ResponseEntity.ok(sanPhamService.getById(id));
+        logger.info("[INFO] Fetching SanPham with id: {}", id);
+        SanPham sanPham = sanPhamService.getById(id);
+        logger.debug("[DEBUG] Retrieved SanPham: {}", sanPham);
+        return ResponseEntity.ok(sanPham);
     }
 
     @PostMapping
     public ResponseEntity<SanPham> create(@RequestBody SanPham sanPham) {
-        return ResponseEntity.ok(sanPhamService.create(sanPham));
+        logger.info("[INFO] Creating new SanPham: {}", sanPham.getTenSanPham());
+        SanPham createdSanPham = sanPhamService.create(sanPham);
+        logger.debug("[DEBUG] Created SanPham: {}", createdSanPham);
+        return ResponseEntity.ok(createdSanPham);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<SanPhamDTO> update(@PathVariable Integer id, @RequestBody SanPhamDTO sanPham) {
-        return ResponseEntity.ok(sanPhamService.update(id, sanPham));
+        logger.info("[INFO] Updating SanPham with id: {}", id);
+        SanPhamDTO updatedSanPham = sanPhamService.update(id, sanPham);
+        logger.debug("[DEBUG] Updated SanPham: {}", updatedSanPham);
+        return ResponseEntity.ok(updatedSanPham);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
+        logger.info("[INFO] Deleting SanPham with id: {}", id);
         sanPhamService.delete(id);
+        logger.debug("[DEBUG] Deleted SanPham with id: {}", id);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/search")
     public ResponseEntity<List<SanPham>> search(@RequestParam String keyword) {
-        return ResponseEntity.ok(sanPhamService.search(keyword));
+        logger.info("[INFO] Searching SanPham with keyword: {}", keyword);
+        List<SanPham> sanPhams = sanPhamService.search(keyword);
+        logger.debug("[DEBUG] Found {} SanPham records for keyword: {}", sanPhams.size(), keyword);
+        return ResponseEntity.ok(sanPhams);
     }
 
-//    @PostMapping("/create-with-detail")
-//    public ResponseEntity<ChiTietSanPham> createSanPhamAndChiTiet(
-//            @RequestParam String tenSanPham,
-//            @RequestParam(required = false) String moTaSanPham,
-//            @RequestParam(required = false) Integer idLoaiBia,
-//            @RequestParam(required = false) Integer idTacGia,
-//            @RequestParam(required = false) Integer idNhaXuatBan,
-//            @RequestParam(required = false) Integer idChatLieu,
-//            @RequestParam(required = false) Integer idNguoiDich,
-//            @RequestParam(required = false) Integer idTheLoai,
-//            @RequestParam(required = false) Integer idNgonNgu,
-//            @RequestParam(required = false) BigDecimal gia,
-//            @RequestParam(required = false) Integer soLuongTon,
-//            @RequestParam(required = false) BigDecimal trongLuong,
-//            @RequestParam(required = false) BigDecimal kichThuoc,
-//            @RequestParam(required = false) String moTaChiTiet) {
-//        ChiTietSanPham result = chiTietSanPhamService.createSanPhamAndChiTiet(
-//                tenSanPham, moTaSanPham, idLoaiBia, idTacGia, idNhaXuatBan,
-//                idChatLieu, idNguoiDich, idTheLoai, idNgonNgu, gia, soLuongTon,
-//                trongLuong, kichThuoc, moTaChiTiet);
-//        return ResponseEntity.ok(result);
-//    }
+    @PostMapping(value = "/create-with-details", consumes = "multipart/form-data")
+    public ResponseEntity<SanPham> createWithDetails(
+            @RequestParam("tenSanPham") String tenSanPham,
+            @RequestParam(value = "moTaSanPham", required = false) String moTaSanPham,
+            @RequestParam(value = "idTacGia", required = false) Integer idTacGia,
+            @RequestParam(value = "idNhaXuatBan", required = false) Integer idNhaXuatBan,
+            @RequestParam(value = "idNguoiDich", required = false) Integer idNguoiDich,
+            @RequestParam(value = "idTheLoai", required = false) Integer idTheLoai,
+            @RequestParam(value = "idNgonNgu", required = false) Integer idNgonNgu,
+            @RequestParam(value = "moTaChiTiet", required = false) String moTaChiTiet,
+            @RequestParam("chiTietSanPhamList") String chiTietSanPhamListJson
+    ) throws Exception {
+        logger.info("[INFO] Creating SanPham with details: tenSanPham={}", tenSanPham);
+        logger.debug("[DEBUG] Request parameters: moTaSanPham={}, idTacGia={}, idNhaXuatBan={}, idNguoiDich={}, idTheLoai={}, idNgonNgu={}, moTaChiTiet={}",
+                moTaSanPham, idTacGia, idNhaXuatBan, idNguoiDich, idTheLoai, idNgonNgu, moTaChiTiet);
 
-    @PostMapping("/create-with-details")
-    public ResponseEntity<SanPham> createWithDetails(@RequestBody SanPhamRequest request) {
-        SanPham created = sanPhamService.createWithDetails(request);
-        return ResponseEntity.ok(created);
+        try {
+            // Tạo SanPhamRequest
+            SanPhamRequest requestSP = new SanPhamRequest();
+            requestSP.setTenSanPham(tenSanPham);
+            requestSP.setMoTaSanPham(moTaSanPham);
+            requestSP.setIdTacGia(idTacGia);
+            requestSP.setIdNhaXuatBan(idNhaXuatBan);
+            requestSP.setIdNguoiDich(idNguoiDich);
+            requestSP.setIdTheLoai(idTheLoai);
+            requestSP.setIdNgonNgu(idNgonNgu);
+            requestSP.setMoTaChiTiet(moTaChiTiet);
+
+            // Parse chiTietSanPhamList
+            ObjectMapper objectMapper = new ObjectMapper();
+            List<SanPhamRequest.ChiTietSanPhamDTO> chiTietList = objectMapper.readValue(
+                    chiTietSanPhamListJson,
+                    objectMapper.getTypeFactory().constructCollectionType(List.class, SanPhamRequest.ChiTietSanPhamDTO.class)
+            );
+            requestSP.setChiTietSanPhamList(chiTietList);
+            logger.debug("[DEBUG] Parsed chiTietSanPhamList: {}", chiTietList);
+
+            // Tạo SanPham
+            SanPham createdSanPham = sanPhamService.createWithDetails(requestSP);
+            logger.info("[INFO] Created SanPham with id: {}", createdSanPham.getId());
+
+            // Liên kết ảnh với chi tiết sản phẩm
+            for (SanPhamRequest.ChiTietSanPhamDTO dto : chiTietList) {
+                Integer idLoaiBia = dto.getIdLoaiBia();
+                logger.debug("[DEBUG] Processing chiTietSanPham with idLoaiBia: {}", idLoaiBia);
+
+                // Tìm tất cả chiTietSanPham theo idSanPham và idLoaiBia
+                List<ChiTietSanPham> chiTietListForLoaiBia = chiTietSanPhamRepository.findAllByIdSanPhamIdAndIdLoaiBiaId(
+                        createdSanPham.getId(), idLoaiBia
+                );
+                if (chiTietListForLoaiBia.isEmpty()) {
+                    logger.error("[ERROR] No ChiTietSanPham found for idSanPham: {} and idLoaiBia: {}", createdSanPham.getId(), idLoaiBia);
+                    throw new RuntimeException("No ChiTietSanPham found for idSanPham: " + createdSanPham.getId() + " and idLoaiBia: " + idLoaiBia);
+                }
+                logger.debug("[DEBUG] Found {} chiTietSanPham for idLoaiBia: {}", chiTietListForLoaiBia.size(), idLoaiBia);
+
+                List<Integer> imageIds = dto.getImageIds();
+                if (imageIds != null && !imageIds.isEmpty()) {
+                    if (imageIds.size() > 3) {
+                        logger.error("[ERROR] Maximum 3 images allowed per ChiTietSanPham, received: {}", imageIds.size());
+                        throw new RuntimeException("Maximum 3 images allowed per ChiTietSanPham");
+                    }
+                    for (Integer imageId : imageIds) {
+                        logger.debug("[DEBUG] Linking imageId: {} to chiTietSanPham", imageId);
+                        AnhSanPham anh = anhSanPhamService.findById(imageId)
+                                .orElseThrow(() -> {
+                                    logger.error("[ERROR] AnhSanPham not found for id: {}", imageId);
+                                    return new RuntimeException("AnhSanPham not found for id: " + imageId);
+                                });
+                        for (ChiTietSanPham chiTiet : chiTietListForLoaiBia) {
+                            anhSanPhamService.linkToChiTietSanPham(chiTiet.getId(), anh.getId());
+                            logger.debug("[DEBUG] Linked imageId: {} to chiTietSanPhamId: {}", imageId, chiTiet.getId());
+                        }
+                    }
+                } else {
+                    logger.debug("[DEBUG] No imageIds provided for idLoaiBia: {}", idLoaiBia);
+                }
+            }
+
+            logger.info("[INFO] Successfully created SanPham and linked images");
+            return ResponseEntity.ok(createdSanPham);
+        } catch (Exception e) {
+            logger.error("[ERROR] Error creating SanPham with details: {}", e.getMessage(), e);
+            throw e;
+        }
     }
-
 }

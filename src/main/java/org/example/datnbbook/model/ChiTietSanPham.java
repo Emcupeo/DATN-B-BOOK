@@ -1,5 +1,6 @@
 package org.example.datnbbook.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -8,22 +9,30 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Nationalized;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 @Getter
 @Setter
 @Entity
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "chi_tiet_san_pham")
 public class ChiTietSanPham {
     @Id
@@ -71,9 +80,6 @@ public class ChiTietSanPham {
     @JoinColumn(name = "id_ngon_ngu")
     private NgonNgu idNgonNgu;
 
-    @Column(name = "anh", length = 50)
-    private String anh;
-
     @Column(name = "trong_luong", precision = 10, scale = 2)
     private BigDecimal trongLuong;
 
@@ -115,6 +121,22 @@ public class ChiTietSanPham {
     @ColumnDefault("0")
     @Column(name = "deleted")
     private Boolean deleted;
+
+    public ChiTietSanPham(Integer chiTietSanPhamId) {
+    }
+
+    @ManyToMany
+    @JoinTable(
+            name = "chi_tiet_san_pham_anh",
+            joinColumns = @JoinColumn(name = "chi_tiet_san_pham_id"),
+            inverseJoinColumns = @JoinColumn(name = "anh_id")
+    )
+    @JsonIgnore
+    private List<AnhSanPham> anhSanPhams = new ArrayList<>();
+
+//    @OneToMany(mappedBy = "chiTietSanPham")
+//    private List<AnhSanPham> anhSanPhams = new ArrayList<>();
+
 
 //    @OneToMany(mappedBy = "idChiTietSanPham")
 //    private Set<DotGiamGiaChiTiet> dotGiamGiaChiTiets = new LinkedHashSet<>();

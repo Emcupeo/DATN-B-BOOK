@@ -7,7 +7,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Nationalized;
@@ -18,6 +20,7 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
+@NoArgsConstructor
 @Table(name = "loai_bia")
 public class LoaiBia {
     @Id
@@ -36,6 +39,11 @@ public class LoaiBia {
     @ColumnDefault("0")
     @Column(name = "deleted")
     private Boolean deleted;
+
+    public LoaiBia(Integer idLoaiBia) {
+    }
+
+
 //
 //    @OneToMany(mappedBy = "idLoaiBia")
 //    private Set<ChiTietSanPham> chiTietSanPhams = new LinkedHashSet<>();

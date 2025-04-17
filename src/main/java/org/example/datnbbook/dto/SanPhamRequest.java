@@ -1,10 +1,12 @@
 package org.example.datnbbook.dto;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 public class SanPhamRequest {
     private String tenSanPham;
     private String moTaSanPham;
@@ -16,7 +18,8 @@ public class SanPhamRequest {
     private String moTaChiTiet;
     private List<ChiTietSanPhamDTO> chiTietSanPhamList;
 
-    @Data
+    @Getter
+    @Setter
     public static class ChiTietSanPhamDTO {
         private String tenChiTietSanPham;
         private Integer idLoaiBia;
@@ -24,6 +27,7 @@ public class SanPhamRequest {
         private Double gia;
         private Integer soLuongTon;
         private Double trongLuong;
-        private Double kichThuoc; // Thêm kichThuoc vào đây
+        private Double kichThuoc;
+        private List<Integer> imageIds;
     }
 }
