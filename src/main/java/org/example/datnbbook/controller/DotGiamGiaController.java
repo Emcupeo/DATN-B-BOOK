@@ -26,9 +26,9 @@ public class DotGiamGiaController {
     public ResponseEntity<DotGiamGia> create(@RequestBody DotGiamGiaRequest request) {
         DotGiamGia dotGiamGia = new DotGiamGia();
         dotGiamGia.setTenDotGiamGia(request.getTenDotGiamGia());
-        dotGiamGia.setLoaiGiamGia("Phần trăm");
-        dotGiamGia.setSoPhanTramGiam(request.getSoPhanTramGiam());
-        dotGiamGia.setGiaTriGiam(null);
+        dotGiamGia.setLoaiGiamGia(request.getLoaiGiamGia()); // Lấy từ request
+        dotGiamGia.setSoPhanTramGiam(request.getLoaiGiamGia().equals("Phần trăm") ? request.getSoPhanTramGiam() : null);
+        dotGiamGia.setGiaTriGiam(request.getLoaiGiamGia().equals("Tiền mặt") ? request.getGiaTriGiam() : null);
         dotGiamGia.setMoTa(null);
         dotGiamGia.setNgayBatDau(request.getNgayBatDau());
         dotGiamGia.setNgayKetThuc(request.getNgayKetThuc());
@@ -43,9 +43,9 @@ public class DotGiamGiaController {
         DotGiamGia dotGiamGia = new DotGiamGia();
         dotGiamGia.setId(id);
         dotGiamGia.setTenDotGiamGia(request.getTenDotGiamGia());
-        dotGiamGia.setLoaiGiamGia("Phần trăm");
-        dotGiamGia.setSoPhanTramGiam(request.getSoPhanTramGiam());
-        dotGiamGia.setGiaTriGiam(null);
+        dotGiamGia.setLoaiGiamGia(request.getLoaiGiamGia()); // Lấy từ request
+        dotGiamGia.setSoPhanTramGiam(request.getLoaiGiamGia().equals("Phần trăm") ? request.getSoPhanTramGiam() : null);
+        dotGiamGia.setGiaTriGiam(request.getLoaiGiamGia().equals("Tiền mặt") ? request.getGiaTriGiam() : null);
         dotGiamGia.setMoTa(null);
         dotGiamGia.setNgayBatDau(request.getNgayBatDau());
         dotGiamGia.setNgayKetThuc(request.getNgayKetThuc());

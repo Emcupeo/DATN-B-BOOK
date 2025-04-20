@@ -10,7 +10,7 @@ import org.springframework.data.web.config.EnableSpringDataWebSupport.PageSerial
 
 @SpringBootApplication
 @EnableSpringDataWebSupport(pageSerializationMode = PageSerializationMode.VIA_DTO)
-@ComponentScan(basePackages = "org.example.datnbbook")
+//@ComponentScan(basePackages = "org.example.datnbbook")
 public class DatnBbookApplication {
 
     public static void main(String[] args) {

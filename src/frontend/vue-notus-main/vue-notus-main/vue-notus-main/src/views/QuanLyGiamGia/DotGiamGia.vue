@@ -23,6 +23,12 @@
             placeholder="Tìm kiếm theo tên..."
           />
           <button
+            @click="exportToExcel"
+            class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-all duration-200 flex items-center"
+          >
+            <span class="mr-2">📊</span> Xuất Excel
+          </button>
+          <button
             @click="openCreateForm"
             class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-all duration-200 flex items-center"
           >
@@ -164,14 +170,17 @@
               <thead>
                 <tr class="bg-gray-100 text-gray-700 text-left">
                   <th class="px-4 py-2 text-sm font-semibold border-b"></th>
-                  <th class="px-4 py-2 text-sm font-semibold border-b">#</th>
+                  <th class="px-4 py-2 text-sm font-semibold border-b">STT</th>
+                  <th class="px-4 py-2 text-sm font-semibold border-b">Mã sản phẩm</th>
                   <th class="px-4 py-2 text-sm font-semibold border-b">Tên sách</th>
+                  <th class="px-4 py-2 text-sm font-semibold border-b">Mô tả</th>
                   <th class="px-4 py-2 text-sm font-semibold border-b">Số lượng tồn</th>
+                  <th class="px-4 py-2 text-sm font-semibold border-b">Hành động</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-if="loadingProducts" class="text-center">
-                  <td colspan="4" class="px-4 py-3 text-gray-600">
+                  <td colspan="7" class="px-4 py-3 text-gray-600">
                     <span class="flex items-center justify-center">
                       <svg class="animate-spin h-5 w-5 mr-2 text-blue-500" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -182,13 +191,12 @@
                   </td>
                 </tr>
                 <tr v-else-if="paginatedProducts.length === 0" class="text-center">
-                  <td colspan="4" class="px-4 py-3 text-gray-600">Không có dữ liệu</td>
+                  <td colspan="7" class="px-4 py-3 text-gray-600">Không có dữ liệu</td>
                 </tr>
                 <tr
                   v-for="(product, index) in paginatedProducts"
                   :key="product.id"
                   class="border-b border-gray-200 hover:bg-gray-50 transition-all duration-200 cursor-pointer"
-                  @click="toggleProductSelection(product.id)"
                 >
                   <td class="px-4 py-2 text-gray-700">
                     <input
@@ -200,8 +208,19 @@
                     />
                   </td>
                   <td class="px-4 py-2 text-gray-700">{{ (currentProductPage - 1) * productsPerPage + index + 1 }}</td>
-                  <td class="px-4 py-2 text-gray-700">{{ product.tenChiTietSanPham }}</td>
+                  <td class="px-4 py-2 text-gray-700">{{ product.maSanPham || 'Không có mã' }}</td>
+                  <td class="px-4 py-2 text-gray-700">{{ product.tenSanPham || 'Không xác định' }}</td>
+                  <td class="px-4 py-2 text-gray-700">{{ product.moTa || 'Không có mô tả' }}</td>
                   <td class="px-4 py-2 text-gray-700">{{ product.soLuongTon || 0 }}</td>
+                  <td class="px-4 py-2 text-gray-700">
+                    <button
+                      @click.stop="viewProductDetails(product.id)"
+                      class="text-blue-500 hover:text-blue-700 transition-all duration-200 mr-2"
+                      title="Xem chi tiết"
+                    >
+                      👁️
+                    </button>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -232,13 +251,13 @@
 
             <!-- Selected Products -->
             <div v-if="formData.selectedProducts.length > 0" class="mt-6">
-              <h3 class="text-lg font-semibold text-gray-800 mb-4">Chi Tiết Sản Phẩm</h3>
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">Sản Phẩm Đã Chọn</h3>
               <table class="min-w-full bg-white border border-gray-200">
                 <thead>
                   <tr class="bg-gray-100 text-gray-700 text-left">
                     <th class="px-4 py-2 text-sm font-semibold border-b">#</th>
                     <th class="px-4 py-2 text-sm font-semibold border-b">Tên sách & Mã số</th>
-                    <th class="px-4 py-2 text-sm font-semibold border-b">Nhà xuất bản</th>
+                    <th class="px-4 py-2 text-sm font-semibold border-b">Mô tả</th>
                     <th class="px-4 py-2 text-sm font-semibold border-b">Số lượng tồn</th>
                   </tr>
                 </thead>
@@ -253,9 +272,9 @@
                   >
                     <td class="px-4 py-2 text-gray-700">{{ index + 1 }}</td>
                     <td class="px-4 py-2 text-gray-700">
-                      {{ product.tenChiTietSanPham }} - {{ product.maChiTietSanPham }}
+                      {{ product.tenSanPham }} - {{ product.maSanPham }}
                     </td>
-                    <td class="px-4 py-2 text-gray-700">{{ product.tenNhaXuatBan || 'Không xác định' }}</td>
+                    <td class="px-4 py-2 text-gray-700">{{ product.moTa || 'Không có mô tả' }}</td>
                     <td class="px-4 py-2 text-gray-700">{{ product.soLuongTon || 0 }}</td>
                   </tr>
                 </tbody>
@@ -365,12 +384,68 @@
           </div>
         </div>
       </div>
+
+      <!-- Modal hiển thị chi tiết sản phẩm -->
+      <div
+        v-if="showProductDetailModal"
+        class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50"
+      >
+        <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-gray-800">Chi tiết sản phẩm</h3>
+            <button
+              @click="showProductDetailModal = false"
+              class="text-gray-500 hover:text-gray-700 text-xl transition-all duration-200"
+            >
+              ×
+            </button>
+          </div>
+          <div v-if="productDetails.length > 0" class="space-y-2">
+            <table class="min-w-full bg-white border border-gray-200">
+              <thead>
+                <tr class="bg-gray-100 text-gray-700 text-left">
+                  <th class="px-4 py-2 text-sm font-semibold border-b">STT</th>
+                  <th class="px-4 py-2 text-sm font-semibold border-b">Mã chi tiết</th>
+                  <th class="px-4 py-2 text-sm font-semibold border-b">Tên chi tiết</th>
+                  <th class="px-4 py-2 text-sm font-semibold border-b">Mô tả</th>
+                  <th class="px-4 py-2 text-sm font-semibold border-b">Số lượng tồn</th>
+                  <th class="px-4 py-2 text-sm font-semibold border-b">Nhà xuất bản</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="(detail, index) in productDetails"
+                  :key="detail.id"
+                  class="border-b border-gray-200 hover:bg-gray-50 transition-all duration-200"
+                >
+                  <td class="px-4 py-2 text-gray-700">{{ index + 1 }}</td>
+                  <td class="px-4 py-2 text-gray-700">{{ detail.maChiTietSanPham || 'Không có mã' }}</td>
+                  <td class="px-4 py-2 text-gray-700">{{ detail.tenChiTietSanPham || 'Không xác định' }}</td>
+                  <td class="px-4 py-2 text-gray-700">{{ detail.moTa || 'Không có mô tả' }}</td>
+                  <td class="px-4 py-2 text-gray-700">{{ detail.soLuongTon || 0 }}</td>
+                  <td class="px-4 py-2 text-gray-700">{{ detail.idNhaXuatBan?.tenNhaXuatBan || 'Không xác định' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div v-else class="text-center text-gray-600">Không có chi tiết sản phẩm</div>
+          <div class="flex justify-end mt-4">
+            <button
+              @click="showProductDetailModal = false"
+              class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-all duration-200"
+            >
+              Đóng
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
 import DotGiamGiaService from '@/service/DotGiamGiaService';
+import * as XLSX from 'xlsx';
 
 export default {
   data() {
@@ -409,6 +484,8 @@ export default {
       productSearchTerm: '',
       currentProductPage: 1,
       productsPerPage: 5,
+      productDetails: [],
+      showProductDetailModal: false,
     };
   },
   computed: {
@@ -431,7 +508,7 @@ export default {
     },
     filteredProducts() {
       return this.products.filter((product) =>
-        product.tenChiTietSanPham.toLowerCase().includes(this.productSearchTerm.toLowerCase())
+        product.tenSanPham.toLowerCase().includes(this.productSearchTerm.toLowerCase())
       );
     },
     totalProductPages() {
@@ -480,19 +557,36 @@ export default {
     async fetchProducts() {
       this.loadingProducts = true;
       try {
-        const products = await DotGiamGiaService.getAllProducts();
+        const products = await DotGiamGiaService.getAllSanPham();
         this.products = products.map((product) => ({
           ...product,
-          tenChiTietSanPham: product.tenChiTietSanPham || 'Không xác định',
-          maChiTietSanPham: product.maChiTietSanPham || '',
-          soLuongTon: product.soLuongTon || 0,
-          tenNhaXuatBan: product.tenNhaXuatBan || 'Không xác định',
+          tenSanPham: product.tenSanPham || 'Không xác định',
+          maSanPham: product.maSanPham || 'Không có mã',
+          moTa: product.moTa || 'Không có mô tả',
+          soLuongTon: product.chiTietSanPhams?.[0]?.soLuongTon || 0, // Lấy từ chi tiết sản phẩm đầu tiên
         }));
       } catch (error) {
         console.error('Lỗi khi lấy sản phẩm:', error);
         this.errorMessage = error.message;
       } finally {
         this.loadingProducts = false;
+      }
+    },
+    async viewProductDetails(idSanPham) {
+      try {
+        const details = await DotGiamGiaService.getChiTietSanPhamBySanPhamId(idSanPham);
+        this.productDetails = details.map((detail) => ({
+          ...detail,
+          maChiTietSanPham: detail.maChiTietSanPham || 'Không có mã',
+          tenChiTietSanPham: detail.tenChiTietSanPham || 'Không xác định',
+          moTa: detail.moTa || 'Không có mô tả',
+          soLuongTon: detail.soLuongTon || 0,
+          idNhaXuatBan: detail.idNhaXuatBan || { tenNhaXuatBan: 'Không xác định' },
+        }));
+        this.showProductDetailModal = true;
+      } catch (error) {
+        console.error('Lỗi khi lấy chi tiết sản phẩm:', error);
+        this.errorMessage = error.message || 'Không thể xem chi tiết sản phẩm!';
       }
     },
     toggleProductSelection(productId) {
@@ -543,7 +637,9 @@ export default {
         ngayBatDau: discount.ngayBatDau ? new Date(discount.ngayBatDau).toISOString().split('T')[0] : '',
         ngayKetThuc: discount.ngayKetThuc ? new Date(discount.ngayKetThuc).toISOString().split('T')[0] : '',
         trangThai: discount.trangThai || 'Chưa bắt đầu',
-        selectedProducts: discount.dotGiamGiaChiTiets ? discount.dotGiamGiaChiTiets.map(item => item.idChiTietSanPham.id) : [],
+        selectedProducts: discount.dotGiamGiaChiTiets
+          ? [...new Set(discount.dotGiamGiaChiTiets.map(item => item.idChiTietSanPham?.idSanPham?.id).filter(id => id))]
+          : [],
       };
       this.updateSelectedProductDetails();
       this.showForm = false;
@@ -649,18 +745,34 @@ export default {
       if (!confirm('Bạn có chắc chắn muốn xóa đợt giảm giá này không?')) return;
 
       try {
-        await DotGiamGiaService.deleteDiscount(discountId); // Gọi API để cập nhật deleted = 1
+        await DotGiamGiaService.deleteDiscount(discountId);
         const index = this.discountList.findIndex((d) => d.id === discountId);
         if (index !== -1) {
-          this.discountList.splice(index, 1); // Xóa khỏi danh sách giao diện
+          this.discountList.splice(index, 1);
         }
         if (this.paginatedDiscounts.length === 0 && this.currentPage > 1) {
-          this.currentPage--; // Giảm trang nếu trang hiện tại trống
+          this.currentPage--;
         }
       } catch (error) {
         console.error('Lỗi khi xóa:', error);
         this.errorMessage = error.message || 'Có lỗi xảy ra khi xóa đợt giảm giá!';
       }
+    },
+    exportToExcel() {
+      const data = this.filteredDiscounts.map((discount, index) => ({
+        '#': (this.currentPage - 1) * this.itemsPerPage + index + 1,
+        'Tên Đợt giảm giá': discount.tenDotGiamGia,
+        'Loại giảm giá': discount.loaiGiamGia,
+        'Giá trị giảm': discount.loaiGiamGia === 'Phần trăm' ? `${discount.soPhanTramGiam}%` : `${discount.giaTriGiam} đ`,
+        'Trạng thái': discount.trangThai || this.getDiscountStatus(discount),
+        'Thời gian bắt đầu': this.formatDate(discount.ngayBatDau),
+        'Thời gian kết thúc': this.formatDate(discount.ngayKetThuc),
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'DotGiamGia');
+      XLSX.writeFile(wb, 'DotGiamGia.xlsx');
     },
     selectAllProducts() {
       this.formData.selectedProducts = this.paginatedProducts.map(product => product.id);
