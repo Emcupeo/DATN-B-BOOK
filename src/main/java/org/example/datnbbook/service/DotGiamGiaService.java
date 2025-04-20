@@ -1,10 +1,15 @@
 package org.example.datnbbook.service;
 
+import org.example.datnbbook.model.ChiTietSanPham;
 import org.example.datnbbook.model.DotGiamGia;
+import org.example.datnbbook.model.DotGiamGiaChiTiet;
+import org.example.datnbbook.repository.ChiTietSanPhamRepository;
+import org.example.datnbbook.repository.DotGiamGiaChiTietRepository;
 import org.example.datnbbook.repository.DotGiamGiaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -15,13 +20,20 @@ public class DotGiamGiaService {
     private DotGiamGiaRepository repository;
 
     @Autowired
+    private DotGiamGiaChiTietRepository dotGiamGiaChiTietRepository;
+
+    @Autowired
+    private ChiTietSanPhamRepository chiTietSanPhamRepository;
+
+    @Autowired
     private JdbcTemplate jdbcTemplate;
 
     public List<DotGiamGia> getAll() {
         return repository.findAllActive();
     }
 
-    public DotGiamGia create(DotGiamGia dotGiamGia) {
+    @Transactional
+    public DotGiamGia create(DotGiamGia dotGiamGia, List<Integer> selectedProductIds) {
         // Sinh ma_dot_giam_gia nếu null hoặc không hợp lệ
         if (dotGiamGia.getMaDotGiamGia() == null || dotGiamGia.getMaDotGiamGia().trim().isEmpty() || dotGiamGia.getMaDotGiamGia().equals("null")) {
             String nextMaDotGiamGia;
@@ -40,10 +52,32 @@ public class DotGiamGiaService {
 
         dotGiamGia.setDeleted(false);
         dotGiamGia.setTrangThai(dotGiamGia.getTrangThai() != null ? dotGiamGia.getTrangThai() : true);
-        return repository.save(dotGiamGia);
+        DotGiamGia savedDotGiamGia = repository.save(dotGiamGia);
+
+        // Lưu các chi tiết sản phẩm được chọn vào dot_giam_gia_chi_tiet
+        if (selectedProductIds != null && !selectedProductIds.isEmpty()) {
+            for (Integer productId : selectedProductIds) {
+                ChiTietSanPham chiTietSanPham = chiTietSanPhamRepository.findById(productId)
+                        .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy chi tiết sản phẩm với ID: " + productId));
+
+                DotGiamGiaChiTiet chiTiet = new DotGiamGiaChiTiet();
+                chiTiet.setIdDotGiamGia(savedDotGiamGia);
+                chiTiet.setIdChiTietSanPham(chiTietSanPham);
+                chiTiet.setSoPhanTramGiam(dotGiamGia.getSoPhanTramGiam());
+                chiTiet.setSoTienGiam(BigDecimal.ZERO); // Có thể tính toán nếu cần
+                chiTiet.setGiaSauGiam(chiTietSanPham.getGia().multiply(BigDecimal.valueOf(1).subtract(dotGiamGia.getSoPhanTramGiam().divide(BigDecimal.valueOf(100)))));
+                chiTiet.setTrangThai(true);
+                chiTiet.setDeleted(false);
+
+                dotGiamGiaChiTietRepository.save(chiTiet);
+            }
+        }
+
+        return savedDotGiamGia;
     }
 
-    public DotGiamGia update(DotGiamGia dotGiamGia) {
+    @Transactional
+    public DotGiamGia update(DotGiamGia dotGiamGia, List<Integer> selectedProductIds) {
         DotGiamGia existing = repository.findById(dotGiamGia.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đợt giảm giá với ID: " + dotGiamGia.getId()));
 
@@ -61,9 +95,33 @@ public class DotGiamGiaService {
         existing.setTrangThai(dotGiamGia.getTrangThai());
         existing.setNgayBatDau(dotGiamGia.getNgayBatDau());
         existing.setNgayKetThuc(dotGiamGia.getNgayKetThuc());
-        return repository.save(existing);
+
+        DotGiamGia updatedDotGiamGia = repository.save(existing);
+
+        // Xóa các chi tiết cũ và thêm mới
+        dotGiamGiaChiTietRepository.deleteAll(existing.getDotGiamGiaChiTiets());
+        if (selectedProductIds != null && !selectedProductIds.isEmpty()) {
+            for (Integer productId : selectedProductIds) {
+                ChiTietSanPham chiTietSanPham = chiTietSanPhamRepository.findById(productId)
+                        .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy chi tiết sản phẩm với ID: " + productId));
+
+                DotGiamGiaChiTiet chiTiet = new DotGiamGiaChiTiet();
+                chiTiet.setIdDotGiamGia(updatedDotGiamGia);
+                chiTiet.setIdChiTietSanPham(chiTietSanPham);
+                chiTiet.setSoPhanTramGiam(updatedDotGiamGia.getSoPhanTramGiam());
+                chiTiet.setSoTienGiam(BigDecimal.ZERO);
+                chiTiet.setGiaSauGiam(chiTietSanPham.getGia().multiply(BigDecimal.valueOf(1).subtract(updatedDotGiamGia.getSoPhanTramGiam().divide(BigDecimal.valueOf(100)))));
+                chiTiet.setTrangThai(true);
+                chiTiet.setDeleted(false);
+
+                dotGiamGiaChiTietRepository.save(chiTiet);
+            }
+        }
+
+        return updatedDotGiamGia;
     }
 
+    @Transactional
     public void delete(Integer id) {
         DotGiamGia dotGiamGia = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đợt giảm giá với ID: " + id));
