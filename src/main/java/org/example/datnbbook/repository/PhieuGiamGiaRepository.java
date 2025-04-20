@@ -10,14 +10,6 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDateTime;
 
 public interface PhieuGiamGiaRepository extends JpaRepository<PhieuGiamGia, Long> {
-    @Query("SELECT p FROM PhieuGiamGia p WHERE p.deleted = false")
-    Page<PhieuGiamGia> findAllByDeletedFalse(Pageable pageable);
-
-    @Query(value = "SELECT 'PGG-' + RIGHT('00000' + CONVERT(NVARCHAR, NEXT VALUE FOR [dbo].[PGGSeq]), 5)", nativeQuery = true)
-    String getNextSequenceValue();
-
-    boolean existsByMaPhieuGiamGia(String maPhieuGiamGia);
-
     @Query(value = "SELECT * FROM phieu_giam_gia p WHERE p.deleted = 0 " +
             "AND (:loaiApDung IS NULL OR p.loai_ap_dung = :loaiApDung) " +
             "AND (:loaiPhieu IS NULL OR p.loai_phieu = :loaiPhieu) " +
@@ -48,4 +40,12 @@ public interface PhieuGiamGiaRepository extends JpaRepository<PhieuGiamGia, Long
             @Param("toDate") LocalDateTime toDate,
             Pageable pageable
     );
+
+    @Query("SELECT p FROM PhieuGiamGia p WHERE p.deleted = false")
+    Page<PhieuGiamGia> findAllByDeletedFalse(Pageable pageable);
+
+    @Query(value = "SELECT 'PGG-' + RIGHT('00000' + CONVERT(NVARCHAR, NEXT VALUE FOR [dbo].[PGGSeq]), 5)", nativeQuery = true)
+    String getNextSequenceValue();
+
+    boolean existsByMaPhieuGiamGia(String maPhieuGiamGia);
 }

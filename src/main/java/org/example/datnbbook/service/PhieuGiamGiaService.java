@@ -10,6 +10,8 @@ import org.example.datnbbook.repository.PhieuGiamGiaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,10 +20,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class PhieuGiamGiaService {
@@ -70,6 +70,7 @@ public class PhieuGiamGiaService {
     public Page<PhieuGiamGiaDTO> getAllDTO(Pageable pageable, String loaiApDung, String loaiPhieu, Boolean trangThai, String tinhTrang, String searchQuery, String fromDate, String toDate) {
         logger.info("Filtering with loaiApDung: {}, loaiPhieu: {}, trangThai: {}, tinhTrang: {}, searchQuery: {}, fromDate: {}, toDate: {}",
                 loaiApDung, loaiPhieu, trangThai, tinhTrang, searchQuery, fromDate, toDate);
+        logger.info("Incoming pageable sort: {}", pageable.getSort());
 
         String mappedSearchQuery = searchQuery != null ? mapSearchQuery(searchQuery.toLowerCase()) : null;
 
@@ -86,13 +87,38 @@ public class PhieuGiamGiaService {
             toDateTime = parsedToDate.atTime(23, 59, 59).atZone(ZoneId.of("Asia/Ho_Chi_Minh")).toLocalDateTime();
         }
 
-        return phieuGiamGiaRepository.findByFilters(loaiApDung, loaiPhieu, trangThai, tinhTrang, mappedSearchQuery, fromDateTime, toDateTime, pageable)
+        // Map sort fields to database column names and remove duplicates
+        Set<String> seenFields = new HashSet<>();
+        List<Sort.Order> mappedOrders = pageable.getSort().stream()
+                .map(order -> new Sort.Order(order.getDirection(), mapSortField(order.getProperty())))
+                .filter(order -> seenFields.add(order.getProperty())) // Only include unique fields
+                .collect(Collectors.toList());
+
+        // If no valid sort orders, use default
+        if (mappedOrders.isEmpty()) {
+            logger.warn("No valid sort orders found. Defaulting to updated_at: DESC");
+            mappedOrders = Collections.singletonList(new Sort.Order(Sort.Direction.DESC, "updated_at"));
+        }
+
+        Sort mappedSort = Sort.by(mappedOrders);
+        Pageable mappedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), mappedSort);
+
+        logger.info("Final sort configuration: {}", mappedSort);
+
+        return phieuGiamGiaRepository.findByFilters(
+                        loaiApDung,
+                        loaiPhieu,
+                        trangThai,
+                        tinhTrang,
+                        mappedSearchQuery,
+                        fromDateTime,
+                        toDateTime,
+                        mappedPageable)
                 .map(phieu -> {
                     List<PhieuGiamGiaKhachHang> dsKhachHang = phieuGiamGiaKhachHangService.findByPhieuGiamGiaId(phieu.getId());
                     return phieuGiamGiaMapper.toDTO(phieu, dsKhachHang);
                 });
     }
-
     private String mapSearchQuery(String query) {
         for (Map.Entry<String, String> entry : SEARCH_MAPPING.entrySet()) {
             if (query.contains(entry.getKey())) {
@@ -101,6 +127,26 @@ public class PhieuGiamGiaService {
             }
         }
         return query;
+    }
+
+    private String mapSortField(String dtoField) {
+        return switch (dtoField) {
+            case "maPhieuGiamGia" -> "ma_phieu_giam_gia";
+            case "tenPhieuGiamGia" -> "ten_phieu_giam_gia";
+            case "giaTriGiam" -> "gia_tri_giam";
+            case "soPhanTramGiam" -> "so_phan_tram_giam";
+            case "soLuong" -> "so_luong";
+            case "ngayBatDau" -> "ngay_bat_dau";
+            case "ngayKetThuc" -> "ngay_ket_thuc";
+            case "createdAt" -> "created_at";
+            case "updatedAt" -> "updated_at";
+            case "loaiApDung" -> "loai_ap_dung";
+            case "loaiPhieu" -> "loai_phieu";
+            case "tinhTrang" -> "tinh_trang";
+            case "trangThai" -> "trang_thai";
+            case "moTa" -> "mo_ta";
+            default -> "updated_at"; // Default sort by updated_at
+        };
     }
 
     public Optional<PhieuGiamGiaDTO> getDTOById(Long id) {
@@ -133,7 +179,9 @@ public class PhieuGiamGiaService {
         phieu.setSoLuong(dto.getSoLuong());
         phieu.setLoaiApDung(dto.getLoaiApDung());
         phieu.setLoaiPhieu(dto.getLoaiPhieu());
-        phieu.setCreatedAt(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+        phieu.setCreatedAt(now);
+        phieu.setUpdatedAt(now);
         phieu.setDeleted(false);
 
         phieu = phieuGiamGiaRepository.save(phieu);
@@ -186,6 +234,7 @@ public class PhieuGiamGiaService {
         existingPhieu.setSoLuong(dto.getSoLuong());
         existingPhieu.setLoaiApDung(dto.getLoaiApDung());
         existingPhieu.setLoaiPhieu(dto.getLoaiPhieu());
+        existingPhieu.setUpdatedAt(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
 
         List<PhieuGiamGiaKhachHang> danhSachCu = phieuGiamGiaKhachHangService.findByPhieuGiamGiaId(existingPhieu.getId());
         Long oldCustomerId = danhSachCu.isEmpty() ? null : Long.valueOf(danhSachCu.get(0).getKhachHang().getId());

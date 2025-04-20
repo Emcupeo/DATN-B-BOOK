@@ -74,12 +74,16 @@
             <table class="w-full text-sm">
               <tbody>
                 <tr>
-                  <td class="p-2 font-semibold">Mã phiếu</td>
+                  <td class="p-2 font-semibold w-32">Mã phiếu</td>
                   <td class="p-2">{{ selectedPhieu.maPhieuGiamGia }}</td>
                 </tr>
                 <tr>
                   <td class="p-2 font-semibold">Tên phiếu</td>
                   <td class="p-2">{{ selectedPhieu.tenPhieuGiamGia }}</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-semibold align-top">Mô tả</td>
+                  <td class="p-2 whitespace-normal break-words" style="max-width: 400px; word-break: break-all;">{{ selectedPhieu.moTa }}</td>
                 </tr>
                 <tr>
                   <td class="p-2 font-semibold">Loại phiếu</td>
@@ -326,10 +330,10 @@
       <template v-else>
         <tr class="bg-white border-b hover:bg-gray-50" v-for="(phieu, index) in phieuGiamGias" :key="phieu.id">
           <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
-            {{ ((currentPage - 1) * itemsPerPage) + index + 1 }}
+            {{ calculateSTT(index) }}
           </td>
-          <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ phieu.maPhieuGiamGia }}</td>
-          <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ phieu.tenPhieuGiamGia }}</td>
+          <td class="px-6 py-4 max-w-xs" :title="phieu.maPhieuGiamGia">{{ truncateText(phieu.maPhieuGiamGia) }}</td>
+          <td class="px-6 py-4 max-w-xs" :title="phieu.tenPhieuGiamGia">{{ truncateText(phieu.tenPhieuGiamGia) }}</td>
           <td class="px-6 py-4 text-center">
             <svg v-if="phieu.loaiApDung === 'PUBLIC'" class="w-6 h-6 inline text-blue-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" />
@@ -338,7 +342,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
             </svg>
           </td>
-          <td class = "px-6 py-4">{{ phieu.moTa }}</td>
+          <td class="px-6 py-4 max-w-xs" :title="phieu.moTa">{{ truncateText(phieu.moTa) }}</td>
           <td class="px-6 py-4 text-center">
             <svg v-if="phieu.loaiPhieu === 'PERCENT'" class="w-6 h-6 inline text-green-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
               <path stroke-linecap="round" stroke-linejoin="round" d="m8.99 14.993 6-6m6 3.001c0 1.268-.63 2.39-1.593 3.069a3.746 3.746 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043 3.745 3.745 0 0 1-3.068 1.593c-1.268 0-2.39-.63-3.068-1.593a3.745 3.745 0 0 1-3.296-1.043 3.746 3.746 0 0 1-1.043-3.297 3.746 3.746 0 0 1-1.593-3.068c0-1.268.63-2.39 1.593-3.068a3.746 3.746 0 0 1 1.043-3.297 3.745 3.745 0 0 1 3.296-1.042 3.745 3.745 0 0 1 3.068-1.594c1.268 0 2.39.63 3.068 1.593a3.745 3.745 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.297 3.746 3.746 0 0 1 1.593 3.068ZM9.74 9.743h.008v.007H9.74v-.007Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm4.125 4.5h.008v.008h-.008v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
@@ -437,10 +441,10 @@ export default {
     return {
       phieuGiamGias: [],
       currentPage: 1,
-      itemsPerPage: 10,
+      pageSize: 10,
       totalPages: 1,
       totalElements: 0,
-      sortBy: 'id',
+      sortBy: 'createdAt',
       sortDir: 'desc',
       isLoading: false,
       showToast: false,
@@ -476,6 +480,12 @@ export default {
     computedFilterStatus() {
       return this.filterStatus || null;
     },
+
+    calculateSTT() {
+      return (index) => {
+        return (this.currentPage - 1) * this.pageSize + index + 1;
+      };
+    }
   },
 
   methods: {
@@ -484,59 +494,37 @@ export default {
         this.isLoading = true;
         const params = {
           page: this.currentPage - 1,
-          size: this.itemsPerPage,
+          size: this.pageSize,
           sortBy: this.sortBy,
           sortDir: this.sortDir,
           loaiApDung: this.computedFilterLoaiApDung,
           loaiPhieu: this.computedFilterLoaiPhieu,
           tinhTrang: this.computedFilterStatus,
-          searchQuery: this.searchQuery || null,
-          fromDate: this.filterFromDate || null,
-          toDate: this.filterToDate || null,
+          searchQuery: this.searchQuery,
+          fromDate: this.filterFromDate,
+          toDate: this.filterToDate
         };
 
-        console.log('Fetching with params:', JSON.stringify(params, null, 2));
+        console.log('Fetching with params:', params);
         const response = await phieuGiamGiaService.getAll(params);
         console.log('API response:', response.data);
 
-        const data = response.data;
+        if (response.data) {
+          this.phieuGiamGias = response.data.content;
+          this.totalElements = response.data.page.totalElements;
+          this.totalPages = response.data.page.totalPages;
 
-        if (data && data.content) {
-          this.phieuGiamGias = data.content;
-          this.totalElements = data.page?.totalElements || 0;
-          this.totalPages = data.page?.totalPages || 1;
           console.log('Pagination info:', {
             totalElements: this.totalElements,
             totalPages: this.totalPages,
             currentPage: this.currentPage,
-            itemsPerPage: this.itemsPerPage,
-            searchQuery: this.searchQuery,
+            itemsPerPage: this.pageSize,
+            searchQuery: this.searchQuery
           });
-          if (this.phieuGiamGias.length === 0) {
-            this.showNotification('Không có phiếu giảm giá phù hợp với bộ lọc', 'warning');
-          }
-          // Adjust currentPage if out of bounds
-          if (this.currentPage > this.totalPages && this.totalPages > 0) {
-            this.currentPage = this.totalPages;
-            await this.fetchPhieuGiamGia();
-          } else if (this.totalPages === 0) {
-            this.currentPage = 1;
-          }
-        } else {
-          console.warn('No content in response');
-          this.phieuGiamGias = [];
-          this.totalElements = 0;
-          this.totalPages = 1;
-          this.currentPage = 1;
-          this.showNotification('Không có phiếu giảm giá phù hợp với bộ lọc', 'warning');
         }
       } catch (error) {
-        console.error('Lỗi khi tải dữ liệu:', error);
-        this.showNotification('Lỗi khi tải dữ liệu: ' + (error.response?.data?.message || error.message), 'error');
-        this.phieuGiamGias = [];
-        this.totalElements = 0;
-        this.totalPages = 1;
-        this.currentPage = 1;
+        console.error('Error fetching data:', error);
+        this.showNotification('Không thể tải dữ liệu. Vui lòng thử lại sau.', 'error');
       } finally {
         this.isLoading = false;
       }
@@ -554,7 +542,6 @@ export default {
     previousPage() {
       if (this.currentPage > 1) {
         this.currentPage--;
-        console.log('Navigating to previous page:', this.currentPage);
         this.fetchPhieuGiamGia();
       }
     },
@@ -562,28 +549,19 @@ export default {
     nextPage() {
       if (this.currentPage < this.totalPages) {
         this.currentPage++;
-        console.log('Navigating to next page:', this.currentPage);
         this.fetchPhieuGiamGia();
       }
     },
 
-    async changePage(page) {
-      if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
-        this.currentPage = page;
-        console.log('Changing to page:', page);
-        await this.fetchPhieuGiamGia();
-      }
-    },
-
-    sort(column) {
-      if (this.sortBy === column) {
+    sort(field) {
+      if (this.sortBy === field) {
         this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
       } else {
-        this.sortBy = column;
+        this.sortBy = field;
         this.sortDir = 'asc';
       }
+      console.log('Sorting by:', this.sortBy, 'Direction:', this.sortDir);
       this.currentPage = 1;
-      console.log('Sorting by:', column, 'Direction:', this.sortDir);
       this.fetchPhieuGiamGia();
     },
 
@@ -741,6 +719,16 @@ export default {
         this.showToastMessage('Lỗi khi tạo phiếu: ' + error.message, 'error');
       }
     },
+
+    truncateText(text, length = 10) {
+      if (!text) return '';
+      return text.length > length ? text.slice(0, length) + '...' : text;
+    },
+
+    getSortIcon(field) {
+      if (this.sortBy !== field) return 'none';
+      return this.sortDir === 'asc' ? 'asc' : 'desc';
+    },
   },
 
   async mounted() {
@@ -759,8 +747,8 @@ export default {
       console.log('currentPage changed:', newVal);
       this.fetchPhieuGiamGia();
     },
-    itemsPerPage(newVal) {
-      console.log('itemsPerPage changed:', newVal);
+    pageSize(newVal) {
+      console.log('pageSize changed:', newVal);
       this.currentPage = 1;
       this.fetchPhieuGiamGia();
     },
@@ -798,7 +786,41 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
+.table-cell {
+  white-space: normal;
+  word-wrap: break-word;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+td {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+td.description {
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* Loading animation */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
 
 html,

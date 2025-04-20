@@ -9,16 +9,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/api/admin/phieu-giam-gia")
 @CrossOrigin(origins = "http://localhost:3000")
 public class PhieuGiamGiaController {
+
+    private static final Logger logger = LoggerFactory.getLogger(PhieuGiamGiaController.class);
 
     @Autowired
     private PhieuGiamGiaService service;
@@ -35,8 +38,13 @@ public class PhieuGiamGiaController {
             @RequestParam(required = false) String trangThai,
             @RequestParam(required = false) String tinhTrang,
             @RequestParam(required = false) String searchQuery,
-            @RequestParam(required = false) String fromDate, // Thêm fromDate
-            @RequestParam(required = false) String toDate) { // Thêm toDate
+            @RequestParam(required = false) String fromDate,
+            @RequestParam(required = false) String toDate,
+            @RequestParam(name = "sortBy", required = false) String sortBy,
+            @RequestParam(name = "sortDir", defaultValue = "desc") String sortDir) {
+
+        logger.info("Received request with params: page={}, size={}, sortBy={}, sortDir={}, loaiApDung={}, loaiPhieu={}, trangThai={}, tinhTrang={}, searchQuery={}, fromDate={}, toDate={}",
+                page, size, sortBy, sortDir, loaiApDung, loaiPhieu, trangThai, tinhTrang, searchQuery, fromDate, toDate);
 
         // Xử lý tham số trangThai
         Boolean trangThaiBoolean = null;
@@ -44,9 +52,22 @@ public class PhieuGiamGiaController {
             trangThaiBoolean = Boolean.parseBoolean(trangThai);
         }
 
-        Pageable pageable = PageRequest.of(page, size);
+        // Create pageable with sort
+        Sort sort;
+        try {
+            sort = sortBy != null && !sortBy.isEmpty() ?
+                    Sort.by(Sort.Direction.fromString(sortDir), sortBy) :
+                    Sort.by(Sort.Direction.DESC, "updatedAt");
+            logger.info("Created Sort object: {}", sort);
+        } catch (IllegalArgumentException e) {
+            logger.error("Invalid sortDir value: {}. Defaulting to updatedAt: DESC", sortDir);
+            sort = Sort.by(Sort.Direction.DESC, "updatedAt");
+        }
 
-        // Gọi service với các tham số mới
+        Pageable pageable = PageRequest.of(page, size, sort);
+        logger.info("Created pageable: page={}, size={}, sort={}", page, size, sort);
+
+        // Gọi service với các tham số
         Page<PhieuGiamGiaDTO> result = service.getAllDTO(
                 pageable,
                 loaiApDung,
@@ -58,6 +79,7 @@ public class PhieuGiamGiaController {
                 toDate
         );
 
+        logger.info("Returning {} items for page {}", result.getContent().size(), page);
         return ResponseEntity.ok(result);
     }
 
@@ -94,7 +116,6 @@ public class PhieuGiamGiaController {
         return ResponseEntity.notFound().build();
     }
 
-    // API gửi email thông báo cho khách hàng
     @PostMapping("/send-voucher-email")
     public ResponseEntity<String> sendVoucherEmail(@RequestBody EmailRequest emailRequest) {
         try {

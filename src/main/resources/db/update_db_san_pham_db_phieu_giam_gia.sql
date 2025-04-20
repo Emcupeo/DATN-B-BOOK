@@ -35,9 +35,25 @@ ALTER TABLE phieu_giam_gia
     add ten_phieu_giam_gia nvarchar(255)
 Go
 
-ALTER TABLE phieu_giam_gia ADD tinh_trang AS (CASE WHEN ngay_bat_dau > GETDATE() THEN N'Chưa bắt đầu'WHEN ngay_bat_dau <= GETDATE() AND ngay_ket_thuc >= GETDATE() THEN N'Đang diễn ra'WHEN ngay_ket_thuc < GETDATE() THEN N'Đã kết thúc'ELSE N'Không xác định'END);
-GO
+-- Xóa cột tính toán hiện tại nếu có
+ALTER TABLE [dbo].[phieu_giam_gia] DROP COLUMN [tinh_trang]
+    GO
+
+-- Thêm lại cột tính toán với logic mới
+ALTER TABLE [dbo].[phieu_giam_gia]
+    ADD [tinh_trang] AS (
+    CASE
+    WHEN [trang_thai] = 0 THEN N'Đã kết thúc'
+    WHEN [trang_thai] = 1 AND [ngay_bat_dau] > GETDATE() THEN N'Chưa bắt đầu'
+    WHEN [trang_thai] = 1 AND [ngay_bat_dau] <= GETDATE() AND [ngay_ket_thuc] >= GETDATE() THEN N'Đang diễn ra'
+    WHEN [trang_thai] = 1 AND [ngay_ket_thuc] < GETDATE() THEN N'Đã kết thúc'
+    ELSE N'Không xác định'
+    END
+    )
+    GO
 Alter table phieu_giam_gia add loai_ap_dung nvarchar(255)
 Go
 Alter table phieu_giam_gia add loai_phieu nvarchar(255)
 Go
+ALTER TABLE phieu_giam_gia
+ALTER COLUMN ma_phieu_giam_gia VARCHAR(50);
