@@ -1,104 +1,309 @@
 <template>
-    <div class="min-h-screen bg-gray-50 p-6 font-sans relative">
-      <!-- Header -->
-      <header class="text-center mb-10">
-        <h1 class="text-4xl font-bold text-indigo-700">Danh Sách Đợt Giảm Giá</h1>
-        <p class="text-gray-500 mt-2">Quản lý các đợt giảm giá một cách hiệu quả</p>
-      </header>
-  
-      <!-- Search and Actions -->
-      <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-        <div class="w-full md:w-1/3 relative">
-          <input
-            v-model="searchTerm"
-            type="text"
-            class="w-full p-3 pl-10 bg-white border border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-300 focus:outline-none transition-all duration-200"
-            placeholder="Tìm kiếm đợt giảm giá..."
-          />
-          <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">🔍</span>
-        </div>
-        <div class="flex space-x-3">
-          <button
-            @click="exportExcel"
-            class="bg-indigo-600 text-white px-5 py-2 rounded-lg shadow-md hover:bg-indigo-700 transition-all duration-200 flex items-center"
-          >
-            <span class="mr-2">📤</span> Export Excel
-          </button>
-          <button
-            @click="openCreateModal"
-            class="bg-green-600 text-white px-5 py-2 rounded-lg shadow-md hover:bg-green-700 transition-all duration-200 flex items-center"
-          >
-            <span class="mr-2">➕</span> Thêm mới
-          </button>
-        </div>
-      </div>
-  
-      <!-- Filter Section -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div class="bg-white p-4 rounded-lg shadow-sm">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Từ ngày</label>
-          <input
-            v-model="fromDate"
-            type="date"
-            class="w-full p-2 bg-gray-50 border border-gray-200 rounded-md focus:ring-2 focus:ring-indigo-300 focus:outline-none transition-all duration-200"
-          />
-        </div>
-        <div class="bg-white p-4 rounded-lg shadow-sm">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Đến ngày</label>
-          <input
-            v-model="toDate"
-            type="date"
-            class="w-full p-2 bg-gray-50 border border-gray-200 rounded-md focus:ring-2 focus:ring-indigo-300 focus:outline-none transition-all duration-200"
-          />
-        </div>
-        <div class="bg-white p-4 rounded-lg shadow-sm">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
+  <div class="min-h-screen bg-gray-100 p-6 font-sans relative">
+    <!-- White Frame (Main Interface) -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <!-- Header and Actions -->
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-semibold text-gray-800">Đợt giảm giá</h1>
+        <!-- Show buttons only when not in create form -->
+        <div v-if="!showForm && !selectedDiscount" class="flex space-x-4">
           <select
             v-model="selectedStatus"
-            class="w-full p-2 bg-gray-50 border border-gray-200 rounded-md focus:ring-2 focus:ring-indigo-300 focus:outline-none transition-all duration-200"
+            class="w-48 p-2 bg-gray-50 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all duration-200"
           >
-            <option value="">Tất cả</option>
+            <option value="">Tất cả trạng thái</option>
             <option v-for="status in statusOptions" :key="status.value" :value="status.value">
               {{ status.text }}
             </option>
           </select>
-        </div>
-        <div class="bg-white p-4 rounded-lg shadow-sm">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Giá trị</label>
-          <select
-            v-model="selectedValue"
-            class="w-full p-2 bg-gray-50 border border-gray-200 rounded-md focus:ring-2 focus:ring-indigo-300 focus:outline-none transition-all duration-200"
+          <input
+            v-model="searchTerm"
+            type="text"
+            class="w-48 p-2 bg-gray-50 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all duration-200"
+            placeholder="Tìm kiếm theo tên..."
+          />
+          <button
+            @click="exportToExcel"
+            class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-all duration-200 flex items-center"
           >
-            <option value="">Tất cả</option>
-            <option v-for="value in valueOptions" :key="value.value" :value="value.value">
-              {{ value.text }}
-            </option>
-          </select>
+            <span class="mr-2">📊</span> Xuất Excel
+          </button>
+          <button
+            @click="openCreateForm"
+            class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-all duration-200 flex items-center"
+          >
+            <span class="mr-2">➕</span> Thêm đợt giảm giá
+          </button>
         </div>
       </div>
-  
-      <!-- Discount Table -->
-      <div class="bg-white rounded-lg shadow-md overflow-hidden">
-        <table class="min-w-full">
+
+      <!-- Create/Update Form (Two Columns) -->
+      <div v-if="showForm || selectedDiscount" class="mb-6 flex flex-col md:flex-row gap-6">
+        <!-- Form (Left Column) -->
+        <div class="w-full md:w-1/2 p-4 bg-gray-50 rounded-md shadow-inner">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-gray-800">{{ isUpdate ? 'Cập nhật đợt giảm giá' : 'Thêm đợt giảm giá' }}</h2>
+            <button @click="closeForm" class="text-gray-500 hover:text-gray-700 text-xl transition-all duration-200">×</button>
+          </div>
+
+          <form @submit.prevent="handleSubmit" class="space-y-4">
+            <div v-if="errorMessage" class="p-2 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-md text-xs">
+              {{ errorMessage }}
+            </div>
+
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Mã</label>
+                <input
+                  v-model="formData.maDotGiamGia"
+                  class="w-full p-2 bg-gray-200 border border-gray-300 rounded-md"
+                  placeholder="Nhập mã đợt giảm giá"
+                  disabled
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">* Tên Đợt giảm giá</label>
+                <input
+                  v-model="formData.tenDotGiamGia"
+                  class="w-full p-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all duration-200"
+                  placeholder="Nhập tên đợt giảm giá"
+                  required
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">* Loại giảm giá</label>
+                <select
+                  v-model="formData.loaiGiamGia"
+                  class="w-full p-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all duration-200"
+                  required
+                >
+                  <option value="Phần trăm">Phần trăm</option>
+                  <option value="Tiền mặt">Tiền mặt</option>
+                </select>
+              </div>
+              <div v-if="formData.loaiGiamGia === 'Phần trăm'">
+                <label class="block text-sm font-medium text-gray-700 mb-1">* Giá trị (%)</label>
+                <input
+                  v-model.number="formData.soPhanTramGiam"
+                  type="number"
+                  min="1"
+                  max="100"
+                  class="w-full p-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all duration-200"
+                  required
+                />
+              </div>
+              <div v-if="formData.loaiGiamGia === 'Tiền mặt'">
+                <label class="block text-sm font-medium text-gray-700 mb-1">* Số tiền tối đa</label>
+                <input
+                  v-model.number="formData.giaTriGiam"
+                  type="number"
+                  min="0"
+                  class="w-full p-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all duration-200"
+                  required
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">* Ngày bắt đầu</label>
+                <input
+                  v-model="formData.ngayBatDau"
+                  type="date"
+                  :class="{ 'border-red-500': isDateInvalid }"
+                  class="w-full p-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all duration-200"
+                  required
+                  @input="validateDates"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">* Ngày kết thúc</label>
+                <input
+                  v-model="formData.ngayKetThuc"
+                  type="date"
+                  :class="{ 'border-red-500': isDateInvalid }"
+                  class="w-full p-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all duration-200"
+                  required
+                  @input="validateDates"
+                />
+              </div>
+            </div>
+
+            <div class="flex justify-end mt-4 space-x-2">
+              <button
+                type="submit"
+                class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-all duration-200"
+              >
+                {{ isUpdate ? 'CẬP NHẬT' : 'TẠO MỚI' }}
+              </button>
+              <button
+                v-if="!isUpdate"
+                type="button"
+                @click="selectAllProducts"
+                class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-all duration-200"
+              >
+                Chọn tất cả
+              </button>
+              <button
+                v-if="!isUpdate"
+                type="button"
+                @click="deselectAllProducts"
+                class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-all duration-200"
+              >
+                Bỏ chọn tất cả
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Product Selection (Right Column) -->
+        <div class="w-full md:w-1/2 p-4 bg-gray-50 rounded-md shadow-inner">
+          <!-- Product Selection -->
+          <div>
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold text-gray-800">Sản Phẩm</h3>
+              <input
+                v-model="productSearchTerm"
+                type="text"
+                class="p-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all duration-200 w-1/2"
+                placeholder="Tìm kiếm theo tên sách..."
+              />
+            </div>
+            <table class="min-w-full bg-white border border-gray-200">
+              <thead>
+                <tr class="bg-gray-100 text-gray-700 text-left">
+                  <th class="px-4 py-2 text-sm font-semibold border-b"></th>
+                  <th class="px-4 py-2 text-sm font-semibold border-b">STT</th>
+                  <th class="px-4 py-2 text-sm font-semibold border-b">Mã sản phẩm</th>
+                  <th class="px-4 py-2 text-sm font-semibold border-b">Tên sách</th>
+                  <th class="px-4 py-2 text-sm font-semibold border-b">Mô tả</th>
+                  <th class="px-4 py-2 text-sm font-semibold border-b">Số lượng tồn</th>
+                  <th class="px-4 py-2 text-sm font-semibold border-b">Hành động</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="loadingProducts" class="text-center">
+                  <td colspan="7" class="px-4 py-3 text-gray-600">
+                    <span class="flex items-center justify-center">
+                      <svg class="animate-spin h-5 w-5 mr-2 text-blue-500" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8v-8H4z"></path>
+                      </svg>
+                      Đang tải sản phẩm...
+                    </span>
+                  </td>
+                </tr>
+                <tr v-else-if="paginatedProducts.length === 0" class="text-center">
+                  <td colspan="7" class="px-4 py-3 text-gray-600">Không có dữ liệu</td>
+                </tr>
+                <tr
+                  v-for="(product, index) in paginatedProducts"
+                  :key="product.id"
+                  class="border-b border-gray-200 hover:bg-gray-50 transition-all duration-200 cursor-pointer"
+                >
+                  <td class="px-4 py-2 text-gray-700">
+                    <input
+                      type="checkbox"
+                      v-model="formData.selectedProducts"
+                      :value="product.id"
+                      class="mr-2"
+                      @click.stop
+                    />
+                  </td>
+                  <td class="px-4 py-2 text-gray-700">{{ (currentProductPage - 1) * productsPerPage + index + 1 }}</td>
+                  <td class="px-4 py-2 text-gray-700">{{ product.maSanPham || 'Không có mã' }}</td>
+                  <td class="px-4 py-2 text-gray-700">{{ product.tenSanPham || 'Không xác định' }}</td>
+                  <td class="px-4 py-2 text-gray-700">{{ product.moTa || 'Không có mô tả' }}</td>
+                  <td class="px-4 py-2 text-gray-700">{{ product.soLuongTon || 0 }}</td>
+                  <td class="px-4 py-2 text-gray-700">
+                    <button
+                      @click.stop="viewProductDetails(product.id)"
+                      class="text-blue-500 hover:text-blue-700 transition-all duration-200 mr-2"
+                      title="Xem chi tiết"
+                    >
+                      👁️
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="mt-4 flex justify-end">
+              <div class="flex items-center space-x-2">
+                <button
+                  @click="prevProductPage"
+                  :disabled="currentProductPage === 1"
+                  class="bg-blue-500 text-white px-2 py-1 rounded-md hover:bg-blue-700 transition-all duration-200 disabled:bg-gray-300 disabled:text-gray-500"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                  </svg>
+                </button>
+                <span class="text-sm text-gray-700">{{ currentProductPage }} / {{ totalProductPages }}</span>
+                <button
+                  @click="nextProductPage"
+                  :disabled="currentProductPage === totalProductPages"
+                  class="bg-blue-500 text-white px-2 py-1 rounded-md hover:bg-blue-700 transition-all duration-200 disabled:bg-gray-300 disabled:text-gray-500"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Selected Products -->
+            <div v-if="formData.selectedProducts.length > 0" class="mt-6">
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">Sản Phẩm Đã Chọn</h3>
+              <table class="min-w-full bg-white border border-gray-200">
+                <thead>
+                  <tr class="bg-gray-100 text-gray-700 text-left">
+                    <th class="px-4 py-2 text-sm font-semibold border-b">#</th>
+                    <th class="px-4 py-2 text-sm font-semibold border-b">Tên sách & Mã số</th>
+                    <th class="px-4 py-2 text-sm font-semibold border-b">Mô tả</th>
+                    <th class="px-4 py-2 text-sm font-semibold border-b">Số lượng tồn</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-if="selectedProductDetails.length === 0" class="text-center">
+                    <td colspan="4" class="px-4 py-3 text-gray-600">Chưa chọn sản phẩm</td>
+                  </tr>
+                  <tr
+                    v-for="(product, index) in selectedProductDetails"
+                    :key="product.id"
+                    class="border-b border-gray-200 hover:bg-gray-50 transition-all duration-200"
+                  >
+                    <td class="px-4 py-2 text-gray-700">{{ index + 1 }}</td>
+                    <td class="px-4 py-2 text-gray-700">
+                      {{ product.tenSanPham }} - {{ product.maSanPham }}
+                    </td>
+                    <td class="px-4 py-2 text-gray-700">{{ product.moTa || 'Không có mô tả' }}</td>
+                    <td class="px-4 py-2 text-gray-700">{{ product.soLuongTon || 0 }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Discount Table (Show only when not in create form) -->
+      <div v-if="!showForm && !selectedDiscount" class="overflow-x-auto">
+        <table class="min-w-full bg-white border border-gray-200">
           <thead>
-            <tr class="bg-indigo-600 text-white">
-              <th class="px-4 py-3 text-left text-sm font-semibold">STT</th>
-              <th class="px-4 py-3 text-left text-sm font-semibold">Mã</th>
-              <th class="px-4 py-3 text-left text-sm font-semibold">Tên Đợt</th>
-              <th class="px-4 py-3 text-left text-sm font-semibold">Loại</th>
-              <th class="px-4 py-3 text-left text-sm font-semibold">Giảm (%)</th>
-              <th class="px-4 py-3 text-left text-sm font-semibold">Giá trị (VNĐ)</th>
-              <th class="px-4 py-3 text-left text-sm font-semibold">Bắt đầu</th>
-              <th class="px-4 py-3 text-left text-sm font-semibold">Kết thúc</th>
-              <th class="px-4 py-3 text-left text-sm font-semibold">Trạng thái</th>
-              <th class="px-4 py-3 text-left text-sm font-semibold">Hành động</th>
+            <tr class="bg-gray-100 text-gray-700 text-left">
+              <th class="px-4 py-2 text-sm font-semibold border-b">#</th>
+              <th class="px-4 py-2 text-sm font-semibold border-b">Tên Đợt giảm giá</th>
+              <th class="px-4 py-2 text-sm font-semibold border-b">Loại giảm giá</th>
+              <th class="px-4 py-2 text-sm font-semibold border-b">Giá trị giảm</th>
+              <th class="px-4 py-2 text-sm font-semibold border-b">Trạng thái</th>
+              <th class="px-4 py-2 text-sm font-semibold border-b">Thời gian bắt đầu</th>
+              <th class="px-4 py-2 text-sm font-semibold border-b">Thời gian kết thúc</th>
+              <th class="px-4 py-2 text-sm font-semibold border-b">Hoạt động</th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="loading" class="text-center">
-              <td colspan="10" class="px-4 py-3 text-gray-600">
+              <td colspan="8" class="px-4 py-3 text-gray-600">
                 <span class="flex items-center justify-center">
-                  <svg class="animate-spin h-5 w-5 mr-2 text-indigo-500" viewBox="0 0 24 24">
+                  <svg class="animate-spin h-5 w-5 mr-2 text-blue-500" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8v-8H4z"></path>
                   </svg>
@@ -107,192 +312,146 @@
               </td>
             </tr>
             <tr v-else-if="paginatedDiscounts.length === 0" class="text-center">
-              <td colspan="10" class="px-4 py-3 text-gray-600">Không có dữ liệu</td>
+              <td colspan="8" class="px-4 py-3 text-gray-600">Không có dữ liệu</td>
             </tr>
             <tr
               v-for="(discount, index) in paginatedDiscounts"
               :key="discount.id"
               class="border-b border-gray-200 hover:bg-gray-50 transition-all duration-200"
             >
-              <td class="px-4 py-3 text-gray-700">{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
-              <td class="px-4 py-3 text-gray-700 font-medium">{{ discount.maDotGiamGia }}</td>
-              <td class="px-4 py-3 text-gray-700">{{ discount.tenDotGiamGia }}</td>
-              <td class="px-4 py-3 text-gray-700">{{ discount.loaiGiamGia }}</td>
-              <td class="px-4 py-3 text-gray-700">{{ discount.soPhanTramGiam || 0 }}%</td>
-              <td class="px-4 py-3 text-gray-700">{{ (discount.giaTriGiam || 0).toLocaleString('vi-VN') }}</td>
-              <td class="px-4 py-3 text-gray-700">{{ formatDate(discount.ngayBatDau) }}</td>
-              <td class="px-4 py-3 text-gray-700">{{ formatDate(discount.ngayKetThuc) }}</td>
-              <td class="px-4 py-3">
+              <td class="px-4 py-2 text-gray-700">{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
+              <td class="px-4 py-2 text-gray-700 font-medium">{{ discount.tenDotGiamGia }}</td>
+              <td class="px-4 py-2 text-gray-700">{{ discount.loaiGiamGia }}</td>
+              <td class="px-4 py-2 text-gray-700">
+                {{ discount.loaiGiamGia === 'Phần trăm' ? `${discount.soPhanTramGiam}%` : `${discount.giaTriGiam || 0} đ` }}
+              </td>
+              <td class="px-4 py-2">
                 <span
                   :class="{
-                    'bg-green-100 text-green-700': getDiscountStatus(discount) === 'Đang diễn ra',
-                    'bg-red-100 text-red-700': getDiscountStatus(discount) === 'Đã kết thúc',
-                    'bg-yellow-100 text-yellow-700': getDiscountStatus(discount) === 'Chưa bắt đầu',
+                    'bg-green-100 text-green-700': discount.trangThai === 'Đang diễn ra',
+                    'bg-red-100 text-red-700': discount.trangThai === 'Đã kết thúc',
+                    'bg-yellow-100 text-yellow-700': discount.trangThai === 'Chưa bắt đầu',
                   }"
                   class="px-2 py-1 rounded-full text-xs font-medium"
                 >
-                  {{ getDiscountStatus(discount) }}
+                  {{ discount.trangThai || getDiscountStatus(discount) }}
                 </span>
               </td>
-              <td class="px-4 py-3">
-                <div class="flex space-x-2">
-                  <button
-                    @click="openUpdateModal(discount)"
-                    class="text-indigo-600 hover:text-indigo-800 transition-all duration-200"
-                    title="Chỉnh sửa"
-                  >
-                    ✏️
-                  </button>
-                  <button
-                    @click="deleteDiscount(discount.id)"
-                    class="text-red-600 hover:text-red-800 transition-all duration-200"
-                    title="Xóa"
-                  >
-                    🗑️
-                  </button>
-                </div>
+              <td class="px-4 py-2 text-gray-700">{{ formatDate(discount.ngayBatDau) }}</td>
+              <td class="px-4 py-2 text-gray-700">{{ formatDate(discount.ngayKetThuc) }}</td>
+              <td class="px-4 py-2">
+                <button
+                  @click="openUpdateForm(discount)"
+                  class="text-blue-500 hover:text-blue-700 transition-all duration-200 mr-2"
+                  title="Xem chi tiết"
+                >
+                  👁️
+                </button>
+                <button
+                  @click="deleteDiscount(discount.id)"
+                  class="text-red-500 hover:text-red-700 transition-all duration-200"
+                  title="Xóa đợt giảm giá"
+                >
+                  🗑️
+                </button>
               </td>
             </tr>
           </tbody>
         </table>
-  
+
         <!-- Pagination -->
-        <div class="mt-4 px-4 py-3 flex justify-center items-center bg-gray-50">
-          <button
-            @click="prevPage"
-            :disabled="currentPage === 1"
-            class="bg-indigo-600 text-white px-4 py-2 rounded-l-md hover:bg-indigo-700 transition-all duration-200 disabled:bg-gray-300 disabled:text-gray-500"
-          >
-            Trước
-          </button>
-          <span class="mx-4 text-sm text-gray-600">Trang {{ currentPage }} / {{ totalPages }}</span>
-          <button
-            @click="nextPage"
-            :disabled="currentPage === totalPages"
-            class="bg-indigo-600 text-white px-4 py-2 rounded-r-md hover:bg-indigo-700 transition-all duration-200 disabled:bg-gray-300 disabled:text-gray-500"
-          >
-            Sau
-          </button>
+        <div class="mt-4 flex justify-center">
+          <div class="flex items-center space-x-2">
+            <button
+              @click="prevPage"
+              :disabled="currentPage === 1"
+              class="bg-blue-500 text-white px-2 py-1 rounded-md hover:bg-blue-700 transition-all duration-200 disabled:bg-gray-300 disabled:text-gray-500"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+              </svg>
+            </button>
+            <span class="text-sm text-gray-700">Trang {{ currentPage }} / {{ totalPages }}</span>
+            <button
+              @click="nextPage"
+              :disabled="currentPage === totalPages"
+              class="bg-blue-500 text-white px-2 py-1 rounded-md hover:bg-blue-700 transition-all duration-200 disabled:bg-gray-300 disabled:text-gray-500"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
-  
-      <!-- Mini Modal for Create/Update -->
+
+      <!-- Modal hiển thị chi tiết sản phẩm -->
       <div
-        v-if="showModal"
-        class="fixed top-20 right-6 w-full max-w-md bg-white rounded-lg shadow-xl p-6 z-50 animate-mini-modal"
+        v-if="showProductDetailModal"
+        class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50"
       >
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-lg font-semibold text-indigo-700">
-            {{ isUpdate ? 'Chỉnh sửa đợt giảm giá' : 'Thêm đợt giảm giá mới' }}
-          </h2>
-          <button @click="closeModal" class="text-gray-500 hover:text-gray-700 text-xl transition-all duration-200">×</button>
+        <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-gray-800">Chi tiết sản phẩm</h3>
+            <button
+              @click="showProductDetailModal = false"
+              class="text-gray-500 hover:text-gray-700 text-xl transition-all duration-200"
+            >
+              ×
+            </button>
+          </div>
+          <div v-if="productDetails.length > 0" class="space-y-2">
+            <table class="min-w-full bg-white border border-gray-200">
+              <thead>
+                <tr class="bg-gray-100 text-gray-700 text-left">
+                  <th class="px-4 py-2 text-sm font-semibold border-b">STT</th>
+                  <th class="px-4 py-2 text-sm font-semibold border-b">Mã chi tiết</th>
+                  <th class="px-4 py-2 text-sm font-semibold border-b">Tên chi tiết</th>
+                  <th class="px-4 py-2 text-sm font-semibold border-b">Mô tả</th>
+                  <th class="px-4 py-2 text-sm font-semibold border-b">Số lượng tồn</th>
+                  <th class="px-4 py-2 text-sm font-semibold border-b">Nhà xuất bản</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="(detail, index) in productDetails"
+                  :key="detail.id"
+                  class="border-b border-gray-200 hover:bg-gray-50 transition-all duration-200"
+                >
+                  <td class="px-4 py-2 text-gray-700">{{ index + 1 }}</td>
+                  <td class="px-4 py-2 text-gray-700">{{ detail.maChiTietSanPham || 'Không có mã' }}</td>
+                  <td class="px-4 py-2 text-gray-700">{{ detail.tenChiTietSanPham || 'Không xác định' }}</td>
+                  <td class="px-4 py-2 text-gray-700">{{ detail.moTa || 'Không có mô tả' }}</td>
+                  <td class="px-4 py-2 text-gray-700">{{ detail.soLuongTon || 0 }}</td>
+                  <td class="px-4 py-2 text-gray-700">{{ detail.idNhaXuatBan?.tenNhaXuatBan || 'Không xác định' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div v-else class="text-center text-gray-600">Không có chi tiết sản phẩm</div>
+          <div class="flex justify-end mt-4">
+            <button
+              @click="showProductDetailModal = false"
+              class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-all duration-200"
+            >
+              Đóng
+            </button>
+          </div>
         </div>
-  
-        <form @submit.prevent="handleSubmit" class="space-y-4">
-          <!-- Error Message -->
-          <div v-if="errorMessage" class="p-2 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-md text-xs">
-            {{ errorMessage }}
-          </div>
-  
-          <div class="space-y-4">
-          
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Tên đợt giảm giá <span class="text-red-500">*</span></label>
-              <input
-                v-model="modalData.tenDotGiamGia"
-                class="w-full p-2 bg-gray-50 border border-gray-200 rounded-md focus:ring-2 focus:ring-indigo-300 focus:outline-none transition-all duration-200"
-                placeholder="VD: Giảm giá mùa hè"
-                required
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Loại giảm giá <span class="text-red-500">*</span></label>
-              <select
-                v-model="modalData.loaiGiamGia"
-                class="w-full p-2 bg-gray-50 border border-gray-200 rounded-md focus:ring-2 focus:ring-indigo-300 focus:outline-none transition-all duration-200"
-                required
-              >
-                <option value="" disabled>Chọn loại</option>
-                <option value="Phần trăm">Phần trăm</option>
-                <option value="Tiền mặt">Tiền mặt</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Số phần trăm giảm</label>
-              <input
-                v-model.number="modalData.soPhanTramGiam"
-                type="number"
-                min="0"
-                max="100"
-                class="w-full p-2 bg-gray-50 border border-gray-200 rounded-md focus:ring-2 focus:ring-indigo-300 focus:outline-none transition-all duration-200"
-                placeholder="0-100"
-                :disabled="modalData.loaiGiamGia === 'Tiền mặt'"
-              />
-              <span v-if="modalData.loaiGiamGia === 'Phần trăm'" class="text-xs text-gray-500 mt-1 block">Từ 1 đến 100%</span>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Giá trị giảm (VNĐ)</label>
-              <input
-                v-model.number="modalData.giaTriGiam"
-                type="number"
-                min="0"
-                class="w-full p-2 bg-gray-50 border border-gray-200 rounded-md focus:ring-2 focus:ring-indigo-300 focus:outline-none transition-all duration-200"
-                placeholder="VD: 50000"
-                :disabled="modalData.loaiGiamGia === 'Phần trăm'"
-              />
-              <span v-if="modalData.loaiGiamGia === 'Tiền mặt'" class="text-xs text-gray-500 mt-1 block">Giá trị > 0</span>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Ngày bắt đầu <span class="text-red-500">*</span></label>
-              <input
-                v-model="modalData.ngayBatDau"
-                type="date"
-                class="w-full p-2 bg-gray-50 border border-gray-200 rounded-md focus:ring-2 focus:ring-indigo-300 focus:outline-none transition-all duration-200"
-                required
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Ngày kết thúc <span class="text-red-500">*</span></label>
-              <input
-                v-model="modalData.ngayKetThuc"
-                type="date"
-                class="w-full p-2 bg-gray-50 border border-gray-200 rounded-md focus:ring-2 focus:ring-indigo-300 focus:outline-none transition-all duration-200"
-                required
-              />
-            </div>
-          </div>
-  
-          <div class="flex justify-end space-x-3">
-            <button
-              type="button"
-              @click="closeModal"
-              class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition-all duration-200"
-            >
-              Hủy
-            </button>
-            <button
-              type="submit"
-              class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-all duration-200"
-            >
-              {{ isUpdate ? 'Lưu' : 'Thêm' }}
-            </button>
-          </div>
-        </form>
       </div>
     </div>
-  </template>
-  
-  <script>
-import axios from 'axios';
+  </div>
+</template>
+
+<script>
+import DotGiamGiaService from '@/service/DotGiamGiaService';
+import * as XLSX from 'xlsx';
 
 export default {
   data() {
     return {
       searchTerm: '',
-      fromDate: '',
-      toDate: '',
       selectedStatus: '',
-      selectedValue: '',
       currentPage: 1,
       itemsPerPage: 5,
       discountList: [],
@@ -301,28 +460,32 @@ export default {
         { value: 'Đang diễn ra', text: 'Đang diễn ra' },
         { value: 'Đã kết thúc', text: 'Đã kết thúc' },
       ],
-      valueOptions: [
-        { value: 'low', text: 'Thấp (<50k)' },
-        { value: 'medium', text: 'Trung bình (50k-100k)' },
-        { value: 'high', text: 'Cao (>100k)' },
-      ],
-      showModal: false,
+      showForm: false,
       isUpdate: false,
-      modalData: {
+      selectedDiscount: null,
+      formData: {
         id: null,
-        maDotGiamGia: '', // Không cần nhập tay khi tạo mới
+        maDotGiamGia: '',
         tenDotGiamGia: '',
-        loaiGiamGia: '',
-        soPhanTramGiam: null,
-        giaTriGiam: null,
+        loaiGiamGia: 'Phần trăm',
+        soPhanTramGiam: 0,
+        giaTriGiam: 0,
         ngayBatDau: '',
         ngayKetThuc: '',
-        trangThai: true,
-        moTa: '',
-        deleted: false,
+        trangThai: 'Chưa bắt đầu',
+        selectedProducts: [],
       },
       errorMessage: '',
       loading: false,
+      loadingProducts: false,
+      isDateInvalid: false,
+      products: [],
+      selectedProductDetails: [],
+      productSearchTerm: '',
+      currentProductPage: 1,
+      productsPerPage: 5,
+      productDetails: [],
+      showProductDetailModal: false,
     };
   },
   computed: {
@@ -332,16 +495,8 @@ export default {
           this.searchTerm === '' ||
           discount.tenDotGiamGia.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
           discount.maDotGiamGia.toLowerCase().includes(this.searchTerm.toLowerCase());
-        const matchesFromDate = !this.fromDate || new Date(discount.ngayBatDau) >= new Date(this.fromDate);
-        const matchesToDate = !this.toDate || new Date(discount.ngayKetThuc) <= new Date(this.toDate);
-        const matchesStatus = this.selectedStatus === '' || this.getDiscountStatus(discount) === this.selectedStatus;
-        const matchesValue =
-          this.selectedValue === '' ||
-          (this.selectedValue === 'low' && (discount.giaTriGiam || 0) < 50000) ||
-          (this.selectedValue === 'medium' && (discount.giaTriGiam || 0) >= 50000 && (discount.giaTriGiam || 0) <= 100000) ||
-          (this.selectedValue === 'high' && (discount.giaTriGiam || 0) > 100000);
-
-        return matchesSearch && matchesFromDate && matchesToDate && matchesStatus && matchesValue;
+        const matchesStatus = this.selectedStatus === '' || discount.trangThai === this.selectedStatus;
+        return matchesSearch && matchesStatus;
       });
     },
     totalPages() {
@@ -351,10 +506,22 @@ export default {
       const start = (this.currentPage - 1) * this.itemsPerPage;
       return this.filteredDiscounts.slice(start, start + this.itemsPerPage);
     },
+    filteredProducts() {
+      return this.products.filter((product) =>
+        product.tenSanPham.toLowerCase().includes(this.productSearchTerm.toLowerCase())
+      );
+    },
+    totalProductPages() {
+      return Math.ceil(this.filteredProducts.length / this.productsPerPage);
+    },
+    paginatedProducts() {
+      const start = (this.currentProductPage - 1) * this.productsPerPage;
+      return this.filteredProducts.slice(start, start + this.productsPerPage);
+    },
   },
   methods: {
     formatDate(date) {
-      return date ? new Date(date).toLocaleDateString('vi-VN') : '';
+      return date ? new Date(date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
     },
     getDiscountStatus(discount) {
       const today = new Date();
@@ -368,80 +535,158 @@ export default {
     async fetchDiscounts() {
       this.loading = true;
       try {
-        const response = await axios.get('http://localhost:8080/api/discounts');
-        this.discountList = response.data.map((discount) => ({
+        const discounts = await DotGiamGiaService.getListDiscounts();
+        this.discountList = discounts.map((discount) => ({
           ...discount,
-          ngayBatDau: new Date(discount.ngayBatDau).toISOString().split('T')[0],
-          ngayKetThuc: new Date(discount.ngayKetThuc).toISOString().split('T')[0],
+          maDotGiamGia: discount.maDotGiamGia || '',
+          loaiGiamGia: discount.loaiGiamGia || 'Phần trăm',
+          soPhanTramGiam: discount.soPhanTramGiam || 0,
+          giaTriGiam: discount.giaTriGiam || 0,
+          ngayBatDau: discount.ngayBatDau,
+          ngayKetThuc: discount.ngayKetThuc,
+          trangThai: this.getDiscountStatus(discount),
+          dotGiamGiaChiTiets: discount.dotGiamGiaChiTiets || [],
         }));
       } catch (error) {
         console.error('Lỗi khi lấy dữ liệu:', error);
-        this.errorMessage = 'Không thể tải dữ liệu từ server!';
+        this.errorMessage = error.message;
       } finally {
         this.loading = false;
       }
     },
-    exportExcel() {
-      // TODO: Thêm logic xuất Excel (dùng thư viện như xlsx)
-      console.log('Exporting to Excel...');
+    async fetchProducts() {
+      this.loadingProducts = true;
+      try {
+        const products = await DotGiamGiaService.getAllSanPham();
+        this.products = products.map((product) => ({
+          ...product,
+          tenSanPham: product.tenSanPham || 'Không xác định',
+          maSanPham: product.maSanPham || 'Không có mã',
+          moTa: product.moTa || 'Không có mô tả',
+          soLuongTon: product.chiTietSanPhams?.[0]?.soLuongTon || 0, // Lấy từ chi tiết sản phẩm đầu tiên
+        }));
+      } catch (error) {
+        console.error('Lỗi khi lấy sản phẩm:', error);
+        this.errorMessage = error.message;
+      } finally {
+        this.loadingProducts = false;
+      }
     },
-    openCreateModal() {
+    async viewProductDetails(idSanPham) {
+      try {
+        const details = await DotGiamGiaService.getChiTietSanPhamBySanPhamId(idSanPham);
+        this.productDetails = details.map((detail) => ({
+          ...detail,
+          maChiTietSanPham: detail.maChiTietSanPham || 'Không có mã',
+          tenChiTietSanPham: detail.tenChiTietSanPham || 'Không xác định',
+          moTa: detail.moTa || 'Không có mô tả',
+          soLuongTon: detail.soLuongTon || 0,
+          idNhaXuatBan: detail.idNhaXuatBan || { tenNhaXuatBan: 'Không xác định' },
+        }));
+        this.showProductDetailModal = true;
+      } catch (error) {
+        console.error('Lỗi khi lấy chi tiết sản phẩm:', error);
+        this.errorMessage = error.message || 'Không thể xem chi tiết sản phẩm!';
+      }
+    },
+    toggleProductSelection(productId) {
+      const index = this.formData.selectedProducts.indexOf(productId);
+      if (index === -1) {
+        this.formData.selectedProducts.push(productId);
+      } else {
+        this.formData.selectedProducts.splice(index, 1);
+      }
+      this.updateSelectedProductDetails();
+    },
+    updateSelectedProductDetails() {
+      this.selectedProductDetails = this.formData.selectedProducts
+        .map((id) => this.products.find((p) => p.id === id))
+        .filter(Boolean);
+    },
+    openCreateForm() {
       this.isUpdate = false;
+      this.selectedDiscount = null;
       this.errorMessage = '';
-      this.modalData = {
+      this.formData = {
         id: null,
-        maDotGiamGia: '', // Backend tự sinh
+        maDotGiamGia: '',
         tenDotGiamGia: '',
-        loaiGiamGia: '',
-        soPhanTramGiam: null,
-        giaTriGiam: null,
+        loaiGiamGia: 'Phần trăm',
+        soPhanTramGiam: 0,
+        giaTriGiam: 0,
         ngayBatDau: '',
         ngayKetThuc: '',
-        trangThai: true,
-        moTa: '',
-        deleted: false,
+        trangThai: 'Chưa bắt đầu',
+        selectedProducts: [],
       };
-      this.showModal = true;
+      this.selectedProductDetails = [];
+      this.showForm = true;
+      this.fetchProducts();
     },
-    openUpdateModal(discount) {
+    openUpdateForm(discount) {
       this.isUpdate = true;
+      this.selectedDiscount = discount;
       this.errorMessage = '';
-      this.modalData = {
-        ...discount,
-        ngayBatDau: new Date(discount.ngayBatDau).toISOString().split('T')[0],
-        ngayKetThuc: new Date(discount.ngayKetThuc).toISOString().split('T')[0],
+      this.formData = {
+        id: discount.id,
+        maDotGiamGia: discount.maDotGiamGia || '',
+        tenDotGiamGia: discount.tenDotGiamGia || '',
+        loaiGiamGia: discount.loaiGiamGia || 'Phần trăm',
+        soPhanTramGiam: discount.soPhanTramGiam || 0,
+        giaTriGiam: discount.giaTriGiam || 0,
+        ngayBatDau: discount.ngayBatDau ? new Date(discount.ngayBatDau).toISOString().split('T')[0] : '',
+        ngayKetThuc: discount.ngayKetThuc ? new Date(discount.ngayKetThuc).toISOString().split('T')[0] : '',
+        trangThai: discount.trangThai || 'Chưa bắt đầu',
+        selectedProducts: discount.dotGiamGiaChiTiets
+          ? [...new Set(discount.dotGiamGiaChiTiets.map(item => item.idChiTietSanPham?.idSanPham?.id).filter(id => id))]
+          : [],
       };
-      this.showModal = true;
+      this.updateSelectedProductDetails();
+      this.showForm = false;
+      this.fetchProducts();
     },
-    closeModal() {
-      this.showModal = false;
+    closeForm() {
+      this.showForm = false;
+      this.selectedDiscount = null;
       this.errorMessage = '';
+      this.isDateInvalid = false;
+      this.selectedProductDetails = [];
+      this.formData.selectedProducts = [];
+    },
+    validateDates() {
+      if (!this.formData.ngayBatDau || !this.formData.ngayKetThuc) {
+        this.isDateInvalid = false;
+        this.errorMessage = '';
+        return;
+      }
+      const startDate = new Date(this.formData.ngayBatDau);
+      const endDate = new Date(this.formData.ngayKetThuc);
+      this.isDateInvalid = startDate >= endDate;
+      if (this.isDateInvalid) {
+        this.errorMessage = 'Ngày bắt đầu phải nhỏ hơn ngày kết thúc!';
+      } else {
+        this.errorMessage = '';
+      }
     },
     validateForm() {
-      if (!this.modalData.tenDotGiamGia || !this.modalData.loaiGiamGia || !this.modalData.ngayBatDau || !this.modalData.ngayKetThuc) {
+      if (!this.formData.tenDotGiamGia || !this.formData.ngayBatDau || !this.formData.ngayKetThuc) {
         this.errorMessage = 'Vui lòng điền đầy đủ các trường bắt buộc!';
         return false;
       }
-      if (this.modalData.moTa && this.modalData.moTa.length > 100) {
-        this.errorMessage = 'Mô tả không được vượt quá 100 ký tự!';
-        return false;
-      }
-      if (new Date(this.modalData.ngayBatDau) >= new Date(this.modalData.ngayKetThuc)) {
+      if (this.isDateInvalid) {
         this.errorMessage = 'Ngày bắt đầu phải nhỏ hơn ngày kết thúc!';
         return false;
       }
-      if (
-        this.modalData.loaiGiamGia === 'Phần trăm' &&
-        (this.modalData.soPhanTramGiam === null || this.modalData.soPhanTramGiam <= 0 || this.modalData.soPhanTramGiam > 100)
-      ) {
-        this.errorMessage = 'Số phần trăm giảm phải từ 1 đến 100!';
+      if (this.formData.loaiGiamGia === 'Phần trăm' && (this.formData.soPhanTramGiam <= 0 || this.formData.soPhanTramGiam > 100)) {
+        this.errorMessage = 'Giá trị giảm phải từ 1 đến 100!';
         return false;
       }
-      if (
-        this.modalData.loaiGiamGia === 'Tiền mặt' &&
-        (this.modalData.giaTriGiam === null || this.modalData.giaTriGiam <= 0)
-      ) {
-        this.errorMessage = 'Giá trị giảm phải lớn hơn 0!';
+      if (this.formData.loaiGiamGia === 'Tiền mặt' && this.formData.giaTriGiam <= 0) {
+        this.errorMessage = 'Số tiền tối đa phải lớn hơn 0!';
+        return false;
+      }
+      if (!this.isUpdate && this.formData.selectedProducts.length === 0) {
+        this.errorMessage = 'Vui lòng chọn ít nhất một sản phẩm!';
         return false;
       }
       return true;
@@ -450,44 +695,92 @@ export default {
       if (!this.validateForm()) return;
 
       const payload = {
-        ...this.modalData,
-        ngayBatDau: new Date(this.modalData.ngayBatDau).toISOString(),
-        ngayKetThuc: new Date(this.modalData.ngayKetThuc).toISOString(),
-        soPhanTramGiam: this.modalData.loaiGiamGia === 'Phần trăm' ? this.modalData.soPhanTramGiam : null,
-        giaTriGiam: this.modalData.loaiGiamGia === 'Tiền mặt' ? this.modalData.giaTriGiam : null,
-        trangThai: this.modalData.trangThai ?? true,
-        deleted: this.modalData.deleted ?? false,
-        maDotGiamGia: this.isUpdate ? this.modalData.maDotGiamGia : undefined, // Không gửi maDotGiamGia khi tạo mới
+        tenDotGiamGia: this.formData.tenDotGiamGia,
+        loaiGiamGia: this.formData.loaiGiamGia,
+        soPhanTramGiam: this.formData.loaiGiamGia === 'Phần trăm' ? this.formData.soPhanTramGiam : null,
+        giaTriGiam: this.formData.loaiGiamGia === 'Tiền mặt' ? this.formData.giaTriGiam : null,
+        ngayBatDau: new Date(this.formData.ngayBatDau).toISOString(),
+        ngayKetThuc: new Date(this.formData.ngayKetThuc).toISOString(),
+        selectedProducts: this.formData.selectedProducts,
       };
 
       try {
         if (this.isUpdate) {
-          const response = await axios.put(`http://localhost:8080/api/discounts/${this.modalData.id}`, payload);
-          const index = this.discountList.findIndex((d) => d.id === this.modalData.id);
-          if (index !== -1) this.discountList.splice(index, 1, response.data);
+          const response = await DotGiamGiaService.updateDiscount(this.formData.id, payload);
+          const index = this.discountList.findIndex((d) => d.id === this.formData.id);
+          if (index !== -1) {
+            this.discountList.splice(index, 1, {
+              ...response,
+              maDotGiamGia: response.maDotGiamGia || '',
+              loaiGiamGia: response.loaiGiamGia || 'Phần trăm',
+              soPhanTramGiam: response.soPhanTramGiam || 0,
+              giaTriGiam: response.giaTriGiam || 0,
+              ngayBatDau: response.ngayBatDau,
+              ngayKetThuc: response.ngayKetThuc,
+              trangThai: this.getDiscountStatus(response),
+              dotGiamGiaChiTiets: response.dotGiamGiaChiTiets || [],
+            });
+          }
         } else {
-          const response = await axios.post('http://localhost:8080/api/discounts', payload);
-          this.discountList.push(response.data);
+          const response = await DotGiamGiaService.createDiscount(payload);
+          this.discountList.push({
+            ...response,
+            maDotGiamGia: response.maDotGiamGia || '',
+            loaiGiamGia: response.loaiGiamGia || 'Phần trăm',
+            soPhanTramGiam: response.soPhanTramGiam || 0,
+            giaTriGiam: response.giaTriGiam || 0,
+            ngayBatDau: response.ngayBatDau,
+            ngayKetThuc: response.ngayKetThuc,
+            trangThai: this.getDiscountStatus(response),
+            dotGiamGiaChiTiets: response.dotGiamGiaChiTiets || [],
+          });
         }
-        this.closeModal();
-        await this.fetchDiscounts(); // Reload để đảm bảo dữ liệu mới nhất
+        this.closeForm();
       } catch (error) {
         console.error('Lỗi khi lưu:', error);
-        this.errorMessage = error.response?.data?.message || 'Không thể lưu dữ liệu!';
+        this.errorMessage = error.message || 'Có lỗi xảy ra khi lưu dữ liệu!';
       }
     },
-    async deleteDiscount(id) {
-      if (confirm('Bạn có chắc chắn muốn xóa đợt giảm giá này?')) {
-        try {
-          await axios.delete(`http://localhost:8080/api/discounts/${id}`);
-          // Xóa bản ghi khỏi danh sách mà không cần reload toàn bộ
-          this.discountList = this.discountList.filter((d) => d.id !== id);
-        } catch (error) {
-          console.error('Lỗi khi xóa:', error);
-          this.errorMessage = 'Không thể xóa dữ liệu!';
-          await this.fetchDiscounts(); // Reload nếu có lỗi để đồng bộ dữ liệu
+    async deleteDiscount(discountId) {
+      if (!confirm('Bạn có chắc chắn muốn xóa đợt giảm giá này không?')) return;
+
+      try {
+        await DotGiamGiaService.deleteDiscount(discountId);
+        const index = this.discountList.findIndex((d) => d.id === discountId);
+        if (index !== -1) {
+          this.discountList.splice(index, 1);
         }
+        if (this.paginatedDiscounts.length === 0 && this.currentPage > 1) {
+          this.currentPage--;
+        }
+      } catch (error) {
+        console.error('Lỗi khi xóa:', error);
+        this.errorMessage = error.message || 'Có lỗi xảy ra khi xóa đợt giảm giá!';
       }
+    },
+    exportToExcel() {
+      const data = this.filteredDiscounts.map((discount, index) => ({
+        '#': (this.currentPage - 1) * this.itemsPerPage + index + 1,
+        'Tên Đợt giảm giá': discount.tenDotGiamGia,
+        'Loại giảm giá': discount.loaiGiamGia,
+        'Giá trị giảm': discount.loaiGiamGia === 'Phần trăm' ? `${discount.soPhanTramGiam}%` : `${discount.giaTriGiam} đ`,
+        'Trạng thái': discount.trangThai || this.getDiscountStatus(discount),
+        'Thời gian bắt đầu': this.formatDate(discount.ngayBatDau),
+        'Thời gian kết thúc': this.formatDate(discount.ngayKetThuc),
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'DotGiamGia');
+      XLSX.writeFile(wb, 'DotGiamGia.xlsx');
+    },
+    selectAllProducts() {
+      this.formData.selectedProducts = this.paginatedProducts.map(product => product.id);
+      this.updateSelectedProductDetails();
+    },
+    deselectAllProducts() {
+      this.formData.selectedProducts = [];
+      this.selectedProductDetails = [];
     },
     prevPage() {
       if (this.currentPage > 1) this.currentPage--;
@@ -495,65 +788,86 @@ export default {
     nextPage() {
       if (this.currentPage < this.totalPages) this.currentPage++;
     },
+    prevProductPage() {
+      if (this.currentProductPage > 1) this.currentProductPage--;
+    },
+    nextProductPage() {
+      if (this.currentProductPage < this.totalProductPages) this.currentProductPage++;
+    },
   },
   mounted() {
     this.fetchDiscounts();
   },
 };
-
 </script>
-  
-  <style scoped>
-  .font-sans {
-    font-family: 'Inter', sans-serif;
+
+<style scoped>
+.font-sans {
+  font-family: 'Inter', sans-serif;
+}
+
+input:disabled,
+select:disabled {
+  background-color: #e5e7eb;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+input,
+select {
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background-color: #f9fafb;
+  transition: all 0.2s ease-in-out;
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  ring: 2px solid #3b82f6;
+}
+
+.bg-gray-50 {
+  background-color: #f9fafb;
+}
+
+.border-red-500 {
+  border-color: #ef4444;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 0.5rem;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+th {
+  background-color: #f3f4f6;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+tr:hover {
+  background-color: #f9fafb;
+}
+
+tr:nth-child(even) {
+  background-color: #f9fafb;
+}
+
+@media (max-width: 768px) {
+  .md\:flex-row {
+    flex-direction: column;
   }
-  
-  /* Mini Modal Animation */
-  @keyframes miniModalFadeIn {
-    from { opacity: 0; transform: translateX(100px); }
-    to { opacity: 1; transform: translateX(0); }
+
+  .w-48 {
+    width: 100%;
   }
-  
-  .animate-mini-modal {
-    animation: miniModalFadeIn 0.3s ease-out forwards;
-  }
-  
-  /* General Styling */
-  .shadow-md {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  }
-  
-  .shadow-xl {
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  }
-  
-  input:disabled,
-  select:disabled {
-    background-color: #e5e7eb;
-    cursor: not-allowed;
-    opacity: 0.7;
-  }
-  
-  /* Responsive */
-  @media (max-width: 768px) {
-    .md\:flex-row {
-      flex-direction: column;
-    }
-   
-    .md\:grid-cols-2 {
-      grid-template-columns: 1fr;
-    }
-    .fixed.top-20.right-6 {
-      top: 10px;
-      right: 10px;
-      width: calc(100% - 20px);
-      max-width: none;
-    }
-  }
-  
-  @media (max-width: 640px) {
-    .sm\:grid-cols-2 {
-      grid-template-columns: 1fr;
-    }
-  }
-  </style>
+}
+</style>

@@ -31,4 +31,8 @@ public interface ChiTietSanPhamRepository extends JpaRepository<ChiTietSanPham, 
     String getNextCTSPSequenceValue();
 
     List<ChiTietSanPham> findByIdSanPham_Id(Integer idSanPham);
+
+    Optional<ChiTietSanPham> findByIdSanPhamIdAndIdLoaiBiaId(Integer idSanPham, Integer idLoaiBia);
+    List<ChiTietSanPham> findAllByIdSanPhamIdAndIdLoaiBiaId(Integer idSanPham, Integer idLoaiBia);
+
 }

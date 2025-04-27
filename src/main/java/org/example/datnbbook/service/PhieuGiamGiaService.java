@@ -6,22 +6,27 @@ import org.example.datnbbook.mapper.PhieuGiamGiaMapper;
 import org.example.datnbbook.model.PhieuGiamGia;
 import org.example.datnbbook.model.PhieuGiamGiaKhachHang;
 import org.example.datnbbook.repository.KhachHangRepository;
-import org.example.datnbbook.repository.PhieuGiamGiaKhachHangRepository;
 import org.example.datnbbook.repository.PhieuGiamGiaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class PhieuGiamGiaService {
+
+    private static final Logger logger = LoggerFactory.getLogger(PhieuGiamGiaService.class);
 
     @Autowired
     private PhieuGiamGiaRepository phieuGiamGiaRepository;
@@ -31,8 +36,25 @@ public class PhieuGiamGiaService {
 
     @Autowired
     private PhieuGiamGiaKhachHangService phieuGiamGiaKhachHangService;
+
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private PhieuGiamGiaMapper phieuGiamGiaMapper;
+
+    private static final Map<String, String> SEARCH_MAPPING = new HashMap<>();
+
+    static {
+        SEARCH_MAPPING.put("công khai", "PUBLIC");
+        SEARCH_MAPPING.put("khách hàng cụ thể", "CUSTOMER");
+        SEARCH_MAPPING.put("giảm theo phần trăm", "PERCENT");
+        SEARCH_MAPPING.put("giảm theo giá trị tiền", "AMOUNT");
+        SEARCH_MAPPING.put("cong khai", "PUBLIC");
+        SEARCH_MAPPING.put("khach hang cu the", "CUSTOMER");
+        SEARCH_MAPPING.put("giam theo phan tram", "PERCENT");
+        SEARCH_MAPPING.put("giam theo gia tri tien", "AMOUNT");
+    }
 
     public boolean existsById(Long id) {
         return phieuGiamGiaRepository.existsById(id);
@@ -45,34 +67,103 @@ public class PhieuGiamGiaService {
         phieuGiamGiaRepository.save(phieu);
     }
 
-    // ✅ Lấy danh sách phiếu giảm giá kèm thông tin khách hàng nếu có
-    public Page<PhieuGiamGiaDTO> getAllDTO(Pageable pageable) {
-        Page<PhieuGiamGia> pageEntity = phieuGiamGiaRepository.findAllByDeletedFalse(pageable);
-        return pageEntity.map(phieu -> {
-            List<PhieuGiamGiaKhachHang> danhSachKhach = phieuGiamGiaKhachHangService.findByPhieuGiamGiaId(phieu.getId());
-            return PhieuGiamGiaMapper.toDTO(phieu, danhSachKhach);
-        });
+    public Page<PhieuGiamGiaDTO> getAllDTO(Pageable pageable, String loaiApDung, String loaiPhieu, Boolean trangThai, String tinhTrang, String searchQuery, String fromDate, String toDate) {
+        logger.info("Filtering with loaiApDung: {}, loaiPhieu: {}, trangThai: {}, tinhTrang: {}, searchQuery: {}, fromDate: {}, toDate: {}",
+                loaiApDung, loaiPhieu, trangThai, tinhTrang, searchQuery, fromDate, toDate);
+        logger.info("Incoming pageable sort: {}", pageable.getSort());
+
+        String mappedSearchQuery = searchQuery != null ? mapSearchQuery(searchQuery.toLowerCase()) : null;
+
+        // Parse fromDate và toDate
+        LocalDateTime fromDateTime = null;
+        LocalDateTime toDateTime = null;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        if (fromDate != null && !fromDate.isEmpty()) {
+            LocalDate parsedFromDate = LocalDate.parse(fromDate, formatter);
+            fromDateTime = parsedFromDate.atStartOfDay(ZoneId.of("Asia/Ho_Chi_Minh")).toLocalDateTime();
+        }
+        if (toDate != null && !toDate.isEmpty()) {
+            LocalDate parsedToDate = LocalDate.parse(toDate, formatter);
+            toDateTime = parsedToDate.atTime(23, 59, 59).atZone(ZoneId.of("Asia/Ho_Chi_Minh")).toLocalDateTime();
+        }
+
+        // Map sort fields to database column names and remove duplicates
+        Set<String> seenFields = new HashSet<>();
+        List<Sort.Order> mappedOrders = pageable.getSort().stream()
+                .map(order -> new Sort.Order(order.getDirection(), mapSortField(order.getProperty())))
+                .filter(order -> seenFields.add(order.getProperty())) // Only include unique fields
+                .collect(Collectors.toList());
+
+        // If no valid sort orders, use default
+        if (mappedOrders.isEmpty()) {
+            logger.warn("No valid sort orders found. Defaulting to updated_at: DESC");
+            mappedOrders = Collections.singletonList(new Sort.Order(Sort.Direction.DESC, "updated_at"));
+        }
+
+        Sort mappedSort = Sort.by(mappedOrders);
+        Pageable mappedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), mappedSort);
+
+        logger.info("Final sort configuration: {}", mappedSort);
+
+        return phieuGiamGiaRepository.findByFilters(
+                        loaiApDung,
+                        loaiPhieu,
+                        trangThai,
+                        tinhTrang,
+                        mappedSearchQuery,
+                        fromDateTime,
+                        toDateTime,
+                        mappedPageable)
+                .map(phieu -> {
+                    List<PhieuGiamGiaKhachHang> dsKhachHang = phieuGiamGiaKhachHangService.findByPhieuGiamGiaId(phieu.getId());
+                    return phieuGiamGiaMapper.toDTO(phieu, dsKhachHang);
+                });
+    }
+    private String mapSearchQuery(String query) {
+        for (Map.Entry<String, String> entry : SEARCH_MAPPING.entrySet()) {
+            if (query.contains(entry.getKey())) {
+                logger.info("Mapping search query '{}' to '{}'", query, entry.getValue());
+                return entry.getValue();
+            }
+        }
+        return query;
     }
 
-    // ✅ Lấy chi tiết theo ID
+    private String mapSortField(String dtoField) {
+        return switch (dtoField) {
+            case "maPhieuGiamGia" -> "ma_phieu_giam_gia";
+            case "tenPhieuGiamGia" -> "ten_phieu_giam_gia";
+            case "giaTriGiam" -> "gia_tri_giam";
+            case "soPhanTramGiam" -> "so_phan_tram_giam";
+            case "soLuong" -> "so_luong";
+            case "ngayBatDau" -> "ngay_bat_dau";
+            case "ngayKetThuc" -> "ngay_ket_thuc";
+            case "createdAt" -> "created_at";
+            case "updatedAt" -> "updated_at";
+            case "loaiApDung" -> "loai_ap_dung";
+            case "loaiPhieu" -> "loai_phieu";
+            case "tinhTrang" -> "tinh_trang";
+            case "trangThai" -> "trang_thai";
+            case "moTa" -> "mo_ta";
+            default -> "updated_at"; // Default sort by updated_at
+        };
+    }
+
     public Optional<PhieuGiamGiaDTO> getDTOById(Long id) {
         return phieuGiamGiaRepository.findById(id)
                 .filter(p -> p.getDeleted() == null || !p.getDeleted())
                 .map(phieu -> {
                     List<PhieuGiamGiaKhachHang> ds = phieuGiamGiaKhachHangService.findByPhieuGiamGiaId(phieu.getId());
-                    return PhieuGiamGiaMapper.toDTO(phieu, ds);
+                    return phieuGiamGiaMapper.toDTO(phieu, ds);
                 });
     }
 
-    // ✅ Tạo mới và trả về DTO
     public PhieuGiamGiaDTO createPhieuGiamGiaAndReturnDTO(PhieuGiamGiaDTO dto) {
         PhieuGiamGia phieu = new PhieuGiamGia();
 
-        // Sử dụng maPhieuGiamGia được cung cấp nếu có, nếu không thì tạo mới
         if (dto.getMaPhieuGiamGia() != null && !dto.getMaPhieuGiamGia().isEmpty()) {
             phieu.setMaPhieuGiamGia(dto.getMaPhieuGiamGia());
         } else {
-            // Tạo mã mới nếu không được cung cấp
             String nextCode = phieuGiamGiaRepository.getNextSequenceValue();
             phieu.setMaPhieuGiamGia(nextCode);
         }
@@ -83,16 +174,18 @@ public class PhieuGiamGiaService {
         phieu.setGiaTriDonHangToiThieu(dto.getGiaTriDonHangToiThieu());
         phieu.setMoTa(dto.getMoTa());
         phieu.setTrangThai(dto.getTrangThai());
-        phieu.setNgayBatDau(dto.getNgayBatDau());
-        phieu.setNgayKetThuc(dto.getNgayKetThuc());
+        phieu.setNgayBatDau(dto.getNgayBatDau().atZone(ZoneId.of("Asia/Ho_Chi_Minh")).toLocalDateTime());
+        phieu.setNgayKetThuc(dto.getNgayKetThuc().atZone(ZoneId.of("Asia/Ho_Chi_Minh")).toLocalDateTime());
         phieu.setSoLuong(dto.getSoLuong());
-        phieu.setCreatedAt(LocalDateTime.now());
+        phieu.setLoaiApDung(dto.getLoaiApDung());
+        phieu.setLoaiPhieu(dto.getLoaiPhieu());
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+        phieu.setCreatedAt(now);
+        phieu.setUpdatedAt(now);
         phieu.setDeleted(false);
 
-        // Lưu phiếu giảm giá
         phieu = phieuGiamGiaRepository.save(phieu);
 
-        // Xử lý logic khách hàng cụ thể nếu cần
         if (dto.getKhachHangId() != null) {
             var khach = khachHangRepository.findById(dto.getKhachHangId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng"));
@@ -100,7 +193,7 @@ public class PhieuGiamGiaService {
             PhieuGiamGiaKhachHang link = new PhieuGiamGiaKhachHang();
             link.setPhieuGiamGia(phieu);
             link.setKhachHang(khach);
-            link.setCreatedAt(LocalDateTime.now());
+            link.setCreatedAt(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
             link.setDeleted(false);
             link.setTrangThai(true);
             link.setSoLuong(1);
@@ -111,21 +204,18 @@ public class PhieuGiamGiaService {
                         dto.getSoPhanTramGiam() != null ? "Giảm theo phần trăm" : "Giảm theo giá trị tiền",
                         dto.getGiaTriGiam().doubleValue());
             } catch (MessagingException e) {
-                e.printStackTrace();
-                throw new RuntimeException("Lỗi khi gửi email: " + e.getMessage());
+                logger.error("Lỗi khi gửi email cho {}: {}", khach.getEmail(), e.getMessage());
             }
         }
 
         List<PhieuGiamGiaKhachHang> danhSach = phieuGiamGiaKhachHangService.findByPhieuGiamGiaId(phieu.getId());
-        return PhieuGiamGiaMapper.toDTO(phieu, danhSach);
+        return phieuGiamGiaMapper.toDTO(phieu, danhSach);
     }
 
-    // ✅ Cập nhật và trả về DTO
     public PhieuGiamGiaDTO updatePhieuGiamGia(PhieuGiamGiaDTO dto) throws MessagingException {
         PhieuGiamGia existingPhieu = phieuGiamGiaRepository.findById(dto.getId())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy phiếu giảm giá"));
 
-        // If maPhieuGiamGia is provided, use it; otherwise, generate a new one
         if (dto.getMaPhieuGiamGia() != null && !dto.getMaPhieuGiamGia().isEmpty()) {
             existingPhieu.setMaPhieuGiamGia(dto.getMaPhieuGiamGia());
         } else {
@@ -133,23 +223,23 @@ public class PhieuGiamGiaService {
             existingPhieu.setMaPhieuGiamGia(nextCode);
         }
 
-        // Update other fields
         existingPhieu.setTenPhieuGiamGia(dto.getTenPhieuGiamGia());
         existingPhieu.setSoPhanTramGiam(dto.getSoPhanTramGiam());
         existingPhieu.setGiaTriGiam(dto.getGiaTriGiam());
         existingPhieu.setGiaTriDonHangToiThieu(dto.getGiaTriDonHangToiThieu());
         existingPhieu.setMoTa(dto.getMoTa());
         existingPhieu.setTrangThai(dto.getTrangThai());
-        existingPhieu.setNgayBatDau(dto.getNgayBatDau());
-        existingPhieu.setNgayKetThuc(dto.getNgayKetThuc());
+        existingPhieu.setNgayBatDau(dto.getNgayBatDau().atZone(ZoneId.of("Asia/Ho_Chi_Minh")).toLocalDateTime());
+        existingPhieu.setNgayKetThuc(dto.getNgayKetThuc().atZone(ZoneId.of("Asia/Ho_Chi_Minh")).toLocalDateTime());
         existingPhieu.setSoLuong(dto.getSoLuong());
+        existingPhieu.setLoaiApDung(dto.getLoaiApDung());
+        existingPhieu.setLoaiPhieu(dto.getLoaiPhieu());
+        existingPhieu.setUpdatedAt(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
 
-        // Kiểm tra và cập nhật liên kết khách hàng
         List<PhieuGiamGiaKhachHang> danhSachCu = phieuGiamGiaKhachHangService.findByPhieuGiamGiaId(existingPhieu.getId());
         Long oldCustomerId = danhSachCu.isEmpty() ? null : Long.valueOf(danhSachCu.get(0).getKhachHang().getId());
 
         if (dto.getKhachHangId() != null && !dto.getKhachHangId().equals(oldCustomerId)) {
-            // Cập nhật hoặc tạo mới liên kết khách hàng
             var kh = khachHangRepository.findById(dto.getKhachHangId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng"));
 
@@ -157,7 +247,7 @@ public class PhieuGiamGiaService {
                 PhieuGiamGiaKhachHang link = new PhieuGiamGiaKhachHang();
                 link.setPhieuGiamGia(existingPhieu);
                 link.setKhachHang(kh);
-                link.setCreatedAt(LocalDateTime.now());
+                link.setCreatedAt(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
                 link.setDeleted(false);
                 link.setTrangThai(true);
                 link.setSoLuong(1);
@@ -168,21 +258,16 @@ public class PhieuGiamGiaService {
                 phieuGiamGiaKhachHangService.save(link);
             }
 
-            // Gửi email cho khách hàng mới
             emailService.sendVoucherEmail(kh.getEmail(), kh.getHoTen(), existingPhieu.getTenPhieuGiamGia(), existingPhieu.getGiaTriGiam().doubleValue());
         } else if (dto.getKhachHangId() == null && !danhSachCu.isEmpty()) {
-            // Xóa liên kết khách hàng cũ nếu chuyển sang công khai
             for (PhieuGiamGiaKhachHang link : danhSachCu) {
-                phieuGiamGiaKhachHangService.delete(link); // Giả sử có phương thức delete trong service
+                phieuGiamGiaKhachHangService.delete(link);
             }
         }
 
-        // Save the updated voucher
         PhieuGiamGia updated = phieuGiamGiaRepository.save(existingPhieu);
-
-        // Return DTO with new linkages
         List<PhieuGiamGiaKhachHang> danhSachMoi = phieuGiamGiaKhachHangService.findByPhieuGiamGiaId(updated.getId());
-        return PhieuGiamGiaMapper.toDTO(updated, danhSachMoi);
+        return phieuGiamGiaMapper.toDTO(updated, danhSachMoi);
     }
 
     public boolean existsByMaPhieuGiamGia(String maPhieuGiamGia) {
@@ -192,5 +277,4 @@ public class PhieuGiamGiaService {
     public Optional<PhieuGiamGia> getById(Long id) {
         return phieuGiamGiaRepository.findById(id);
     }
-
 }

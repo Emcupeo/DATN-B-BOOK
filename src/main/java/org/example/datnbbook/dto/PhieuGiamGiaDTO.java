@@ -29,4 +29,6 @@ public class PhieuGiamGiaDTO {
     private Long khachHangId;
     private Boolean deleted;
     private String loaiApDung;
+    private String loaiPhieu;
+    private String tinhTrang;
 }
