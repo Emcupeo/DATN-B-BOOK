@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen w-full bg-gray-100 font-roboto">
-    <div class="bg-white p-4 shadow rounded w-full">
+    <div class="bg-white p-4 shadow rounded w-full overflow-hidden">
       <!-- Thanh tiêu đề -->
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-lg font-bold">Tất cả chi tiết sách</h2>

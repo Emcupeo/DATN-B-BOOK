@@ -6,7 +6,7 @@
       <HeaderStats />
       <div class="px-4 md:px-11 mx-auto w-full flex-grow font-roboto">
         <!-- Thêm transition ngang quanh router-view -->
-        <div class="min-h-[calc(100vh-56px)] bg-white px-4 pt-4 pb-1 shadow rounded w-full">
+        <div class="min-h-[calc(100vh-56px)] bg-white px-4 pt-4 pb-1 shadow rounded w-full overflow-hidden">
           <transition name="slide" mode="out-in">
             <router-view />
           </transition>
