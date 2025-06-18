@@ -2,7 +2,7 @@
   <div class="w-full font-roboto">
     <!-- Loading Overlay -->
     <div v-if="isLoading" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div class="bg-white p-6 rounded-lg shadow-xl flex flex-col items-center">
+      <div class="bg-white p-6 rounded-lg shadow-xl flex flex-col items-center overflow-hidden">
         <div class="loading-spinner mb-4"></div>
         <p class="text-gray-700 font-medium">Đang xử lý yêu cầu...</p>
         <p class="text-gray-500 text-sm mt-2">Vui lòng đợi trong giây lát</p>
