@@ -14,7 +14,6 @@ BEGIN
     
     EXEC('ALTER TABLE khach_hang DROP CONSTRAINT ' + @ConstraintName)
 END
-
 -- Add default constraint for ma_khach_hang
 ALTER TABLE khach_hang 
 ADD CONSTRAINT DF_khach_hang_ma_khach_hang 

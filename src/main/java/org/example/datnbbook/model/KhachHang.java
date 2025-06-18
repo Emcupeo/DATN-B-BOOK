@@ -1,6 +1,7 @@
 package org.example.datnbbook.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -71,6 +72,7 @@ public class KhachHang {
     private Set<HoaDon> hoaDons = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "khachHang", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<DiaChi> danhSachDiaChi = new ArrayList<>();
 
     public void themDiaChi(DiaChi diaChi) {
