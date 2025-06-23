@@ -128,7 +128,7 @@
     </transition>
 
     <!-- Bảng Hóa đơn với Tabs -->
-    <div class="relative overflow-x-auto shadow-md sm:rounded-lg bg-white">
+    <div class="relative overflow-x-auto shadow-md sm:rounded-lg bg-white overflow-hidden">
       <!-- Tabs -->
       <div class="flex border-b bg-gray-50 px-4 py-2">
         <button

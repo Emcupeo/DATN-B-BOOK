@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-wrap mt-4 flex justify-center items-center h-screen">
-    <div class="w-full mb-12 px-4 bg-white p-6 shadow-lg rounded-lg w-4/5 h-4/5">
-      <div class="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded bg-white">
+    <div class="w-full mb-12 px-4 bg-white p-6 shadow-lg rounded-lg w-4/5 h-4/5 overflow-hidden">
+      <div class="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded bg-white overflow-hidden">
         <div class="rounded-t mb-0 px-4 py-3 border-0">
           <div class="flex flex-wrap items-center">
             <div class="relative w-full px-4 max-w-full flex-grow flex-1">

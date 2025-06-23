@@ -74,6 +74,13 @@
               </a>
             </router-link>
           </li>
+          <!-- Cửa hàng trực tuyến -->
+          <li class="items-center">
+            <a href="/shop" target="_blank" class="text-xs uppercase py-3 font-bold block text-blueGray-700 hover:text-blueGray-500">
+              <i class="fas fa-store mr-2 text-sm text-blueGray-300"></i>
+              Cửa hàng trực tuyến
+            </a>
+          </li>
           <!-- Bán hàng tại quầy -->
           <li class="items-center">
             <router-link to="/admin/ban-hang-tai-quay" v-slot="{ href, navigate, isActive }">

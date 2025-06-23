@@ -1,6 +1,6 @@
 <template>
   <div
-      class="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded"
+      class="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded overflow-hidden"
       :class="[color === 'light' ? 'bg-white' : 'bg-emerald-900 text-white']"
   >
     <!-- Thanh tiêu đề và công cụ -->
