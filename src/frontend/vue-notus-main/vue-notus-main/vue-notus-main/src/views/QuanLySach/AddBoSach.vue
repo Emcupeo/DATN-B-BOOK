@@ -1,16 +1,13 @@
 <template>
   <div class="min-h-screen w-full bg-gray-100 font-roboto">
     <div class="bg-white p-4 shadow rounded w-full">
-
-    <h2 class="text-3xl font-bold mb-8 text-gray-800 text-center">
+      <h2 class="text-3xl font-bold mb-8 text-gray-800 text-center">
         {{ isEdit ? 'Sửa Bộ Sách' : 'Thêm Bộ Sách' }}
       </h2>
-      <div class="grid grid-cols-2 gap-8 items-start">
-
-      <!-- Form nhập thông tin bộ sách -->
-        <form @submit.prevent="handleSubmit" class="space-y-6">
-
-        <div class="grid grid-cols-2 gap-6 mb-6">
+      <div class="flex flex-row gap-8 items-start">
+        <!-- Form nhập thông tin bộ sách -->
+        <form @submit.prevent="handleSubmit" class="w-1/2 space-y-6">
+          <div class="grid grid-cols-2 gap-6 mb-6">
             <div class="col-span-2 sm:col-span-1">
               <label for="tenBoSach" class="block mb-2 text-sm font-medium text-gray-700">Tên bộ sách <span class="text-red-500">*</span></label>
               <input
@@ -24,20 +21,19 @@
               <p v-if="errors.tenBoSach" class="text-red-500 text-xs mt-1">{{ errors.tenBoSach }}</p>
             </div>
             <div class="col-span-2 sm:col-span-1">
-              <label for="gia" class="block mb-2 text-sm font-medium text-gray-700">Giá tiền <span class="text-red-500">*</span></label>
+              <label for="giaTien" class="block mb-2 text-sm font-medium text-gray-700">Giá tiền <span class="text-red-500">*</span></label>
               <input
-                  v-model.number="form.gia"
+                  v-model.number="form.giaTien"
                   @input="giaTuDong = false"
-              id="gia"
-              type="number"
-              min="0"
-              step="1000"
-              :placeholder="placeholderGiaTien()"
-              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3"
-              required
+                  id="giaTien"
+                  type="number"
+                  min="0"
+                  step="1000"
+                  :placeholder="placeholderGiaTien()"
+                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3"
+                  required
               />
-
-              <p v-if="errors.gia" class="text-red-500 text-xs mt-1">{{ errors.gia }}</p>
+              <p v-if="errors.giaTien" class="text-red-500 text-xs mt-1">{{ errors.giaTien }}</p>
             </div>
             <div class="col-span-2 sm:col-span-1">
               <label for="soLuong" class="block mb-2 text-sm font-medium text-gray-700">Số lượng <span class="text-red-500">*</span></label>
@@ -68,8 +64,8 @@
           <div v-if="form.chiTietSanPhams.length" class="mt-6">
             <h3 class="text-sm font-medium text-gray-700 mb-2">Danh sách chi tiết sách đã chọn</h3>
             <div class="border border-gray-300 rounded-lg p-4">
-              <table class="w-full text-xs text-center">
-                <thead class="text-xs text-gray-700 font-semibold bg-white">
+              <table class="w-full text-sm text-center">
+                <thead class="text-sm text-gray-700 font-semibold bg-white">
                 <tr>
                   <th class="px-6 py-3">Mã</th>
                   <th class="px-6 py-3">Tên</th>
@@ -165,7 +161,7 @@
         </form>
 
         <!-- Bảng chọn chi tiết sản phẩm -->
-        <div>
+        <div class="w-1/2">
           <label class="block mb-3 text-sm font-medium text-gray-700">
             Chọn chi tiết sách áp dụng
           </label>
@@ -178,7 +174,7 @@
             />
           </div>
           <div class="max-h-[600px] overflow-y-auto border border-gray-300 rounded-lg p-4">
-            <table class="w-full text-xs text-center">
+            <table class="w-full text-sm text-center">
               <thead class="text-sm text-black font-semibold bg-white sticky top-0">
               <tr>
                 <th class="px-6 py-3">
@@ -222,11 +218,11 @@
               </tbody>
             </table>
           </div>
-          <div class="flex justify-center text-xs items-center mt-6 space-x-4">
+          <div class="flex justify-center items-center mt-6 space-x-4">
             <button
                 @click="prevPage"
                 :disabled="currentPage <= 0"
-                class="text-white bg-blue-500 hover:bg-blue-700 focus:ring focus:ring-blue-300 font-medium rounded-lg py-3 px-4 flex items-center justify-center disabled:opacity-50"
+                class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 shadow-lg font-medium rounded-lg text-base p-3 flex items-center justify-center disabled:opacity-50"
             >
               <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -239,49 +235,53 @@
                 <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
-                    d="M15.75 19.5 L8.25 12 l 7.5-7.5"
-                ></path>
-              </svg>
-            </button>
-            <span class="text-base text-xs font-semibold text-gray-700">Trang {{ currentPage + 1 }} / {{ totalPages }}</span>
-            <button
-                @click="nextPage"
-                :disabled="currentPage >= totalPages - 1"
-                class="text-white bg-blue-500 hover:bg-blue-600 focus:ring-blue-300 focus:ring font-medium rounded-lg py-3 px-4 flex items-center justify-center disabled:opacity-50"
-            >
-              <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke-width="8"
-                  stroke="currentColor"
-                  class="w-2 h-2"
-              >
-                <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M9 5l7 7-7 7"
+                    d="M15.75 19.5 8.25 12l7.5-7.5"
                 />
               </svg>
             </button>
-
+            <span class="text-base font-semibold text-gray-700">Trang {{ currentPage + 1 }} / {{ totalPages }}</span>
+            <button
+                @click="nextPage"
+                :disabled="currentPage >= totalPages - 1"
+                class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 shadow-lg font-medium rounded-lg text-base p-3 flex items-center justify-center disabled:opacity-50"
+            >
+              <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="8"
+                  stroke="currentColor"
+                  class="w-2 h-2"
+              >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="m8.25 4.5 7.5 7.5-7.5 7.5"
+                />
+              </svg>
+            </button>
           </div>
         </div>
       </div>
     </div>
   </div>
 </template>
+
 <script>
 import BoSachService from '@/service/BoSachService';
 import { useRouter } from 'vue-router';
 
 export default {
   name: 'AddBoSach',
+  setup() {
+    const router = useRouter();
+    return { router };
+  },
   data() {
     return {
       form: {
         tenBoSach: '',
-        gia: 0,
+        giaTien: 0,
         moTa: '',
         soLuong: 0,
         chiTietSanPhams: [],
@@ -289,7 +289,7 @@ export default {
       giaTuDong: true,
       errors: {
         tenBoSach: '',
-        gia: '',
+        giaTien: '',
         moTa: '',
         soLuong: '',
         chiTietSanPhams: [],
@@ -301,7 +301,6 @@ export default {
       currentPage: 0,
       itemsPerPage: 6,
       isEdit: false,
-      router: useRouter(), // fix: thêm router vào data
     };
   },
   computed: {
@@ -320,7 +319,6 @@ export default {
         return total + (item.gia || 0) * (item.soLuong || 1);
       }, 0);
     },
-
     totalPages() {
       return Math.ceil(this.filteredChiTietSanPhams.length / this.itemsPerPage) || 1;
     },
@@ -336,7 +334,7 @@ export default {
     form: {
       handler(newForm) {
         if (this.giaTuDong) {
-          newForm.gia = this.totalGiaTien;
+          newForm.giaTien = this.totalGiaTien;
         }
       },
       deep: true,
@@ -349,7 +347,6 @@ export default {
     },
   },
   methods: {
-
     async loadChiTietSanPhams() {
       try {
         this.chiTietSanPhams = await BoSachService.getChiTietSanPhams();
@@ -370,12 +367,13 @@ export default {
       }
       this.updateSelectedChiTietSanPhams();
     },
-
     placeholderGiaTien() {
       return this.form.chiTietSanPhams.length
-          ? this.form.chiTietSanPhams.reduce((total, item) => {
-        return total + (item.gia || 0) * (item.soLuong || 1);
-      }, 0).toLocaleString('vi-VN') + ' VNĐ'
+          ? this.form.chiTietSanPhams
+          .reduce((total, item) => {
+            return total + (item.gia || 0) * (item.soLuong || 1);
+          }, 0)
+          .toLocaleString('vi-VN') + ' VNĐ'
           : 'Nhập giá tiền';
     },
     toggleSelectAll() {
@@ -396,47 +394,46 @@ export default {
         soLuongTon: item.soLuongTon,
         soLuong: item.soLuong || 1,
       }));
-      this.errors.chiTietSanPhams = new Array(this.form.chiTietSanPhams.length).fill(null);
+      this.errors.chiTietSanPhams = new Array(this.form.chiTietSanPhams.length).fill('');
     },
     removeChiTietSanPham(index) {
-      const removeItem = this.form.chiTietSanPhams.splice(index, 1)[0];
+      const removedItem = this.form.chiTietSanPhams.splice(index, 1)[0];
       this.errors.chiTietSanPhams.splice(index, 1);
       this.selectedChiTietSanPhams = this.selectedChiTietSanPhams.filter(
-          item => item.id !== removeItem.id
+          item => item.id !== removedItem.id
       );
     },
     validateChiTietSoLuong(item, index) {
-      const chiTietSanPham = this.form.chiTietSanPhams.find(selected => selected.id === item.id);
-      const chiTietSanPhamIndex = chiTietSanPham ? this.form.chiTietSanPhams.indexOf(chiTietSanPham) : index;
-      if (chiTietSanPham && chiTietSanPham.soLuong < 1) {
-        this.errors.chiTietSanPhams[chiTietSanPhamIndex] = 'Số lượng phải lớn hơn 0';
-      } else if (chiTietSanPham && chiTietSanPham.soLuong > chiTietSanPham.soLuongTon) {
-        this.errors.chiTietSanPhams[chiTietSanPhamIndex] = `Số lượng không được vượt quá tồn kho (${chiTietSanPham.soLuongTon})`;
+      const chiTiet = this.form.chiTietSanPhams.find(selected => selected.id === item.id);
+      const chiTietIndex = chiTiet ? this.form.chiTietSanPhams.indexOf(chiTiet) : index;
+      if (chiTiet && chiTiet.soLuong < 1) {
+        this.errors.chiTietSanPhams[chiTietIndex] = 'Số lượng phải lớn hơn 0';
+      } else if (chiTiet && chiTiet.soLuong > chiTiet.soLuongTon) {
+        this.errors.chiTietSanPhams[chiTietIndex] = `Số lượng không được vượt quá tồn kho (${chiTiet.soLuongTon})`;
       } else {
-        this.errors.chiTietSanPhams[chiTietSanPhamIndex] = '';
+        this.errors.chiTietSanPhams[chiTietIndex] = '';
       }
     },
     async handleSubmit() {
       this.errors = {
         tenBoSach: '',
-        gia: '',
+        giaTien: '',
         moTa: '',
         soLuong: '',
-        chiTietSanPhams: new Array(this.form.chiTietSanPhams.length).fill(null),
+        chiTietSanPhams: new Array(this.form.chiTietSanPhams.length).fill(''),
       };
 
       let hasError = false;
-
       if (!this.form.tenBoSach.trim()) {
         this.errors.tenBoSach = 'Tên bộ sách không được để trống';
         hasError = true;
       }
-      if (this.form.gia < 0) {
-        this.errors.gia = 'Giá tiền không được nhỏ hơn 0';
+      if (this.form.giaTien < 0 || isNaN(this.form.giaTien)) {
+        this.errors.giaTien = 'Giá tiền phải là số không âm';
         hasError = true;
       }
-      if (this.form.soLuong < 0) {
-        this.errors.soLuong = 'Số lượng không được nhỏ hơn 0';
+      if (this.form.soLuong < 0 || isNaN(this.form.soLuong)) {
+        this.errors.soLuong = 'Số lượng phải là số không âm';
         hasError = true;
       }
       if (!this.form.chiTietSanPhams.length) {
@@ -445,9 +442,7 @@ export default {
       } else {
         this.form.chiTietSanPhams.forEach((item, index) => {
           this.validateChiTietSoLuong(item, index);
-          if (this.errors.chiTietSanPhams[index]) {
-            hasError = true;
-          }
+          if (this.errors.chiTietSanPhams[index]) hasError = true;
         });
       }
 
@@ -456,34 +451,37 @@ export default {
       try {
         const payload = {
           tenBoSach: this.form.tenBoSach,
-          gia: this.form.gia,
+          giaTien: this.form.giaTien,
           moTa: this.form.moTa,
           soLuong: this.form.soLuong,
           boSachChiTiets: this.form.chiTietSanPhams.map(item => ({
-            idChiTietSanPham: item.id,
+            idChiTietSanPham: parseInt(item.id), // Ensure Integer
             soLuong: item.soLuong,
           })),
         };
-
+        console.log('Payload gửi đi:', JSON.stringify(payload, null, 2));
         await BoSachService.create(payload);
         await this.router.push('/admin/bo-sach');
       } catch (error) {
-        console.error('Lỗi khi thêm bộ sách:', error);
-        alert('Có lỗi xảy ra khi thêm bộ sách.');
+        console.error('Lỗi khi thêm bộ sách:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        });
+        alert(
+            error.response?.data?.tenBoSach ||
+            'Có lỗi xảy ra khi thêm bộ sách. Vui lòng kiểm tra server logs.'
+        );
       }
     },
     cancel() {
       this.router.push('/admin/bo-sach');
     },
     prevPage() {
-      if (this.currentPage > 0) {
-        this.currentPage--;
-      }
+      if (this.currentPage > 0) this.currentPage--;
     },
     nextPage() {
-      if (this.currentPage < this.totalPages - 1) {
-        this.currentPage++;
-      }
+      if (this.currentPage < this.totalPages - 1) this.currentPage++;
     },
   },
 };
@@ -491,7 +489,6 @@ export default {
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
-
 .font-roboto {
   font-family: 'Roboto', sans-serif;
 }

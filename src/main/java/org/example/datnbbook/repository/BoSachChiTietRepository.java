@@ -1,17 +1,28 @@
 package org.example.datnbbook.repository;
 
-import org.example.datnbbook.model.BoSach;
 import org.example.datnbbook.model.BoSachChiTiet;
-import org.example.datnbbook.model.ChatLieu;
+import org.example.datnbbook.model.BoSachChiTietId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-@Component
-public interface BoSachChiTietRepository extends JpaRepository<BoSachChiTiet, Integer> {
+@Repository
+public interface BoSachChiTietRepository extends JpaRepository<BoSachChiTiet, BoSachChiTietId> {
 
-    
+    @Query("SELECT b FROM BoSachChiTiet b " +
+            "JOIN FETCH b.idChiTietSanPham c " +
+            "LEFT JOIN FETCH c.idLoaiBia " +
+            "LEFT JOIN FETCH c.idTacGia " +
+            "LEFT JOIN FETCH c.idNhaXuatBan " +
+            "LEFT JOIN FETCH c.idChatLieu " +
+            "LEFT JOIN FETCH c.idNguoiDich " +
+            "LEFT JOIN FETCH c.idTheLoai " +
+            "LEFT JOIN FETCH c.idNgonNgu " +
+            "WHERE b.id.idBoSach = :idBoSach AND b.deleted = false")
+    List<BoSachChiTiet> findByIdBoSachId(Integer idBoSach);
+
+    @Query("SELECT b FROM BoSachChiTiet b WHERE b.id.idBoSach = :idBoSach AND b.id.idChiTietSanPham = :idChiTietSanPham AND b.deleted = false")
+    BoSachChiTiet findByIdBoSachIdAndIdChiTietSanPhamId(Integer idBoSach, Integer idChiTietSanPham);
 }

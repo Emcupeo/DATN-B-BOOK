@@ -1,12 +1,10 @@
 import { createApp } from "vue";
 import { createWebHistory, createRouter } from "vue-router";
 import "@/assets/styles/index.css";
-import "@/assets/styles/tailwind.css";
 import "@/assets/styles/custom.css";
 
 // styles
 import "@fortawesome/fontawesome-free/css/all.min.css";
-import "@/assets/styles/tailwind.css";
 
 // mouting point for the whole app
 import App from "@/App.vue";
@@ -14,6 +12,7 @@ import App from "@/App.vue";
 // layouts
 import Admin from "@/layouts/Admin.vue";
 import Auth from "@/layouts/Auth.vue";
+import Shop from "@/layouts/Shop.vue";
 
 // views for Admin layout
 import Dashboard from "@/views/admin/Dashboard.vue";
@@ -25,30 +24,24 @@ import Maps from "@/views/admin/Maps.vue";
 import Login from "@/views/auth/Login.vue";
 import Register from "@/views/auth/Register.vue";
 
-// views without layouts
-// import Landing from "@/views/Landing.vue";
-// import Profile from "@/views/Profile.vue";
-// import Index from "@/views/Index.vue";
+// Shop views
+import ShopHome from "@/views/shop/views/Home.vue";
+import ShopBookDetail from "@/views/shop/views/BookDetail.vue";
+import ShopCart from "@/views/shop/views/Cart.vue";
+import ShopCheckout from "@/views/shop/views/Checkout.vue";
+import ShopProducts from "@/views/shop/views/Products.vue";
+import ShopWishlist from "@/views/shop/views/Wishlist.vue";
+import ShopContact from "@/views/shop/views/Contact.vue";
+import ShopProfile from "@/views/shop/views/Profile.vue";
+import ShopOrderDetail from "@/views/shop/views/OrderDetail.vue";
 
-//guest
-
-// import Home from "@/views/guest/Home.vue"
-// import Home from "@/views/guest/BookStore.vue"
-// import Home from "@/views/guest/BookStore.vue"
-
-import Home from "./views/guest/Home.vue";
-import ProductDetailPage from "./views/guest/ProductDetail.vue";
-import CartPage from "./views/guest/Cart.vue";
 // pages
 import BanHang from "@/views/BanHang/BanHangTaiQuay.vue";
 import HoaDon from "@/views/BanHang/HoaDon.vue";
 import PhieuGiamGia from "@/views/QuanLyGiamGia/PhieuGiamGia.vue";
 import PhieuGiamGiaForm from "@/views/QuanLyGiamGia/PhieuGiamGiaForm.vue";
 import DotGiamGia from "@/views/QuanLyGiamGia/DotGiamGia.vue";
-import BoSach from "@/views/QuanLySach/BoSach.vue";
 import Sach from "@/views/QuanLySach/Sach.vue";
-// import EditSach from "@/views/QuanLySach/EditSach.vue";
-// import AddSach from "@/views/QuanLySach/AddSach.vue";
 // thuoc tinh cua thuoc tinh
 import ChatLieu from "@/views/QuanLySach/ThuocTinh/ChatLieu.vue";
 import LoaiBia from "@/views/QuanLySach/ThuocTinh/LoaiBia.vue";
@@ -66,7 +59,9 @@ import EditChiTietSach from "./views/QuanLySach/EditChiTietSach.vue";
 import ChiTietSach from "./views/QuanLySach/ChiTietSach.vue";
 import KhachHangDetail from "./views/TaiKhoan/KhachHangDetail.vue";
 import AllSach from "@/views/QuanLySach/AllSach.vue";
+import BoSach from "@/views/QuanLySach/BoSach.vue";
 import AddBoSach from "@/views/QuanLySach/AddBoSach.vue";
+import ChiTietBoSach from "@/views/QuanLySach/ChiTietBoSach.vue";
 
 const routes = [
   {
@@ -137,9 +132,10 @@ const routes = [
         path: "/admin/bo-sach/add",
         component: AddBoSach
       },
-
-
-
+      {
+        path: '/admin/bo-sach/:id',
+        component: ChiTietBoSach
+      },
       {
         path: "/admin/thuoc-tinh",
         redirect: "/admin/thuoc-tinh/chat-lieu",
@@ -216,6 +212,7 @@ const routes = [
       },
     ],
   },
+
   {
     path: "/auth",
     redirect: "/auth/login",
@@ -231,18 +228,25 @@ const routes = [
       },
     ],
   },
-  { path: "/", component: Home },
-  { path: "/product/:id", name: "ProductDetail", component: ProductDetailPage },
-  { path: "/cart", component: CartPage },
-  // {
-  //   path: "/profile",
-  //   component: Profile,
-  // },
-  // {
-  //   path: "/",
-  //   component: Index,
-  // },
-  { path: "/:pathMatch(.*)*", redirect: "/" },
+
+  // Shop routes with layout
+  {
+    path: "/shop",
+    component: Shop,
+    children: [
+      { path: "", component: ShopHome },
+      { path: "products", component: ShopProducts },
+      { path: "book/:id", name: "ShopBookDetail", component: ShopBookDetail },
+      { path: "cart", component: ShopCart },
+      { path: "checkout", component: ShopCheckout },
+      { path: "wishlist", component: ShopWishlist },
+      { path: "contact", component: ShopContact },
+      { path: "profile", component: ShopProfile },
+      { path: "order/:id", name: "ShopOrderDetail", component: ShopOrderDetail },
+    ]
+  },
+
+  { path: "/:pathMatch(.*)*", redirect: "/shop" },
 
   {
     path: "/ban-hang",

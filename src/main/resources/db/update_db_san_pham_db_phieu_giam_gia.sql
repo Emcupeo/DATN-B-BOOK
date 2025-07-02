@@ -82,7 +82,7 @@ CREATE SEQUENCE dbo.BSSeq
     INCREMENT BY 1;
 
 ALTER TABLE dbo.bo_sach
-    ADD ma_bo_sach NVARCHAR(20) DEFAULT 'BS' + RIGHT('0000' + CAST(NEXT VALUE FOR dbo.BSSeq AS NVARCHAR(7)), 5) NOT NULL;
+    ADD ma_bo_sach NVARCHAR(20) DEFAULT 'BS' + RIGHT('-000' + CAST(NEXT VALUE FOR dbo.BSSeq AS NVARCHAR(7)), 5) NOT NULL;
 
 CREATE TABLE bo_sach_chi_tiet (
                                   id_bo_sach INT NOT NULL,

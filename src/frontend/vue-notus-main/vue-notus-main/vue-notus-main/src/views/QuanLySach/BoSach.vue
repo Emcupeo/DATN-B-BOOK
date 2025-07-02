@@ -78,7 +78,7 @@
             <td class="px-6 py-4">{{ boSach.soLuong || 0 }}</td>
             <td class="px-6 py-4">{{ boSach.giaTien ? boSach.giaTien.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) : '0' }}</td>
             <td class="px-6 py-4 flex justify-center space-x-3">
-              <a href="#" @click="viewDetails(boSach.id)" class="text-gray-600 hover:text-gray-800">
+              <a href="#" @click.prevent="viewDetails(boSach.id)" class="text-gray-600 hover:text-gray-800">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M12 5c7 0 10 7 10 7s-3 7-10 7-10-7-10-7 3-7 10-7z" />
                   <path stroke-linecap="round" stroke-linejoin="round" d="M12 9c1.657 0 3 1.343 3 3s-1.343 3-3 3-3-1.343-3-3 1.343-3 3-3z" />
@@ -252,6 +252,7 @@ export default {
     },
 
     viewDetails(id) {
+      console.log("[INFO] Navigating to chi tiết bộ sách with id:", id);
       this.$router.push(`/admin/bo-sach/${id}`);
     },
   },
