@@ -4,7 +4,7 @@ import org.example.datnbbook.model.ChiTietSanPham;
 import org.example.datnbbook.model.DotGiamGia;
 import org.example.datnbbook.model.DotGiamGiaChiTiet;
 import org.example.datnbbook.repository.ChiTietSanPhamRepository;
-import org.example.datnbbook.repository.DotGiamGiaChiTietRepository;
+//import org.example.datnbbook.repository.DotGiamGiaChiTietRepository;
 import org.example.datnbbook.repository.DotGiamGiaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -19,8 +19,8 @@ public class DotGiamGiaService {
     @Autowired
     private DotGiamGiaRepository repository;
 
-    @Autowired
-    private DotGiamGiaChiTietRepository dotGiamGiaChiTietRepository;
+//    @Autowired
+//    private DotGiamGiaChiTietRepository dotGiamGiaChiTietRepository;
 
     @Autowired
     private ChiTietSanPhamRepository chiTietSanPhamRepository;
@@ -69,7 +69,7 @@ public class DotGiamGiaService {
                 chiTiet.setTrangThai(true);
                 chiTiet.setDeleted(false);
 
-                dotGiamGiaChiTietRepository.save(chiTiet);
+//                dotGiamGiaChiTietRepository.save(chiTiet);
             }
         }
 
@@ -99,7 +99,7 @@ public class DotGiamGiaService {
         DotGiamGia updatedDotGiamGia = repository.save(existing);
 
         // Xóa các chi tiết cũ và thêm mới
-        dotGiamGiaChiTietRepository.deleteAll(existing.getDotGiamGiaChiTiets());
+//        dotGiamGiaChiTietRepository.deleteAll(existing.getDotGiamGiaChiTiets());
         if (selectedProductIds != null && !selectedProductIds.isEmpty()) {
             for (Integer productId : selectedProductIds) {
                 ChiTietSanPham chiTietSanPham = chiTietSanPhamRepository.findById(productId)
@@ -114,7 +114,7 @@ public class DotGiamGiaService {
                 chiTiet.setTrangThai(true);
                 chiTiet.setDeleted(false);
 
-                dotGiamGiaChiTietRepository.save(chiTiet);
+//                dotGiamGiaChiTietRepository.save(chiTiet);
             }
         }
 

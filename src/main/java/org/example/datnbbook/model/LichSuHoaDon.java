@@ -39,8 +39,7 @@ public class LichSuHoaDon {
     @JsonBackReference
     private NhanVien nhanVien;
 
-    @ColumnDefault("'LSHD'+right('-000'+CONVERT([nvarchar](5), NEXT VALUE FOR [dbo].[LSHDSeq]), 5)")
-    @Column(name = "ma_lich_su_hoa_don", length = 20)
+    @Column(name = "ma_lich_su_hoa_don", length = 10)
     private String maLichSuHoaDon;
 
     @Nationalized
