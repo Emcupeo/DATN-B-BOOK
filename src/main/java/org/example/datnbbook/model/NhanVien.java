@@ -17,6 +17,7 @@ import org.hibernate.annotations.Nationalized;
 
 import java.time.Instant;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -33,8 +34,7 @@ public class NhanVien {
     @JoinColumn(name = "id_chuc_vu")
     private ChucVu idChucVu;
 
-    @ColumnDefault("'NV'+right('-000'+CONVERT([nvarchar](5), NEXT VALUE FOR [dbo].[NVSeq]), 5)")
-    @Column(name = "ma_nhan_vien", length = 10)
+    @Column(name = "ma_nhan_vien", length = 10, nullable = false, unique = true)
     private String maNhanVien;
 
     @Nationalized
@@ -52,6 +52,25 @@ public class NhanVien {
 
     @Column(name = "so_dien_thoai", length = 15)
     private String soDienThoai;
+
+    @Nationalized
+    @Column(name = "tinh_thanh")
+    private String tinhThanh;
+
+    @Nationalized
+    @Column(name = "quan_huyen")
+    private String quanHuyen;
+
+    @Nationalized
+    @Column(name = "xa_phuong")
+    private String xaPhuong;
+
+    @Nationalized
+    @Column(name = "dia_chi_chi_tiet")
+    private String diaChiChiTiet;
+
+    @Column(name = "email")
+    private String email;
 
     @ColumnDefault("1")
     @Column(name = "trang_thai")
@@ -82,7 +101,7 @@ public class NhanVien {
     private Boolean deleted;
 
     @OneToMany(mappedBy = "nhanVien")
-    private Set<HoaDon> hoaDons = new LinkedHashSet<>();
+    private List<HoaDon> hoaDons;
 
     @OneToMany(mappedBy = "nhanVien")
     private Set<LichSuHoaDon> lichSuHoaDons = new LinkedHashSet<>();

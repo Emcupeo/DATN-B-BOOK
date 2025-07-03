@@ -204,6 +204,16 @@ const routes = [
         name: "KhachHangDetail",
         component: KhachHangDetail,
       },
+      {
+        path: "/admin/khach-hang/them-moi",
+        name: "ThemKhachHang",
+        component: () => import("../views/TaiKhoan/KhachHangForm.vue"),
+      },
+      {
+        path: "/admin/khach-hang/chinh-sua/:id",
+        name: "ChinhSuaKhachHang",
+        component: () => import("../views/TaiKhoan/KhachHangForm.vue"),
+      },
     ],
   },
   {

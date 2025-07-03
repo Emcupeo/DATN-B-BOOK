@@ -2,30 +2,71 @@ package org.example.datnbbook.service;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-
+import java.util.Properties;
 
 @Service
 public class EmailService {
 
-    @Autowired
-    private JavaMailSender emailSender;
+    private final JavaMailSender mailSender;
+
+    public EmailService() {
+        JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
+        mailSender.setHost("smtp-relay.brevo.com");
+        mailSender.setPort(587);
+        mailSender.setUsername("h5studiogl@gmail.com");
+        mailSender.setPassword("fScdnZ4WmEDqjBA1");
+
+        Properties props = mailSender.getJavaMailProperties();
+        props.put("mail.transport.protocol", "smtp");
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        
+        this.mailSender = mailSender;
+    }
+
+    public void sendEmployeeCredentials(String toEmail, String employeeCode, String password) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+        
+        helper.setFrom("duyennckth02248@fpt.edu.vn");
+        helper.setTo(toEmail);
+        helper.setSubject("Thông tin đăng nhập hệ thống");
+        
+        String content = String.format("""
+            <html>
+            <body>
+                <h2>Thông tin đăng nhập của bạn</h2>
+                <p>Xin chào,</p>
+                <p>Dưới đây là thông tin đăng nhập của bạn:</p>
+                <p><strong>Tên đăng nhập:</strong> %s</p>
+                <p><strong>Mật khẩu:</strong> %s</p>
+                <p>Vui lòng đổi mật khẩu sau khi đăng nhập lần đầu.</p>
+                <p>Trân trọng,</p>
+                <p>B-Book</p>
+            </body>
+            </html>
+            """, employeeCode, password);
+        
+        helper.setText(content, true);
+        mailSender.send(message);
+    }
 
     public void sendVoucherEmail(String to, String customerName, String voucherType, Double voucherValue) throws MessagingException {
-        MimeMessage message = emailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-        // Đảm bảo mã hóa UTF-8 để hỗ trợ tiếng Việt đúng
+        helper.setFrom("h5studiogl@gmail.com");
         helper.setTo(to);
         helper.setSubject("Chúc mừng bạn nhận voucher giảm giá!");
         helper.setText(
                 "<html>" +
                         "<head>" +
-                        "<meta charset='UTF-8'>" +  // Đảm bảo mã hóa UTF-8
+                        "<meta charset='UTF-8'>" +
                         "<style>" +
                         "body { font-family: 'Arial', sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; color: #333; }" +
                         ".email-container { width: 100%; max-width: 600px; margin: 20px auto; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1); }" +
@@ -57,10 +98,9 @@ public class EmailService {
                         "</div>" +
                         "</body>" +
                         "</html>",
-                true // true cho phép sử dụng HTML
+                true
         );
 
-        // Gửi email
-        emailSender.send(message);
+        mailSender.send(message);
     }
 }

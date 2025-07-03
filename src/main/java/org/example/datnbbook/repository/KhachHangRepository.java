@@ -30,10 +30,18 @@ public interface KhachHangRepository extends JpaRepository<KhachHang, Long> {
     @Query("SELECT k FROM KhachHang k JOIN k.danhSachDiaChi d WHERE LOWER(d.xaPhuong) LIKE LOWER(CONCAT('%', :xaPhuong, '%'))")
     List<KhachHang> findByXaPhuongContainingIgnoreCase(@Param("xaPhuong") String xaPhuong);
 
-    @Query("SELECT k FROM KhachHang k WHERE k.deleted = false AND " +
-            "(LOWER(k.maKhachHang) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+    @Query("SELECT k FROM KhachHang k WHERE " +
+            "LOWER(k.maKhachHang) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(k.hoTen) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(k.email) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-            "LOWER(k.soDienThoai) LIKE LOWER(CONCAT('%', :keyword, '%')))")
-    List<KhachHang> search(String keyword);
+            "LOWER(k.soDienThoai) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+    List<KhachHang> findByHoTenContainingIgnoreCaseOrEmailContainingIgnoreCaseOrSoDienThoaiContaining(
+            @Param("keyword") String keyword);
+
+    @Query("SELECT k FROM KhachHang k WHERE " +
+            "LOWER(k.maKhachHang) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+            "LOWER(k.hoTen) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+            "LOWER(k.email) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+            "LOWER(k.soDienThoai) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+    List<KhachHang> search(@Param("keyword") String keyword);
 }

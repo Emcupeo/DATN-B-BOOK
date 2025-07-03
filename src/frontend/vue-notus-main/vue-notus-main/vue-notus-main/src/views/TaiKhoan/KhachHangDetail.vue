@@ -242,7 +242,7 @@ export default {
     editAddress(diaChi) {
       this.showAddressForm = true;
       this.editingAddressId = diaChi.id;
-      this.addressFormData = {...diaChi};
+      this.addressFormData = { ...diaChi };
 
       // Set selected locations
       this.selectedAddressProvince = this.provinces.find(p => p.name === diaChi.tinhThanh);
