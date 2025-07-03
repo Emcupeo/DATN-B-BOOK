@@ -1,36 +1,81 @@
-import api from './api';
+import axios from 'axios';
+import { API_URL } from '../config';
 import NhanVien from '../models/NhanVien';
 
 class NhanVienService {
     async getAll() {
-        const response = await api.get('/nhan-vien');
-        return response.data.map(item => new NhanVien(item));
+        try {
+            const response = await axios.get(`${API_URL}/nhan-vien`);
+            return response.data.map(item => new NhanVien(item));
+        } catch (error) {
+            console.error('Error fetching nhan vien:', error);
+            throw error;
+        }
     }
 
     async getById(id) {
-        const response = await api.get(`/nhan-vien/${id}`);
+        try {
+            const response = await axios.get(`${API_URL}/nhan-vien/${id}`);
+            return new NhanVien(response.data);
+        } catch (error) {
+            console.error('Error fetching nhan vien by id:', error);
+            throw error;
+        }
+    }
+
+    async toggleStatus(id) {
+        const response = await axios.put(`${API_URL}/nhan-vien/${id}/toggle-status`);
         return new NhanVien(response.data);
     }
 
     async create(nhanVien) {
-        const response = await api.post('/nhan-vien', nhanVien.toJSON());
-        return new NhanVien(response.data);
+        try {
+            const response = await axios.post(`${API_URL}/nhan-vien`, nhanVien);
+            return new NhanVien(response.data);
+        } catch (error) {
+            console.error('Error creating nhan vien:', error);
+            throw error;
+        }
     }
 
     async update(id, nhanVien) {
-        const response = await api.put(`/nhan-vien/${id}`, nhanVien.toJSON());
-        return new NhanVien(response.data);
+        try {
+            const response = await axios.put(`${API_URL}/nhan-vien/${id}`, nhanVien);
+            return new NhanVien(response.data);
+        } catch (error) {
+            console.error('Error updating nhan vien:', error);
+            throw error;
+        }
     }
 
     async delete(id) {
-        await api.delete(`/nhan-vien/${id}`);
+        try {
+            const response = await axios.delete(`${API_URL}/nhan-vien/${id}`);
+            return response.data;
+        } catch (error) {
+            console.error('Error deleting nhan vien:', error);
+            throw error;
+        }
     }
 
     async search(keyword) {
-        const response = await api.get('/nhan-vien/search', {
-            params: { keyword }
-        });
-        return response.data.map(item => new NhanVien(item));
+        try {
+            const response = await axios.get(`${API_URL}/nhan-vien/search?keyword=${keyword}`);
+            return response.data.map(item => new NhanVien(item));
+        } catch (error) {
+            console.error('Error searching nhan vien:', error);
+            throw error;
+        }
+    }
+
+    async updateStatus(id) {
+        try {
+            const response = await axios.put(`${API_URL}/nhan-vien/${id}/status`);
+            return response.data;
+        } catch (error) {
+            console.error('Error updating nhan vien status:', error);
+            throw error;
+        }
     }
 }
 

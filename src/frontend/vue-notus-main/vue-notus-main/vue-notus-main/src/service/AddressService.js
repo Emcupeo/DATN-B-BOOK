@@ -1,22 +1,38 @@
-import axios from 'axios';
-
 const API_URL = 'https://provinces.open-api.vn/api';
 
 class AddressService {
     async getProvinces() {
-        const response = await axios.get(`${API_URL}/p/`);
-        return response.data;
+        try {
+            const response = await fetch(`${API_URL}/p`);
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error fetching provinces:', error);
+            throw error;
+        }
     }
 
-    async getDistrictsByProvinceCode(provinceCode) {
-        const response = await axios.get(`${API_URL}/p/${provinceCode}?depth=2`);
-        return response.data.districts;
+    async getDistricts(provinceCode) {
+        try {
+            const response = await fetch(`${API_URL}/p/${provinceCode}?depth=2`);
+            const data = await response.json();
+            return data.districts;
+        } catch (error) {
+            console.error('Error fetching districts:', error);
+            throw error;
+        }
     }
 
-    async getWardsByDistrictCode(districtCode) {
-        const response = await axios.get(`${API_URL}/d/${districtCode}?depth=2`);
-        return response.data.wards;
+    async getWards(districtCode) {
+        try {
+            const response = await fetch(`${API_URL}/d/${districtCode}?depth=2`);
+            const data = await response.json();
+            return data.wards;
+        } catch (error) {
+            console.error('Error fetching wards:', error);
+            throw error;
+        }
     }
 }
 
-export default new AddressService(); 
+export default new AddressService();

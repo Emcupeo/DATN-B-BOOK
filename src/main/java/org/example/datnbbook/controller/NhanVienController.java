@@ -47,4 +47,9 @@ public class NhanVienController {
     public ResponseEntity<List<NhanVienDTO>> search(@RequestParam String keyword) {
         return ResponseEntity.ok(nhanVienService.search(keyword));
     }
+
+    @PutMapping("/{id}/toggle-status")
+    public ResponseEntity<NhanVienDTO> toggleStatus(@PathVariable Integer id) {
+        return ResponseEntity.ok(nhanVienService.updateStatus(id));
+    }
 }
