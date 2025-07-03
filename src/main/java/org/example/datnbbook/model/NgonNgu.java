@@ -36,6 +36,8 @@ public class NgonNgu {
     @ColumnDefault("0")
     @Column(name = "deleted")
     private Boolean deleted;
+
+
 //
 //    @OneToMany(mappedBy = "idNgonNgu")
 //    private Set<ChiTietSanPham> chiTietSanPhams = new LinkedHashSet<>();

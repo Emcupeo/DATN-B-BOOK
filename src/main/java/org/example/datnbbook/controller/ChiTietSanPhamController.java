@@ -3,8 +3,15 @@ package org.example.datnbbook.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.example.datnbbook.dto.ChiTietSanPhamDTO;
+import org.example.datnbbook.model.ChatLieu;
 import org.example.datnbbook.model.ChiTietSanPham;
+import org.example.datnbbook.model.LoaiBia;
+import org.example.datnbbook.model.NgonNgu;
+import org.example.datnbbook.model.NguoiDich;
+import org.example.datnbbook.model.NhaXuatBan;
 import org.example.datnbbook.model.SanPham;
+import org.example.datnbbook.model.TacGia;
+import org.example.datnbbook.model.TheLoai;
 import org.example.datnbbook.service.ChiTietSanPhamService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -37,8 +44,68 @@ public class ChiTietSanPhamController {
     }
 
     @PostMapping
-    public ResponseEntity<ChiTietSanPham> create(@RequestBody ChiTietSanPham chiTietSanPham) {
-        ChiTietSanPham created = chiTietSanPhamService.create(chiTietSanPham);
+    public ResponseEntity<ChiTietSanPham> create(@RequestBody ChiTietSanPhamDTO dto) {
+        // Mapping thủ công từ DTO sang Entity
+        ChiTietSanPham entity = new ChiTietSanPham();
+        entity.setTenChiTietSanPham(dto.getTenChiTietSanPham());
+        entity.setMaChiTietSanPham(dto.getMaChiTietSanPham());
+        entity.setMoTa(dto.getMoTa());
+        entity.setGia(dto.getGia());
+        entity.setSoLuongTon(dto.getSoLuongTon());
+        entity.setTrongLuong(dto.getTrongLuong());
+        entity.setKichThuoc(dto.getKichThuoc());
+        entity.setTrangThai(dto.getTrangThai());
+        entity.setGhiChu(dto.getGhiChu());
+        // mapping các trường liên kết
+        if (dto.getIdSanPham() != null) {
+            SanPham sanPham = new SanPham();
+            sanPham.setId(dto.getIdSanPham());
+            entity.setIdSanPham(sanPham);
+        }
+        if (dto.getIdLoaiBia() != null) entity.setIdLoaiBia(new LoaiBia(dto.getIdLoaiBia()));
+        if (dto.getIdNguoiDich() != null) {
+            NguoiDich nguoiDich = new NguoiDich();
+            nguoiDich.setId(dto.getIdNguoiDich());
+            entity.setIdNguoiDich(nguoiDich);
+        }
+        if (dto.getIdTacGia() != null) {
+            TacGia tacGia = new TacGia();
+            tacGia.setId(dto.getIdTacGia());
+            entity.setIdTacGia(tacGia);
+        }
+        if (dto.getIdChatLieu() != null) {
+            ChatLieu chatLieu = new ChatLieu();
+            chatLieu.setId(dto.getIdChatLieu());
+            entity.setIdChatLieu(chatLieu);
+        }
+        if (dto.getIdNhaXuatBan() != null) {
+            NhaXuatBan nhaXuatBan = new NhaXuatBan();
+            nhaXuatBan.setId(dto.getIdNhaXuatBan());
+            entity.setIdNhaXuatBan(nhaXuatBan);
+        }
+        if (dto.getIdTheLoai() != null) {
+            TheLoai theLoai = new TheLoai();
+            theLoai.setId(dto.getIdTheLoai());
+            entity.setIdTheLoai(theLoai);
+        }
+        if (dto.getIdNgonNgu() != null) {
+            NgonNgu ngonNgu = new NgonNgu();
+            ngonNgu.setId(dto.getIdNgonNgu());
+            entity.setIdNgonNgu(ngonNgu);
+        }
+        // mapping các trường thời gian, createdBy, updatedBy nếu cần
+        entity.setCreatedAt(dto.getCreatedAt());
+        entity.setCreatedBy(dto.getCreatedBy());
+        entity.setUpdatedAt(dto.getUpdatedAt());
+        entity.setUpdatedBy(dto.getUpdatedBy());
+        entity.setDeleted(dto.getDeleted());
+
+        ChiTietSanPham created = chiTietSanPhamService.create(entity);
+        if (dto.getImageIds() != null) {
+            for (Integer anhId : dto.getImageIds()) {
+                chiTietSanPhamService.linkImageToChiTietSanPham(created.getId(), anhId);
+            }
+        }
         return ResponseEntity.ok(created);
     }
 

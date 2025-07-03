@@ -27,9 +27,7 @@ import java.util.List;
 @Getter
 @Setter
 @Entity
-@Table(name = "anh_san_pham", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"url", "id_loai_bia"})
-})
+@Table(name = "anh_san_pham")
 public class AnhSanPham {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

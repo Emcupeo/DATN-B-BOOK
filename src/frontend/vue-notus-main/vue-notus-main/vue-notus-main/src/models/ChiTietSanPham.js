@@ -11,7 +11,7 @@ export default class ChiTietSanPham {
         this.idNhaXuatBan = data.idNhaXuatBan || null;
         this.idTheLoai = data.idTheLoai || null;
         this.idNgonNgu = data.idNgonNgu || null;
-        this.anh = data.anh || '';
+        this.images = data.images || [];
         this.trongLuong = data.trongLuong || 0;
         this.kichThuoc = data.kichThuoc || 0;
         this.moTa = data.moTa || '';
@@ -39,7 +39,7 @@ export default class ChiTietSanPham {
             idNhaXuatBan: this.idNhaXuatBan,
             idTheLoai: this.idTheLoai,
             idNgonNgu: this.idNgonNgu,
-            anh: this.anh,
+            images: this.images,
             trongLuong: this.trongLuong,
             kichThuoc: this.kichThuoc,
             moTa: this.moTa,

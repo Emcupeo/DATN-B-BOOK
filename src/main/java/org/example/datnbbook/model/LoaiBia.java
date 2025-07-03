@@ -41,6 +41,7 @@ public class LoaiBia {
     private Boolean deleted;
 
     public LoaiBia(Integer idLoaiBia) {
+        this.id = idLoaiBia;
     }
 
 

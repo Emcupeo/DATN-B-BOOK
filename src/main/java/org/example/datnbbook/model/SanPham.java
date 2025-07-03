@@ -21,7 +21,6 @@ import java.util.Set;
 
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
 @Entity
 @Table(name = "san_pham")
@@ -50,6 +49,7 @@ public class SanPham {
 
     @Transient // Không lưu vào database
     private int tongSoLuongTon;
+
 //
 //    @OneToMany(mappedBy = "idSanPham")
 //    private Set<ChiTietSanPham> chiTietSanPhams = new LinkedHashSet<>();

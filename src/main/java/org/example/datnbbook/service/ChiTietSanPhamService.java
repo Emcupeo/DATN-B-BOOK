@@ -3,8 +3,11 @@ package org.example.datnbbook.service;
 import lombok.RequiredArgsConstructor;
 import org.example.datnbbook.dto.ChiTietSanPhamDTO;
 import org.example.datnbbook.dto.SanPhamRequest;
+import org.example.datnbbook.model.AnhSanPham;
 import org.example.datnbbook.model.ChatLieu;
 import org.example.datnbbook.model.ChiTietSanPham;
+import org.example.datnbbook.model.ChiTietSanPhamAnh;
+import org.example.datnbbook.model.ChiTietSanPhamAnhId;
 import org.example.datnbbook.model.LoaiBia;
 import org.example.datnbbook.model.NgonNgu;
 import org.example.datnbbook.model.NguoiDich;
@@ -13,6 +16,7 @@ import org.example.datnbbook.model.SanPham;
 import org.example.datnbbook.model.TacGia;
 import org.example.datnbbook.model.TheLoai;
 import org.example.datnbbook.repository.ChatLieuRepository;
+import org.example.datnbbook.repository.ChiTietSanPhamAnhRepository;
 import org.example.datnbbook.repository.ChiTietSanPhamRepository;
 import org.example.datnbbook.repository.LoaiBiaRepository;
 import org.example.datnbbook.repository.NgonNguRepository;
@@ -25,6 +29,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -47,6 +52,8 @@ public class ChiTietSanPhamService {
     private final NguoiDichService nguoiDichService;
     private final NgonNguService ngonNguService;
     private final TheLoaiService theLoaiService;
+    private final AnhSanPhamService anhSanPhamService;
+    private final ChiTietSanPhamAnhRepository chiTietSanPhamAnhRepository;
 
     private ModelMapper modelMapper;
 
@@ -65,76 +72,6 @@ public class ChiTietSanPhamService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy chi tiết sản phẩm với mã: " + ma));
         return entity;
     }
-
-
-//    public ChiTietSanPham createSanPhamAndChiTiet(String tenSanPham, String moTaSanPham,
-//                                                  Integer idLoaiBia, Integer idTacGia, Integer idNhaXuatBan,
-//                                                  Integer idChatLieu, Integer idNguoiDich, Integer idTheLoai,
-//                                                  Integer idNgonNgu, BigDecimal gia, Integer soLuongTon,
-//                                                  BigDecimal trongLuong, BigDecimal kichThuoc, String moTaChiTiet) {
-//        // Tạo và lưu SanPham
-//        SanPham sanPham = new SanPham();
-//        sanPham.setMaSanPham(sanPhamRepository.getNextSequenceValue());
-//        sanPham.setTenSanPham(tenSanPham);
-//        sanPham.setMoTa(moTaSanPham);
-//        sanPham.setDeleted(false);
-//        SanPham savedSanPham = sanPhamRepository.save(sanPham);
-//
-//        // Tạo và lưu ChiTietSanPham
-//        ChiTietSanPham chiTietSanPham = new ChiTietSanPham();
-//        chiTietSanPham.setMaChiTietSanPham(repository.getNextCTSPSequenceValue());
-//        chiTietSanPham.setTenChiTietSanPham(tenSanPham); // Giống tenSanPham
-//        chiTietSanPham.setIdSanPham(savedSanPham);
-//
-//        // Gán các trường @ManyToOne
-//        if (idLoaiBia != null) {
-//            LoaiBia loaiBia = new LoaiBia();
-//            loaiBia.setId(idLoaiBia);
-//            chiTietSanPham.setIdLoaiBia(loaiBia);
-//        }
-//        if (idTacGia != null) {
-//            TacGia tacGia = new TacGia();
-//            tacGia.setId(idTacGia);
-//            chiTietSanPham.setIdTacGia(tacGia);
-//        }
-//        if (idNhaXuatBan != null) {
-//            NhaXuatBan nhaXuatBan = new NhaXuatBan();
-//            nhaXuatBan.setId(idNhaXuatBan);
-//            chiTietSanPham.setIdNhaXuatBan(nhaXuatBan);
-//        }
-//        if (idChatLieu != null) {
-//            ChatLieu chatLieu = new ChatLieu();
-//            chatLieu.setId(idChatLieu);
-//            chiTietSanPham.setIdChatLieu(chatLieu);
-//        }
-//        if (idNguoiDich != null) {
-//            NguoiDich nguoiDich = new NguoiDich();
-//            nguoiDich.setId(idNguoiDich);
-//            chiTietSanPham.setIdNguoiDich(nguoiDich);
-//        }
-//        if (idTheLoai != null) {
-//            TheLoai theLoai = new TheLoai();
-//            theLoai.setId(idTheLoai);
-//            chiTietSanPham.setIdTheLoai(theLoai);
-//        }
-//        if (idNgonNgu != null) {
-//            NgonNgu ngonNgu = new NgonNgu();
-//            ngonNgu.setId(idNgonNgu);
-//            chiTietSanPham.setIdNgonNgu(ngonNgu);
-//        }
-//
-//        chiTietSanPham.setGia(gia != null ? gia : BigDecimal.ZERO);
-//        chiTietSanPham.setSoLuongTon(soLuongTon != null ? soLuongTon : 0);
-//        chiTietSanPham.setTrongLuong(trongLuong != null ? trongLuong : BigDecimal.ZERO); // Thêm trongLuong
-//        chiTietSanPham.setKichThuoc(kichThuoc != null ? kichThuoc : BigDecimal.ZERO); // Thêm kichThuoc
-//        chiTietSanPham.setMoTa(moTaChiTiet);
-//        chiTietSanPham.setDeleted(false);
-//        chiTietSanPham.setTrangThai(true);
-//        chiTietSanPham.setCreatedAt(Instant.now());
-//        chiTietSanPham.setUpdatedAt(Instant.now());
-//
-//        return repository.save(chiTietSanPham);
-//    }
 
 
 
@@ -292,6 +229,34 @@ public class ChiTietSanPhamService {
 
     public List<ChiTietSanPham> search(String keyword) {
         return repository.search(keyword);
+    }
+
+    public ChiTietSanPham createWithImages(ChiTietSanPhamDTO dto, List<MultipartFile> images) {
+        // Tạo chi tiết sản phẩm
+        ChiTietSanPham chiTietSanPham = new ChiTietSanPham();
+        // ... set các trường ...
+        chiTietSanPham = repository.save(chiTietSanPham);
+        // Upload ảnh
+        if (images != null && !images.isEmpty()) {
+            anhSanPhamService.uploadImages(images, chiTietSanPham.getId());
+        }
+        return chiTietSanPham;
+    }
+
+    public void linkImageToChiTietSanPham(Integer chiTietSanPhamId, Integer anhId) {
+        ChiTietSanPhamAnhId id = new ChiTietSanPhamAnhId();
+        id.setChiTietSanPhamId(chiTietSanPhamId);
+        id.setAnhId(anhId);
+        ChiTietSanPhamAnh entity = new ChiTietSanPhamAnh();
+        entity.setId(id);
+        // Nạp entity đầy đủ để mapping
+        ChiTietSanPham chiTietSanPham = repository.findById(chiTietSanPhamId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy chi tiết sản phẩm với id: " + chiTietSanPhamId));
+        entity.setChiTietSanPham(chiTietSanPham);
+        AnhSanPham anh = anhSanPhamService.findById(anhId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy ảnh với id: " + anhId));
+        entity.setAnh(anh);
+        chiTietSanPhamAnhRepository.save(entity);
     }
 
 //    private ChiTietSanPhamDTO toDTO(ChiTietSanPham entity) {

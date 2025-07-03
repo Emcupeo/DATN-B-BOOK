@@ -98,4 +98,12 @@ public class ImgBBService {
             throw new IOException("Failed to parse ImgBB response: " + e.getMessage(), e);
         }
     }
+
+    public String uploadToImgBB(MultipartFile file) {
+        try {
+            return uploadImage(file);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to upload image to ImgBB", e);
+        }
+    }
 }

@@ -151,15 +151,9 @@ public class SanPhamController {
                         logger.error("[ERROR] Maximum 3 images allowed per ChiTietSanPham, received: {}", imageIds.size());
                         throw new RuntimeException("Maximum 3 images allowed per ChiTietSanPham");
                     }
-                    for (Integer imageId : imageIds) {
-                        logger.debug("[DEBUG] Linking imageId: {} to chiTietSanPham", imageId);
-                        AnhSanPham anh = anhSanPhamService.findById(imageId)
-                                .orElseThrow(() -> {
-                                    logger.error("[ERROR] AnhSanPham not found for id: {}", imageId);
-                                    return new RuntimeException("AnhSanPham not found for id: " + imageId);
-                                });
-                        for (ChiTietSanPham chiTiet : chiTietListForLoaiBia) {
-                            anhSanPhamService.linkToChiTietSanPham(chiTiet.getId(), anh.getId());
+                    for (ChiTietSanPham chiTiet : chiTietListForLoaiBia) {
+                        for (Integer imageId : imageIds) {
+                            chiTietSanPhamService.linkImageToChiTietSanPham(chiTiet.getId(), imageId);
                             logger.debug("[DEBUG] Linked imageId: {} to chiTietSanPhamId: {}", imageId, chiTiet.getId());
                         }
                     }

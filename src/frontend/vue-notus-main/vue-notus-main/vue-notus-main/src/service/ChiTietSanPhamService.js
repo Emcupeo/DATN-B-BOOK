@@ -24,7 +24,21 @@ class chiTietSanPhamService {
     }
 
     async create(data) {
-        const response = await axios.post(chiTietSanPhamAPIBaseURL, data);
+        // data.images là mảng các file ảnh
+        const formData = new FormData();
+        for (const key in data) {
+            if (key !== 'images') {
+                formData.append(key, data[key]);
+            }
+        }
+        if (data.images && Array.isArray(data.images)) {
+            data.images.forEach(file => {
+                formData.append('images', file);
+            });
+        }
+        const response = await axios.post(chiTietSanPhamAPIBaseURL, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
         return response.data;
     }
 
