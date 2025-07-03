@@ -34,17 +34,26 @@
             />
             <span class="text-sm text-gray-700">Hiển thị đợt giảm giá có sản phẩm không tồn tại</span>
           </label>
-          <button
-            @click="exportToExcel"
-            class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-all duration-200 flex items-center"
-          >
-            <span class="mr-2">📊</span> Xuất Excel
-          </button>
+            <button type="button" @click="exportToExcel"
+              class="flex items-center gap-2 text-white bg-gradient-to-r from-green-600 via-green-700 to-green-800 hover:from-green-700 hover:via-green-800 hover:to-green-900 focus:ring-4 focus:outline-none focus:ring-green-400 dark:focus:ring-green-900 font-medium rounded-lg text-sm px-5 py-2.5 text-center mt-5">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0,0,256,256">
+                <g fill="#ffffff">
+                  <g transform="scale(5.12,5.12)">
+                    <path
+                      d="M16,4c-1.65,0 -3,1.35 -3,3v4h2v-4c0,-0.55 0.45,-1 1,-1h14v8h-3.49023c0.29,0.61 0.46047,1.28 0.48047,2h3.00977v8h-3v2h3v8h-3.00977c-0.02,0.72 -0.19047,1.39 -0.48047,2h3.49023v8h-14c-0.55,0 -1,-0.45 -1,-1v-4h-2v4c0,1.65 1.35,3 3,3h30c1.65,0 3,-1.35 3,-3v-36c0,-1.65 -1.35,-3 -3,-3zM32,6h14c0.55,0 1,0.45 1,1v7h-15zM4.19922,13c-1.75547,0 -3.19922,1.44375 -3.19922,3.19922v17.60156c0,1.75547 1.44375,3.19922 3.19922,3.19922h17.60156c1.75547,0 3.19922,-1.44375 3.19922,-3.19922v-17.60156c0,-1.75547 -1.44375,-3.19922 -3.19922,-3.19922zM4.19922,15h17.60156c0.67453,0 1.19922,0.52468 1.19922,1.19922v17.60156c0,0.67453 -0.52469,1.19922 -1.19922,1.19922h-17.60156c-0.67453,0 -1.19922,-0.52468 -1.19922,-1.19922v-17.60156c0,-0.67453 0.52469,-1.19922 1.19922,-1.19922zM32,16h15v8h-15zM7.96875,19l3.49414,5.97852l-3.83203,6.02148h2.86328l2.52148,-4.7168l2.5332,4.7168h2.82031l-3.76953,-6l3.68555,-6h-2.67578l-2.45508,4.50586l-2.32422,-4.50586zM32,26h15v8h-15zM32,36h15v7c0,0.55 -0.45,1 -1,1h-14z">
+                    </path>
+                  </g>
+                </g>
+              </svg>
+              Xuất Excel
+            </button>
           <button
             @click="openCreateForm"
-            class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-all duration-200 flex items-center"
-          >
-            <span class="mr-2">➕</span> Thêm đợt giảm giá
+           class="flex items-center gap-2 text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg font-medium rounded-lg text-sm px-5 py-2.5 mt-5">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="w-4 h-4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg> Thêm đợt giảm giá
           </button>
         </div>
       </div>
@@ -261,7 +270,7 @@
 
             <!-- Selected Products (Show ChiTietSanPham) -->
             <div v-if="filteredChiTietSanPhams.length > 0" class="mt-6">
-              <h3 class="text-lg font-semibold text-gray-800 mb-4">Sản Phẩm Đã Chọn</h3>
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">Sản Phẩm Chi Tiết</h3>
               <table class="min-w-full bg-white border border-gray-200">
                 <thead>
                   <tr class="bg-gray-100 text-gray-700 text-left">
@@ -592,7 +601,7 @@
               <th class="px-4 py-2 text-sm font-semibold border-b">Trạng thái</th>
               <th class="px-4 py-2 text-sm font-semibold border-b">Thời gian bắt đầu</th>
               <th class="px-4 py-2 text-sm font-semibold border-b">Thời gian kết thúc</th>
-              <th class="px-4 py-2 text-sm font-semibold border-b">Hoạt động</th>
+              <th class="px-4 py-2 text-sm font-semibold border-b">Hành động</th>
             </tr>
           </thead>
           <tbody>
@@ -638,7 +647,7 @@
               <td class="px-4 py-2">
                 <button
                   @click="openUpdateForm(discount)"
-                  class="text-blue-500 hover:text-blue-700 transition-all duration-200 mr-2"
+                  class="text-gray-600 hover:text-gray-800 transition-all duration-200 mr-2"
                   title="Xem chi tiết"
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
