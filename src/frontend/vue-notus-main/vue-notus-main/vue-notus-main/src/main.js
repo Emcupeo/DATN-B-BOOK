@@ -62,6 +62,7 @@ import EditChiTietSach from "./views/QuanLySach/EditChiTietSach.vue";
 import ChiTietSach from "./views/QuanLySach/ChiTietSach.vue";
 import KhachHangDetail from "./views/TaiKhoan/KhachHangDetail.vue";
 import AllSach from "@/views/QuanLySach/AllSach.vue";
+import KhachHangForm from "@/views/TaiKhoan/KhachHangForm.vue";
 
 const routes = [
   {
@@ -203,6 +204,16 @@ const routes = [
         path: "/admin/khach-hang/:id",
         name: "KhachHangDetail",
         component: KhachHangDetail,
+      },
+      {
+        path: "/admin/khach-hang/them-moi",
+        name: "ThemKhachHang",
+      component: KhachHangForm
+      },
+      {
+        path: "/admin/khach-hang/chinh-sua/:id",
+        name: "ChinhSuaKhachHang",
+      component: KhachHangForm
       },
     ],
   },

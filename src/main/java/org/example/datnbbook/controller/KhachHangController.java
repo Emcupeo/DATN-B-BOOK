@@ -1,6 +1,8 @@
 package org.example.datnbbook.controller;
 
+import org.example.datnbbook.dto.KhachHangAddressDTO;
 import org.example.datnbbook.dto.KhachHangDTO;
+import org.example.datnbbook.model.KhachHang;
 import org.example.datnbbook.service.KhachHangService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -45,5 +47,16 @@ public class KhachHangController {
     @GetMapping("/search")
     public ResponseEntity<List<KhachHangDTO>> search(@RequestParam String keyword) {
         return ResponseEntity.ok(khachHangService.search(keyword));
+    }
+
+    @PostMapping("/create-with-addresses")
+    public ResponseEntity<KhachHang> createWithAddresses(@RequestBody KhachHangAddressDTO dto) {
+        KhachHang savedKhachHang = khachHangService.createWithAddresses(dto);
+        return ResponseEntity.ok(savedKhachHang);
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<KhachHangDTO> updateStatus(@PathVariable Long id, @RequestParam Integer trangThai) {
+        return ResponseEntity.ok(khachHangService.updateStatus(id, trangThai));
     }
 }

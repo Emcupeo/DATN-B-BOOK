@@ -1,10 +1,13 @@
 import api from './api';
-import KhachHang from '../models/KhachHang';
+import KhachHang from '@/models/KhachHang';
 
 class KhachHangService {
     async getAll() {
         const response = await api.get('/khach-hang');
-        return response.data.map(item => new KhachHang(item));
+        console.log(response.data);
+        return Array.isArray(response.data)
+            ? response.data.map(item => new KhachHang(item))
+            : response.data.content.map(item => new KhachHang(item));
     }
 
     async getById(id) {
@@ -31,6 +34,23 @@ class KhachHangService {
             params: { keyword }
         });
         return response.data.map(item => new KhachHang(item));
+    }
+
+    async createWithAddresses(khachHangData) {
+        // Convert boolean values to integers
+        const convertedData = {
+            ...khachHangData,
+            gioiTinh: khachHangData.gioiTinh ? 1 : 0,
+            trangThai: khachHangData.trangThai ? 1 : 0
+        };
+
+        const response = await api.post('/khach-hang/create-with-addresses', convertedData);
+        return new KhachHang(response.data);
+    }
+
+    async updateStatus(id, trangThai) {
+        const response = await api.patch(`/khach-hang/${id}/status?trangThai=${trangThai}`);
+        return new KhachHang(response.data);
     }
 }
 

@@ -1,7 +1,7 @@
 <template>
-  <div class="flex flex-wrap mt-4 flex justify-center items-center h-screen">
-    <div class="w-full mb-12 px-4 bg-white p-6 bg-white p-6 shadow-lg rounded-lg w-4/5 h-4/5 overflow-hidden">
-      <div class="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded bg-white overflow-hidden">
+  <div class="flex flex-wrap mt-4">
+    <div class="w-full mb-12 px-4">
+      <div class="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded bg-white">
         <div class="rounded-t mb-0 px-4 py-3 border-0">
           <div class="flex flex-wrap items-center">
             <div class="relative w-full px-4 max-w-full flex-grow flex-1">
@@ -9,25 +9,60 @@
                 Danh sách khách hàng
               </h3>
             </div>
-            <div class="relative w-full px-4 max-w-full flex-grow flex-1 text-right">
-              <button @click="openModal"
-                      class="bg-indigo-500 text-white active:bg-indigo-600 text-xs font-bold uppercase px-3 py-1 rounded outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150">
-                Thêm khách hàng
+            <div class="flex space-x-2">
+              <button type="button" @click="exportToExcel"
+                      class="flex items-center gap-2 text-white bg-gradient-to-r from-green-600 via-green-700 to-green-800 hover:from-green-700 hover:via-green-800 hover:to-green-900 focus:ring-4 focus:outline-none focus:ring-green-400 dark:focus:ring-green-900 font-medium rounded-lg text-sm px-5 py-2.5 text-center mt-5">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0,0,256,256">
+                  <g fill="#ffffff">
+                    <g transform="scale(5.12,5.12)">
+                      <path
+                          d="M16,4c-1.65,0 -3,1.35 -3,3v4h2v-4c0,-0.55 0.45,-1 1,-1h14v8h-3.49023c0.29,0.61 0.46047,1.28 0.48047,2h3.00977v8h-3v2h3v8h-3.00977c-0.02,0.72 -0.19047,1.39 -0.48047,2h3.49023v8h-14c-0.55,0 -1,-0.45 -1,-1v-4h-2v4c0,1.65 1.35,3 3,3h30c1.65,0 3,-1.35 3,-3v-36c0,-1.65 -1.35,-3 -3,-3zM32,6h14c0.55,0 1,0.45 1,1v7h-15zM4.19922,13c-1.75547,0 -3.19922,1.44375 -3.19922,3.19922v17.60156c0,1.75547 1.44375,3.19922 3.19922,3.19922h17.60156c1.75547,0 3.19922,-1.44375 3.19922,-3.19922v-17.60156c0,-1.75547 -1.44375,-3.19922 -3.19922,-3.19922zM4.19922,15h17.60156c0.67453,0 1.19922,0.52468 1.19922,1.19922v17.60156c0,0.67453 -0.52469,1.19922 -1.19922,1.19922h-17.60156c-0.67453,0 -1.19922,-0.52468 -1.19922,-1.19922v-17.60156c0,-0.67453 0.52469,-1.19922 1.19922,-1.19922zM32,16h15v8h-15zM7.96875,19l3.49414,5.97852l-3.83203,6.02148h2.86328l2.52148,-4.7168l2.5332,4.7168h2.82031l-3.76953,-6l3.68555,-6h-2.67578l-2.45508,4.50586l-2.32422,-4.50586zM32,26h15v8h-15zM32,36h15v7c0,0.55 -0.45,1 -1,1h-14z">
+                      </path>
+                    </g>
+                  </g>
+                </svg>
+                Xuất Excel
               </button>
+
+              <router-link to="/admin/khach-hang/them-moi"
+                           class="flex items-center gap-2 text-white bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 hover:from-blue-700 hover:via-blue-800 hover:to-blue-900 focus:ring-4 focus:outline-none focus:ring-blue-400 dark:focus:ring-blue-900 font-medium rounded-lg text-sm px-5 py-2.5 text-center mt-5">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+                Thêm mới
+              </router-link>
+
             </div>
-          </div>
-          <div class="mt-4 flex justify-end">
-            <input v-model="searchQuery" @input="handleSearch" type="text" placeholder="Tìm kiếm khách hàng..."
-                   class="border px-3 py-2 rounded">
           </div>
         </div>
 
         <div class="block w-full overflow-x-auto">
+          <!-- Search and filter -->
+          <div class="p-4 flex space-x-4">
+            <div class="flex-1">
+              <input type="text" v-model="searchQuery"
+                     placeholder="Tìm kiếm theo tên, email, số điện thoại..."
+                     class="w-full border rounded px-3 py-2"
+                     @input="handleSearch">
+            </div>
+            <div>
+              <select v-model="statusFilter" class="border rounded px-3 py-2" @change="handleSearch">
+                <option value="">Tất cả trạng thái</option>
+                <option value="true">Hoạt động</option>
+                <option value="false">Không hoạt động</option>
+              </select>
+            </div>
+          </div>
+
           <table class="items-center w-full bg-transparent border-collapse">
             <thead>
             <tr>
+              <th class="px-6 py-3 text-xs uppercase font-semibold text-left bg-blueGray-50 text-blueGray-500 border border-blueGray-100">
+                #
+              </th>
               <th class="px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left bg-blueGray-50 text-blueGray-500 border-blueGray-100">
-                Mã KH
+                Mã khách hàng
               </th>
               <th class="px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left bg-blueGray-50 text-blueGray-500 border-blueGray-100">
                 Họ tên
@@ -39,7 +74,7 @@
                 Số điện thoại
               </th>
               <th class="px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left bg-blueGray-50 text-blueGray-500 border-blueGray-100">
-                Địa chỉ
+                Địa chỉ mặc định
               </th>
               <th class="px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left bg-blueGray-50 text-blueGray-500 border-blueGray-100">
                 Trạng thái
@@ -50,7 +85,10 @@
             </tr>
             </thead>
             <tbody>
-            <tr v-for="khachHang in khachHangs" :key="khachHang.id">
+            <tr v-for="(khachHang, index) in displayedKhachHang" :key="khachHang.id">
+              <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
+                {{ index + 1 }}
+              </td>
               <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
                 {{ khachHang.maKhachHang }}
               </td>
@@ -63,30 +101,78 @@
               <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
                 {{ khachHang.soDienThoai }}
               </td>
+              <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs p-4">
+              <span :title="getFullAddress(khachHang)">
+                {{ getDefaultAddress(khachHang) }}
+              </span>
+              </td>
+
               <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
-                {{ formatDiaChi(khachHang) }}
+                <div class="flex items-center">
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox"
+                           :checked="khachHang.trangThai === 1"
+                           class="sr-only peer"
+                           @change="toggleStatus(khachHang)">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                  <span class="ml-2">{{ khachHang.trangThai === 1 ? 'Hoạt động' : 'Không hoạt động' }}</span>
+                </div>
               </td>
               <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
-                  <span :class="getStatusClass(khachHang.trangThai)"
-                        class="px-2 py-1 text-green-700 border border-green-500 bg-green-100 rounded">
-                    {{ khachHang.trangThai ? 'Hoạt động' : 'Không hoạt động' }}
-                  </span>
-              </td>
-              <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
-                <router-link :to="'/admin/khach-hang/' + khachHang.id" class="bg-blue-500 text-white px-2 py-1 rounded">
-                  Chi tiết
-                </router-link>
-                &nbsp;
-                <button @click="editKhachHang(khachHang)" class="bg-yellow-500 text-white px-2 py-1 rounded mr-2">Sửa
-                </button>
-                <button @click="deleteKhachHang(khachHang.id)" class="bg-red-500 text-white px-2 py-1 rounded mr-2">
-                  Xóa
-                </button>
+                <div class="flex space-x-2">
+                  <router-link :to="'/admin/khach-hang/chinh-sua/' + khachHang.id"
+                               class="text-blue-600 hover:text-blue-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                         stroke="currentColor" class="w-5 h-5">
+                      <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M16.862 3.487a2.25 2.25 0 1 1 3.182 3.182L6.75 19.5l-4.5 1.5 1.5-4.5 13.294-13.294z" />
+                    </svg>
+                  </router-link>
+                  <button @click="deleteKhachHang(khachHang.id)" class="text-red-600 hover:text-red-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                         stroke="currentColor" class="w-5 h-5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+
+                </div>
 
               </td>
             </tr>
             </tbody>
           </table>
+
+          <div class="p-4 flex justify-between items-center">
+            <div>
+              <select v-model="pageSize" class="border rounded px-3 py-2" @change="handlePageSizeChange">
+                <option :value="10">10 / trang</option>
+                <option :value="20">20 / trang</option>
+                <option :value="50">50 / trang</option>
+              </select>
+            </div>
+            <div class="flex space-x-2">
+              <button @click="currentPage--"
+                      :disabled="currentPage === 1"
+                      :class="[
+                        'px-3 py-1 rounded',
+                        currentPage === 1 ? 'bg-gray-100 text-gray-400' : 'bg-blue-500 text-white'
+                      ]">
+                Trước
+              </button>
+              <span class="px-3 py-1">
+                Trang {{ currentPage }} / {{ totalPages }}
+              </span>
+              <button @click="currentPage++"
+                      :disabled="currentPage === totalPages"
+                      :class="[
+                        'px-3 py-1 rounded',
+                        currentPage === totalPages ? 'bg-gray-100 text-gray-400' : 'bg-blue-500 text-white'
+                      ]">
+                Sau
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -100,8 +186,7 @@
         </div>
 
         <!-- Modal panel -->
-        <div
-            class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
           <!-- Modal content -->
           <div class="max-h-[80vh] overflow-y-auto">
             <div class="bg-white px-4 pt-5 pb-4 sm:p-6">
@@ -135,17 +220,17 @@
 
                   <div>
                     <label class="block text-sm font-medium mb-1">Giới tính</label>
-                    <select v-model="formData.gioiTinh" class="w-full border rounded px-3 py-2">
-                      <option :value="true">Nam</option>
-                      <option :value="false">Nữ</option>
+                    <select v-model.number="formData.gioiTinh" class="w-full border rounded px-3 py-2">
+                      <option :value="1">Nam</option>
+                      <option :value="0">Nữ</option>
                     </select>
                   </div>
 
                   <div>
                     <label class="block text-sm font-medium mb-1">Trạng thái</label>
-                    <select v-model="formData.trangThai" class="w-full border rounded px-3 py-2">
-                      <option :value="true">Hoạt động</option>
-                      <option :value="false">Không hoạt động</option>
+                    <select v-model.number="formData.trangThai" class="w-full border rounded px-3 py-2">
+                      <option :value="1">Hoạt động</option>
+                      <option :value="0">Không hoạt động</option>
                     </select>
                   </div>
                 </div>
@@ -177,8 +262,7 @@
         <div class="fixed inset-0 transition-opacity" aria-hidden="true">
           <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
         </div>
-        <div
-            class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
           <div class="bg-white px-4 pt-5 pb-4 sm:p-6">
             <div class="flex justify-between items-center mb-4">
               <h2 class="text-xl font-bold">Quản lý địa chỉ cho {{ selectedKhachHang?.hoTen }}</h2>
@@ -192,8 +276,7 @@
               <form @submit.prevent="saveAddress" class="space-y-4">
                 <div>
                   <label class="block text-sm font-medium mb-1">Tỉnh/Thành phố</label>
-                  <select v-model="selectedAddressProvince" @change="handleAddressProvinceChange"
-                          class="w-full border rounded px-3 py-2" required>
+                  <select v-model="selectedAddressProvince" @change="handleAddressProvinceChange" class="w-full border rounded px-3 py-2" required>
                     <option value="">Chọn Tỉnh/Thành phố</option>
                     <option v-for="province in provinces" :key="province.code" :value="province">
                       {{ province.name }}
@@ -203,8 +286,7 @@
 
                 <div>
                   <label class="block text-sm font-medium mb-1">Quận/Huyện</label>
-                  <select v-model="selectedAddressDistrict" @change="handleAddressDistrictChange"
-                          class="w-full border rounded px-3 py-2" required :disabled="!selectedAddressProvince">
+                  <select v-model="selectedAddressDistrict" @change="handleAddressDistrictChange" class="w-full border rounded px-3 py-2" required :disabled="!selectedAddressProvince">
                     <option value="">Chọn Quận/Huyện</option>
                     <option v-for="district in districts" :key="district.code" :value="district">
                       {{ district.name }}
@@ -214,8 +296,7 @@
 
                 <div>
                   <label class="block text-sm font-medium mb-1">Xã/Phường/Thị trấn</label>
-                  <select v-model="selectedAddressWard" class="w-full border rounded px-3 py-2" required
-                          :disabled="!selectedAddressDistrict">
+                  <select v-model="selectedAddressWard" class="w-full border rounded px-3 py-2" required :disabled="!selectedAddressDistrict">
                     <option value="">Chọn Xã/Phường/Thị trấn</option>
                     <option v-for="ward in wards" :key="ward.code" :value="ward">
                       {{ ward.name }}
@@ -225,8 +306,7 @@
 
                 <div>
                   <label class="block text-sm font-medium mb-1">Địa chỉ chi tiết</label>
-                  <input v-model="addressFormData.diaChiChiTiet" type="text" class="w-full border rounded px-3 py-2"
-                         required
+                  <input v-model="addressFormData.diaChiChiTiet" type="text" class="w-full border rounded px-3 py-2" required
                          placeholder="Số nhà, tên đường...">
                 </div>
 
@@ -281,6 +361,7 @@ import KhachHangService from '@/service/KhachHangService';
 import AddressService from '@/service/AddressService';
 import DiaChiService from '@/service/DiaChiService';
 import KhachHang from '@/models/KhachHang';
+import * as XLSX from 'xlsx';
 
 export default {
   name: "KhachHang",
@@ -290,7 +371,25 @@ export default {
       showModal: false,
       isEditing: false,
       searchQuery: '',
-      formData: new KhachHang(),
+      statusFilter: '',
+      currentPage: 1,
+      pageSize: 10,
+      totalItems: 0,
+      formData: {
+        id: null,
+        maKhachHang: '',
+        hoTen: '',
+        email: '',
+        soDienThoai: '',
+        ngaySinh: '',
+        gioiTinh: 1,
+        trangThai: 1,
+        createdAt: null,
+        createdBy: null,
+        updatedAt: null,
+        updatedBy: null,
+        danhSachDiaChi: []
+      },
       editingId: null,
       provinces: [],
       districts: [],
@@ -314,6 +413,30 @@ export default {
       selectedAddressDistrict: null,
       selectedAddressWard: null,
     };
+  },
+  computed: {
+    totalPages() {
+      return Math.ceil(this.filteredKhachHang.length / this.pageSize);
+    },
+    filteredKhachHang() {
+      return this.khachHangs.filter(kh => {
+        const matchesSearch = !this.searchQuery ||
+            kh.hoTen?.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+            kh.email?.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+            kh.soDienThoai?.includes(this.searchQuery);
+
+        const matchesStatus = this.statusFilter === '' ||
+            (this.statusFilter === 'true' && kh.trangThai === 1) ||
+            (this.statusFilter === 'false' && kh.trangThai === 0);
+
+        return matchesSearch && matchesStatus;
+      });
+    },
+    displayedKhachHang() {
+      const start = (this.currentPage - 1) * this.pageSize;
+      const end = start + this.pageSize;
+      return this.filteredKhachHang.slice(start, end);
+    }
   },
   async created() {
     await this.loadKhachHangs();
@@ -357,17 +480,46 @@ export default {
       this.showModal = true;
     },
 
-    editKhachHang(khachHang) {
-      this.isEditing = true;
-      this.editingId = khachHang.id;
-      this.formData = new KhachHang(khachHang);
+    async editKhachHang(id) {
+      try {
+        this.isEditing = true;
+        this.editingId = id;
 
-      this.selectedProvince = this.provinces.find(p => p.name === khachHang.tinhThanh) || null;
-      if (this.selectedProvince) {
-        this.handleProvinceChange();
+        // Fetch customer data
+        const khachHang = await KhachHangService.getById(id);
+        console.log('Raw customer data:', khachHang); // Debug log
+
+        // Convert date format for input
+        if (khachHang.ngaySinh) {
+          khachHang.ngaySinh = khachHang.ngaySinh.split('T')[0];
+        }
+
+        // Reset form data first
+        this.formData = {
+          id: khachHang.id,
+          maKhachHang: khachHang.maKhachHang,
+          hoTen: khachHang.hoTen,
+          email: khachHang.email,
+          soDienThoai: khachHang.soDienThoai,
+          ngaySinh: khachHang.ngaySinh,
+          gioiTinh: parseInt(khachHang.gioiTinh), // Ensure it's a number
+          trangThai: parseInt(khachHang.trangThai), // Ensure it's a number
+          createdAt: khachHang.createdAt,
+          createdBy: khachHang.createdBy,
+          updatedAt: khachHang.updatedAt,
+          updatedBy: khachHang.updatedBy,
+          danhSachDiaChi: khachHang.danhSachDiaChi || []
+        };
+
+        console.log('Form data after setting:', this.formData); // Debug log
+        this.showModal = true;
+
+        // Load provinces for address management
+        await this.loadProvinces();
+      } catch (error) {
+        console.error('Error loading customer data:', error);
+        alert('Có lỗi xảy ra khi tải thông tin khách hàng');
       }
-
-      this.showModal = true;
     },
 
     async saveKhachHang() {
@@ -428,17 +580,12 @@ export default {
           : 'bg-red-100 text-red-800 px-2 py-1 rounded-full';
     },
 
-    async handleSearch() {
-      try {
-        if (this.searchQuery.trim()) {
-          this.khachHangs = await KhachHangService.search(this.searchQuery);
-        } else {
-          await this.loadKhachHangs();
-        }
-      } catch (error) {
-        console.error('Error searching khach hang:', error);
-        alert('Có lỗi xảy ra khi tìm kiếm khách hàng');
-      }
+    handleSearch() {
+      this.currentPage = 1;
+    },
+
+    handlePageSizeChange() {
+      this.currentPage = 1;
     },
 
     async loadProvinces() {
@@ -523,7 +670,7 @@ export default {
     async editAddress(diaChi) {
       this.showAddressForm = true;
       this.editingAddressId = diaChi.id;
-      this.addressFormData = {...diaChi};
+      this.addressFormData = { ...diaChi };
 
       // Set selected locations
       this.selectedAddressProvince = this.provinces.find(p => p.name === diaChi.tinhThanh);
@@ -614,7 +761,67 @@ export default {
           alert('Không thể tải danh sách xã/phường');
         }
       }
+    },
+
+    async toggleStatus(khachHang) {
+      try {
+        const newStatus = khachHang.trangThai === 1 ? 0 : 1;
+        await KhachHangService.updateStatus(khachHang.id, newStatus);
+        khachHang.trangThai = newStatus;
+      } catch (error) {
+        console.error('Error updating status:', error);
+        alert('Không thể cập nhật trạng thái khách hàng');
+      }
+    },
+
+    getDefaultAddress(khachHang) {
+      const defaultAddress = khachHang.danhSachDiaChi?.find(d => d.macDinh);
+      if (!defaultAddress) return "Chưa có địa chỉ mặc định";
+
+      // Ghép địa chỉ đầy đủ
+      const fullAddress = `${defaultAddress.diaChiChiTiet}, ${defaultAddress.xaPhuong}, ${defaultAddress.quanHuyen}, ${defaultAddress.tinhThanh}`;
+
+      // Giới hạn độ dài hiển thị
+      const maxLength = 30;
+      return fullAddress.length > maxLength
+          ? fullAddress.substring(0, maxLength) + "..."
+          : fullAddress;
+    },
+    getFullAddress(khachHang) {
+      const defaultAddress = khachHang.danhSachDiaChi?.find(d => d.macDinh);
+      if (!defaultAddress) return "Chưa có địa chỉ mặc định";
+      return `${defaultAddress.diaChiChiTiet}, ${defaultAddress.xaPhuong}, ${defaultAddress.quanHuyen}, ${defaultAddress.tinhThanh}`;
+    },
+
+    exportToExcel() {
+      const data = this.filteredKhachHang.map(kh => ({
+        'Mã khách hàng': kh.maKhachHang,
+        'Họ tên': kh.hoTen,
+        'Email': kh.email,
+        'Số điện thoại': kh.soDienThoai,
+        'Ngày sinh': kh.ngaySinh,
+        'Giới tính': kh.gioiTinh ? 'Nam' : 'Nữ',
+        'Địa chỉ mặc định': this.getDefaultAddress(kh),
+        'Trạng thái': kh.trangThai === 1 ? 'Hoạt động' : 'Không hoạt động'
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Khách hàng');
+      XLSX.writeFile(wb, 'danh-sach-khach-hang.xlsx');
+    }
+  },
+  watch: {
+    searchQuery() {
+      this.handleSearch();
+    },
+    statusFilter() {
+      this.handleSearch();
     }
   }
 };
 </script>
+
+<style scoped>
+/* Thêm style cho switch nếu cần */
+</style>
