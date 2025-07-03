@@ -51,6 +51,9 @@ public class HoaDonService {
     private HoaDonChiTietRepository hoaDonChiTietRepository;
 
     @Autowired
+    private KhachHangRepository khachHangRepository;
+
+    @Autowired
     private SpringTemplateEngine templateEngine;
 
     private String generateMaHinhThucThanhToan() {
@@ -59,13 +62,16 @@ public class HoaDonService {
     }
 
     private String generateMaLichSuHoaDon() {
-        String uuidPart = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 6).toUpperCase();
-        return "LSHD-" + uuidPart;
+        return "LSHD-" + UUID.randomUUID().toString();
+    }
+
+    private String generateMaHoaDon() {
+        String uuidPart = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 8);
+        return "HD-" + uuidPart;
     }
 
     private String generateMaHoaDonChiTiet() {
-        String uuidPart = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 6).toUpperCase();
-        return "HDCT-" + uuidPart;
+        return "HDCT-" + UUID.randomUUID().toString().replaceAll("-", "").substring(0, 6);
     }
 
     public List<HoaDon> getAllHoaDon() {
@@ -73,7 +79,7 @@ public class HoaDonService {
     }
 
     public HoaDon getHoaDonById(int id) {
-        return hoaDonRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hóa đơn với ID: " + id));
+        return hoaDonRepository.findById(id).orElse(null);
     }
 
     public String generateQRCodeImage(int id) throws WriterException, IOException {
@@ -90,6 +96,10 @@ public class HoaDonService {
 
     public ByteArrayOutputStream printInvoiceToPdf(int id) throws IOException, WriterException {
         HoaDon hoaDon = getHoaDonById(id);
+        if (hoaDon == null) {
+            throw new IllegalArgumentException("Không tìm thấy hóa đơn với ID: " + id);
+        }
+
         BigDecimal tongTienHang = hoaDon.getHoaDonChiTiets() != null ?
                 hoaDon.getHoaDonChiTiets().stream()
                         .map(item -> item.getGiaSanPham() != null ? item.getGiaSanPham().multiply(BigDecimal.valueOf(item.getSoLuong())) : BigDecimal.ZERO)
@@ -241,7 +251,6 @@ public class HoaDonService {
         String trangThaiCu = hoaDon.getTrangThai();
 
         hoaDon.setTrangThai(trangThaiMoi);
-        hoaDon.setUpdatedAt(Instant.now());
         hoaDonRepository.save(hoaDon);
 
         LichSuHoaDon lichSu = new LichSuHoaDon();
@@ -263,7 +272,6 @@ public class HoaDonService {
         String trangThaiCu = hoaDon.getTrangThai();
         hoaDon.setTrangThai("Hủy");
         hoaDon.setDeleted(true);
-        hoaDon.setUpdatedAt(Instant.now());
         hoaDonRepository.save(hoaDon);
 
         LichSuHoaDon lichSu = new LichSuHoaDon();
@@ -278,7 +286,7 @@ public class HoaDonService {
     }
 
     @Transactional
-    public HoaDon updatePayment(int id, BigDecimal tienMat, BigDecimal chuyenKhoan, Integer phuongThucThanhToanId, String ghiChu) {
+    public HoaDon updatePayment(int id, BigDecimal tienMat, BigDecimal chuyenKhoan, Integer phuongThucThanhToanId, String ghiChu, String loaiHoaDon, BigDecimal tienKhachDua) {
         HoaDon hoaDon = hoaDonRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hóa đơn với ID: " + id));
 
@@ -294,6 +302,12 @@ public class HoaDonService {
         BigDecimal tongTienThanhToan = tienMat.add(chuyenKhoan);
         if (tongTienThanhToan.compareTo(thanhTien) != 0) {
             throw new IllegalArgumentException("Tổng tiền thanh toán không khớp với tổng hóa đơn!");
+        }
+
+        if ("TaiQuay".equals(loaiHoaDon) && tienMat.compareTo(BigDecimal.ZERO) > 0) {
+            if (tienKhachDua.compareTo(thanhTien) < 0) {
+                throw new IllegalArgumentException("Tiền khách đưa không đủ để thanh toán!");
+            }
         }
 
         HinhThucThanhToan hinhThucThanhToan = hoaDon.getHinhThucThanhToan();
@@ -315,15 +329,18 @@ public class HoaDonService {
         hoaDon.setHinhThucThanhToan(hinhThucThanhToan);
         hoaDon.setGhiChu(ghiChu);
         hoaDon.setTongTien(thanhTien);
-        hoaDon.setTrangThai("Hoàn thành");
         hoaDon.setUpdatedAt(Instant.now());
+
+        // Set trạng thái dựa trên loại hóa đơn
+        String newTrangThai = "TaiQuay".equals(loaiHoaDon) ? "Hoàn thành" : "Chờ xác nhận";
+        hoaDon.setTrangThai(newTrangThai);
 
         HoaDon updatedHoaDon = hoaDonRepository.save(hoaDon);
 
         LichSuHoaDon lichSu = new LichSuHoaDon();
         lichSu.setHoaDon(updatedHoaDon);
-        lichSu.setTrangThaiCu("Đã giao hàng");
-        lichSu.setTrangThaiMoi("Hoàn thành");
+        lichSu.setTrangThaiCu("Tạo hóa đơn");
+        lichSu.setTrangThaiMoi(newTrangThai);
         lichSu.setCreatedAt(Instant.now());
         lichSu.setMaLichSuHoaDon(generateMaLichSuHoaDon());
         lichSuHoaDonRepository.save(lichSu);
@@ -332,88 +349,137 @@ public class HoaDonService {
     }
 
     @Transactional
-    public HoaDonChiTiet addProductToOrder(int orderId, HoaDonChiTiet productData) {
-        HoaDon hoaDon = hoaDonRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hóa đơn với ID: " + orderId));
-        ChiTietSanPham chiTietSanPham = chiTietSanPhamRepository.findById(productData.getChiTietSanPham().getId())
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy sản phẩm với ID: " + productData.getChiTietSanPham().getId()));
-
-        if (chiTietSanPham.getSoLuongTon() < productData.getSoLuong()) {
-            throw new IllegalArgumentException("Số lượng tồn kho không đủ: " + chiTietSanPham.getSoLuongTon());
+    public HoaDon createHoaDon(String loaiHoaDon) {
+        if (loaiHoaDon == null || loaiHoaDon.isEmpty()) {
+            throw new IllegalArgumentException("Loại hóa đơn không được để trống!");
         }
 
-        chiTietSanPham.setSoLuongTon(chiTietSanPham.getSoLuongTon() - productData.getSoLuong());
-        chiTietSanPhamRepository.save(chiTietSanPham);
+        HoaDon hoaDon = new HoaDon();
+        hoaDon.setMaHoaDon(generateMaHoaDon());
+        hoaDon.setLoaiHoaDon(loaiHoaDon);
+        hoaDon.setTrangThai("Tạo hóa đơn");
+        hoaDon.setCreatedAt(Instant.now());
+        hoaDon.setDeleted(false);
+
+        HoaDon savedHoaDon = hoaDonRepository.save(hoaDon);
+
+        LichSuHoaDon lichSu = new LichSuHoaDon();
+        lichSu.setHoaDon(savedHoaDon);
+        lichSu.setTrangThaiCu(null);
+        lichSu.setTrangThaiMoi("Tạo hóa đơn");
+        lichSu.setCreatedAt(Instant.now());
+        lichSu.setMaLichSuHoaDon(generateMaLichSuHoaDon());
+        lichSuHoaDonRepository.save(lichSu);
+
+        return savedHoaDon;
+    }
+
+    @Transactional
+    public HoaDon updateCustomerInfo(int id, Long idKhachHang, String tenNguoiNhan, String soDienThoaiNguoiNhan, String diaChiGiaoHang) {
+        HoaDon hoaDon = hoaDonRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hóa đơn với ID: " + id));
+
+        if (idKhachHang != null) {
+            KhachHang khachHang = khachHangRepository.findById(idKhachHang)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khách hàng với ID: " + idKhachHang));
+            hoaDon.setKhachHang(khachHang);
+        } else {
+            hoaDon.setKhachHang(null);
+        }
+
+        hoaDon.setTenNguoiNhan(tenNguoiNhan != null ? tenNguoiNhan : "Khách lẻ");
+        hoaDon.setSoDienThoaiNguoiNhan(soDienThoaiNguoiNhan);
+        hoaDon.setDiaChi(diaChiGiaoHang);
+        hoaDon.setUpdatedAt(Instant.now());
+
+        HoaDon updatedHoaDon = hoaDonRepository.save(hoaDon);
+
+        LichSuHoaDon lichSu = new LichSuHoaDon();
+        lichSu.setHoaDon(updatedHoaDon);
+        lichSu.setTrangThaiCu(hoaDon.getTrangThai());
+        lichSu.setTrangThaiMoi(hoaDon.getTrangThai());
+        lichSu.setCreatedAt(Instant.now());
+        lichSu.setMaLichSuHoaDon(generateMaLichSuHoaDon());
+        lichSu.setGhiChu("Cập nhật thông tin khách hàng");
+        lichSuHoaDonRepository.save(lichSu);
+
+        return updatedHoaDon;
+    }
+
+    @Transactional
+    public HoaDonChiTiet addProductToOrder(int orderId, int chiTietSanPhamId, int soLuong, BigDecimal giaSanPham) {
+        HoaDon hoaDon = hoaDonRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hóa đơn với ID: " + orderId));
+
+        if (!"Tạo hóa đơn".equals(hoaDon.getTrangThai())) {
+            throw new IllegalStateException("Chỉ có thể thêm sản phẩm vào hóa đơn ở trạng thái 'Tạo hóa đơn'");
+        }
+
+        ChiTietSanPham chiTietSanPham = chiTietSanPhamRepository.findById(chiTietSanPhamId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy sản phẩm với ID: " + chiTietSanPhamId));
+
+        if (chiTietSanPham.getSoLuongTon() < soLuong) {
+            throw new IllegalArgumentException("Số lượng tồn kho không đủ!");
+        }
 
         HoaDonChiTiet hoaDonChiTiet = new HoaDonChiTiet();
         hoaDonChiTiet.setHoaDon(hoaDon);
         hoaDonChiTiet.setChiTietSanPham(chiTietSanPham);
-        hoaDonChiTiet.setSoLuong(productData.getSoLuong());
-        hoaDonChiTiet.setGiaSanPham(productData.getGiaSanPham());
-        hoaDonChiTiet.setThanhTien(productData.getGiaSanPham().multiply(BigDecimal.valueOf(productData.getSoLuong())));
+        hoaDonChiTiet.setSoLuong(soLuong);
+        hoaDonChiTiet.setGiaSanPham(giaSanPham);
+        hoaDonChiTiet.setThanhTien(giaSanPham.multiply(BigDecimal.valueOf(soLuong)));
         hoaDonChiTiet.setMaHoaDonChiTiet(generateMaHoaDonChiTiet());
 
-        BigDecimal tongTien = hoaDon.getTongTien() != null ? hoaDon.getTongTien() : BigDecimal.ZERO;
-        tongTien = tongTien.add(hoaDonChiTiet.getThanhTien());
-        hoaDon.setTongTien(tongTien);
-        hoaDon.setUpdatedAt(Instant.now());
-        hoaDonRepository.save(hoaDon);
+        chiTietSanPham.setSoLuongTon(chiTietSanPham.getSoLuongTon() - soLuong);
+        chiTietSanPhamRepository.save(chiTietSanPham);
 
         return hoaDonChiTietRepository.save(hoaDonChiTiet);
     }
 
     @Transactional
-    public void removeProductFromOrder(int orderId, int itemId) {
+    public HoaDonChiTiet updateProductQuantity(int orderId, int chiTietId, int soLuong) {
         HoaDon hoaDon = hoaDonRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hóa đơn với ID: " + orderId));
-        HoaDonChiTiet hoaDonChiTiet = hoaDonChiTietRepository.findById(itemId)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy chi tiết hóa đơn với ID: " + itemId));
+
+        if (!"Tạo hóa đơn".equals(hoaDon.getTrangThai())) {
+            throw new IllegalStateException("Chỉ có thể cập nhật số lượng sản phẩm ở trạng thái 'Tạo hóa đơn'");
+        }
+
+        HoaDonChiTiet hoaDonChiTiet = hoaDonChiTietRepository.findById(chiTietId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy chi tiết hóa đơn với ID: " + chiTietId));
+
+        ChiTietSanPham chiTietSanPham = hoaDonChiTiet.getChiTietSanPham();
+        int soLuongCu = hoaDonChiTiet.getSoLuong();
+        int soLuongTonHienTai = chiTietSanPham.getSoLuongTon() + soLuongCu;
+
+        if (soLuongTonHienTai < soLuong) {
+            throw new IllegalArgumentException("Số lượng tồn kho không đủ!");
+        }
+
+        chiTietSanPham.setSoLuongTon(soLuongTonHienTai - soLuong);
+        chiTietSanPhamRepository.save(chiTietSanPham);
+
+        hoaDonChiTiet.setSoLuong(soLuong);
+        hoaDonChiTiet.setThanhTien(hoaDonChiTiet.getGiaSanPham().multiply(BigDecimal.valueOf(soLuong)));
+        return hoaDonChiTietRepository.save(hoaDonChiTiet);
+    }
+
+    @Transactional
+    public void removeProductFromOrder(int orderId, int chiTietId) {
+        HoaDon hoaDon = hoaDonRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hóa đơn với ID: " + orderId));
+
+        if (!"Tạo hóa đơn".equals(hoaDon.getTrangThai())) {
+            throw new IllegalStateException("Chỉ có thể xóa sản phẩm ở trạng thái 'Tạo hóa đơn'");
+        }
+
+        HoaDonChiTiet hoaDonChiTiet = hoaDonChiTietRepository.findById(chiTietId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy chi tiết hóa đơn với ID: " + chiTietId));
 
         ChiTietSanPham chiTietSanPham = hoaDonChiTiet.getChiTietSanPham();
         chiTietSanPham.setSoLuongTon(chiTietSanPham.getSoLuongTon() + hoaDonChiTiet.getSoLuong());
         chiTietSanPhamRepository.save(chiTietSanPham);
 
-        BigDecimal tongTien = hoaDon.getTongTien().subtract(hoaDonChiTiet.getThanhTien());
-        hoaDon.setTongTien(tongTien.compareTo(BigDecimal.ZERO) < 0 ? BigDecimal.ZERO : tongTien);
-        hoaDon.setUpdatedAt(Instant.now());
-        hoaDonRepository.save(hoaDon);
-
         hoaDonChiTietRepository.delete(hoaDonChiTiet);
-    }
-
-    @Transactional
-    public HoaDonChiTiet updateProductQuantity(int orderId, int itemId, HoaDonChiTiet updatedData) {
-        HoaDon hoaDon = hoaDonRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hóa đơn với ID: " + orderId));
-        HoaDonChiTiet hoaDonChiTiet = hoaDonChiTietRepository.findById(itemId)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy chi tiết hóa đơn với ID: " + itemId));
-        ChiTietSanPham chiTietSanPham = chiTietSanPhamRepository.findById(updatedData.getChiTietSanPham().getId())
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy sản phẩm với ID: " + updatedData.getChiTietSanPham().getId()));
-
-        int oldQuantity = hoaDonChiTiet.getSoLuong();
-        int newQuantity = updatedData.getSoLuong();
-        int deltaQuantity = newQuantity - oldQuantity;
-
-        if (deltaQuantity > chiTietSanPham.getSoLuongTon()) {
-            throw new IllegalArgumentException("Số lượng tồn kho không đủ: " + chiTietSanPham.getSoLuongTon());
-        }
-
-        chiTietSanPham.setSoLuongTon(chiTietSanPham.getSoLuongTon() - deltaQuantity);
-        chiTietSanPhamRepository.save(chiTietSanPham);
-
-        hoaDonChiTiet.setSoLuong(newQuantity);
-        BigDecimal giaSanPham = hoaDonChiTiet.getGiaSanPham();
-        BigDecimal thanhTien = giaSanPham.multiply(BigDecimal.valueOf(newQuantity));
-        hoaDonChiTiet.setThanhTien(thanhTien);
-        hoaDonChiTietRepository.save(hoaDonChiTiet);
-
-        BigDecimal oldThanhTien = giaSanPham.multiply(BigDecimal.valueOf(oldQuantity));
-        BigDecimal newThanhTien = thanhTien;
-        BigDecimal tongTien = hoaDon.getTongTien().subtract(oldThanhTien).add(newThanhTien);
-        hoaDon.setTongTien(tongTien.compareTo(BigDecimal.ZERO) < 0 ? BigDecimal.ZERO : tongTien);
-        hoaDon.setUpdatedAt(Instant.now());
-        hoaDonRepository.save(hoaDon);
-
-        return hoaDonChiTiet;
     }
 }

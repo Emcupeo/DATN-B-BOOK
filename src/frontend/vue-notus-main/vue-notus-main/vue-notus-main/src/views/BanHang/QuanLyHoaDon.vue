@@ -242,11 +242,11 @@
               </div>
               <div class="flex justify-center">
                 <div class="flex items-center border rounded-lg">
-                  <button @click="decreaseQuantity(item)" class="px-3 py-1 border-r" :disabled="order.trangThai !== 'Chờ giao hàng' || item.soLuong <= 1">
+                  <button @click="decreaseQuantity(item)" class="px-3 py-1 border-r" :disabled="order.trangThai !== 'Chờ giao hàng'">
                     -
                   </button>
                   <input type="text" v-model.number="item.soLuong" class="w-12 text-center border-none outline-none" :disabled="order.trangThai !== 'Chờ giao hàng'" @input="validateQuantity(item)">
-                  <button @click="increaseQuantity(item)" class="px-3 py-1 border-l" :disabled="order.trangThai !== 'Chờ giao hàng' || item.soLuong >= item.chiTietSanPham.soLuongTon">
+                  <button @click="increaseQuantity(item)" class="px-3 py-1 border-l" :disabled="order.trangThai !== 'Chờ giao hàng'">
                     +
                   </button>
                 </div>
@@ -827,51 +827,41 @@ export default {
       }
     },
 
-    async increaseQuantity(item) {
+    increaseQuantity(item) {
       if (this.order.trangThai !== 'Chờ giao hàng') return;
-      if (item.soLuong >= item.chiTietSanPham.soLuongTon) {
-        alert(`Số lượng không thể vượt quá tồn kho (${item.chiTietSanPham.soLuongTon})!`);
-        return;
-      }
-      const newQuantity = Number(item.soLuong) + 1;
-      await this.updateProductQuantity(item, newQuantity);
+      item.soLuong = Number(item.soLuong) + 1;
+      item.thanhTien = item.soLuong * item.giaSanPham;
+      this.updateProductQuantity(item);
     },
 
-    async decreaseQuantity(item) {
+    decreaseQuantity(item) {
       if (this.order.trangThai !== 'Chờ giao hàng') return;
-      if (item.soLuong <= 1) {
-        alert("Số lượng không thể nhỏ hơn 1!");
-        return;
+      if (item.soLuong > 1) {
+        item.soLuong = Number(item.soLuong) - 1;
+        item.thanhTien = item.soLuong * item.giaSanPham;
+        this.updateProductQuantity(item);
       }
-      const newQuantity = Number(item.soLuong) - 1;
-      await this.updateProductQuantity(item, newQuantity);
     },
 
-    async validateQuantity(item) {
+    validateQuantity(item) {
       if (this.order.trangThai !== 'Chờ giao hàng') return;
       if (!/^\d+$/.test(item.soLuong) || Number(item.soLuong) < 1) {
-        alert("Số lượng phải là số nguyên dương!");
         item.soLuong = 1;
-      } else if (Number(item.soLuong) > item.chiTietSanPham.soLuongTon) {
-        alert(`Số lượng không thể vượt quá tồn kho (${item.chiTietSanPham.soLuongTon})!`);
-        item.soLuong = item.chiTietSanPham.soLuongTon;
       }
-      await this.updateProductQuantity(item, Number(item.soLuong));
+      item.thanhTien = item.soLuong * item.giaSanPham;
+      this.updateProductQuantity(item);
     },
 
-    async updateProductQuantity(item, newQuantity) {
+    async updateProductQuantity(item) {
       try {
         const orderId = this.$route.params.id;
         const updatedData = {
-          soLuong: newQuantity,
-          thanhTien: newQuantity * item.giaSanPham,
-          chiTietSanPhamId: item.chiTietSanPham.id
+          soLuong: item.soLuong,
+          thanhTien: item.thanhTien,
         };
         const response = await HoaDonService.updateProductQuantity(orderId, item.id, updatedData);
         if (response.status === 200) {
           console.log("Cập nhật số lượng sản phẩm thành công:", item);
-          item.soLuong = newQuantity;
-          item.thanhTien = updatedData.thanhTien;
           await this.fetchOrder(); // Làm mới dữ liệu để đồng bộ
         } else {
           console.error("Cập nhật số lượng thất bại:", response.status);
