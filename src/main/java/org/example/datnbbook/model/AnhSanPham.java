@@ -1,5 +1,6 @@
 package org.example.datnbbook.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -54,7 +55,7 @@ public class AnhSanPham {
     }
 
     @ManyToMany(mappedBy = "anhSanPhams")
-    @JsonManagedReference
+    @JsonIgnore
     private List<ChiTietSanPham> chiTietSanPhams = new ArrayList<>();
 
 

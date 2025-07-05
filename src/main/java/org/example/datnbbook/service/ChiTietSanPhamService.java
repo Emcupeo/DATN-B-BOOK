@@ -158,11 +158,13 @@ public class ChiTietSanPhamService {
     }
 
     public List<ChiTietSanPham> getBySanPhamId(Integer idSanPham) {
-        return repository.findByIdSanPham_Id(idSanPham)
+        List<ChiTietSanPham> chiTietSanPhams = repository.findByIdSanPham_Id(idSanPham)
                 .stream()
                 .filter(ctsp -> !ctsp.getDeleted()) // Lọc deleted = false
                 .sorted(Comparator.comparing(ChiTietSanPham::getId, Comparator.reverseOrder())) // Sắp xếp theo id giảm dần
                 .collect(Collectors.toList());
+        
+        return chiTietSanPhams;
     }
 
     public ChiTietSanPham create(ChiTietSanPham newData) {

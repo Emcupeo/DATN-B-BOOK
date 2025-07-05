@@ -21,12 +21,7 @@
         ]"
       >
       
-      <!-- Discount Badge -->
-      <div class="absolute top-3 left-3">
-        <span class="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg">
-          -{{ Math.round((1 - book.price / book.originalPrice) * 100) }}%
-        </span>
-      </div>
+
 
       <!-- Quick Actions Overlay -->
       <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
@@ -118,16 +113,7 @@
           </p>
         </div>
         
-        <!-- Rating -->
-        <div class="flex items-center mb-3">
-          <div class="flex text-yellow-400 mr-2">
-            <span v-for="star in ratingStars" :key="star.index" class="text-sm">
-              {{ star.filled ? '★' : '☆' }}
-            </span>
-          </div>
-          <span class="text-sm text-gray-500">({{ book.rating }})</span>
-          <span class="text-xs text-gray-400 ml-2">• {{ book.reviewCount || '0' }} đánh giá</span>
-        </div>
+
       </div>
 
       <div>
@@ -137,12 +123,6 @@
             <span class="text-xl font-bold text-red-600">
               {{ formatPrice(book.price) }}
             </span>
-            <span class="text-sm text-gray-500 line-through ml-2">
-              {{ formatPrice(book.originalPrice) }}
-            </span>
-          </div>
-          <div class="text-xs text-gray-400">
-            Tiết kiệm {{ formatPrice(book.originalPrice - book.price) }}
           </div>
         </div>
         
@@ -183,7 +163,7 @@
 </template>
 
 <script>
-import { useShopStore } from '../store'
+import { useRealDataStore } from '../store/realDataStore'
 import { useWishlist } from '../store/wishlist'
 import { computed } from 'vue'
 
@@ -201,7 +181,7 @@ export default {
     }
   },
   setup(props) {
-    const store = useShopStore()
+    const store = useRealDataStore()
     const wishlist = useWishlist()
 
     const isInWishlist = computed(() => wishlist.isIn(props.book.id))
@@ -232,24 +212,11 @@ export default {
       console.log('Quick view:', props.book.title)
     }
 
-    const ratingStars = computed(() => {
-      const stars = []
-      const rating = Math.floor(props.book.rating)
-      for (let i = 1; i <= 5; i++) {
-        stars.push({
-          index: i,
-          filled: i <= rating
-        })
-      }
-      return stars
-    })
-
     return {
       formatPrice,
       addToCart,
       toggleWishlist,
       quickView,
-      ratingStars,
       isInWishlist
     }
   }

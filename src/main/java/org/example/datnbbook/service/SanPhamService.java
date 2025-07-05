@@ -4,6 +4,7 @@ import org.example.datnbbook.dto.SanPhamDTO;
 import org.example.datnbbook.dto.SanPhamRequest;
 import org.example.datnbbook.model.ChatLieu;
 import org.example.datnbbook.model.ChiTietSanPham;
+import org.example.datnbbook.model.DanhMuc;
 import org.example.datnbbook.model.LoaiBia;
 import org.example.datnbbook.model.NgonNgu;
 import org.example.datnbbook.model.NguoiDich;
@@ -13,6 +14,7 @@ import org.example.datnbbook.model.TacGia;
 import org.example.datnbbook.model.TheLoai;
 import org.example.datnbbook.repository.ChatLieuRepository;
 import org.example.datnbbook.repository.ChiTietSanPhamRepository;
+import org.example.datnbbook.repository.DanhMucRepository;
 import org.example.datnbbook.repository.LoaiBiaRepository;
 import org.example.datnbbook.repository.NgonNguRepository;
 import org.example.datnbbook.repository.NguoiDichRepository;
@@ -53,6 +55,8 @@ public class SanPhamService {
     private TheLoaiRepository theLoaiRepository;
     @Autowired
     private NgonNguRepository ngonNguRepository;
+    @Autowired
+    private DanhMucRepository danhMucRepository;
 
     public List<SanPham> getAll() {
         List<SanPham> sanPhams = sanPhamRepository.findAll().stream()
@@ -97,7 +101,17 @@ public class SanPhamService {
                 .filter(sp -> !sp.getDeleted())
                 .orElseThrow(() -> new RuntimeException("Sản phẩm không tồn tại với id: " + id));
 
-        BeanUtils.copyProperties(sanPhamDTO, sanPham, "maSanPham", "id", "deleted");
+        BeanUtils.copyProperties(sanPhamDTO, sanPham, "maSanPham", "id", "deleted", "danhMuc");
+        
+        // Xử lý danh mục
+        if (sanPhamDTO.getIdDanhMuc() != null) {
+            DanhMuc danhMuc = danhMucRepository.findById(sanPhamDTO.getIdDanhMuc())
+                    .orElseThrow(() -> new RuntimeException("Danh mục không tồn tại với id: " + sanPhamDTO.getIdDanhMuc()));
+            sanPham.setDanhMuc(danhMuc);
+        } else {
+            sanPham.setDanhMuc(null);
+        }
+        
         sanPham = sanPhamRepository.save(sanPham);
         return convertToDTO(sanPham);
     }
@@ -114,9 +128,35 @@ public class SanPhamService {
         return sanPhamRepository.search(keyword);
     }
 
+    public List<SanPham> getByDanhMucId(Integer danhMucId) {
+        List<SanPham> sanPhams = sanPhamRepository.findByDanhMuc_Id(danhMucId).stream()
+                .filter(sp -> !sp.getDeleted())
+                .sorted(Comparator.comparing(SanPham::getId, Comparator.reverseOrder()))
+                .collect(Collectors.toList());
+
+        // Tính tổng số lượng tồn cho mỗi sản phẩm
+        for (SanPham sanPham : sanPhams) {
+            int tongSoLuongTon = chiTietSanPhamRepository.findByIdSanPham_Id(sanPham.getId())
+                    .stream()
+                    .filter(ctsp -> !ctsp.getDeleted())
+                    .mapToInt(ChiTietSanPham::getSoLuongTon)
+                    .sum();
+            sanPham.setTongSoLuongTon(tongSoLuongTon);
+        }
+
+        return sanPhams;
+    }
+
     private SanPhamDTO convertToDTO(SanPham sanPham) {
         SanPhamDTO sanPhamDTO = new SanPhamDTO();
         BeanUtils.copyProperties(sanPham, sanPhamDTO);
+        
+        // Thêm thông tin danh mục
+        if (sanPham.getDanhMuc() != null) {
+            sanPhamDTO.setIdDanhMuc(sanPham.getDanhMuc().getId());
+            sanPhamDTO.setTenDanhMuc(sanPham.getDanhMuc().getTenDanhMuc());
+        }
+        
         return sanPhamDTO;
     }
 
@@ -128,6 +168,13 @@ public class SanPhamService {
         sanPham.setTenSanPham(request.getTenSanPham());
         sanPham.setMoTa(request.getMoTaSanPham());
         sanPham.setDeleted(false);
+        
+        // Xử lý danh mục
+        if (request.getIdDanhMuc() != null) {
+            DanhMuc danhMuc = danhMucRepository.findById(request.getIdDanhMuc())
+                    .orElseThrow(() -> new RuntimeException("Danh mục không tồn tại với id: " + request.getIdDanhMuc()));
+            sanPham.setDanhMuc(danhMuc);
+        }
         SanPham savedSanPham = sanPhamRepository.save(sanPham);
 
         // Tạo và lưu danh sách ChiTietSanPham

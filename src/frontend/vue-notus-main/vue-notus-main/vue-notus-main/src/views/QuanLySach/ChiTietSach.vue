@@ -159,10 +159,10 @@
 
       <!-- Nội dung bảng -->
       <div v-else class="relative overflow-x-auto sm:rounded-lg w-full h-[calc(130vh-250px)]">
-        <table class="w-full text-sm text-center text-gray-500">
+        <table class="w-full text-sm text-center text-gray-500 sticky-table">
           <thead class="text-xs text-gray-700 uppercase bg-gray-50">
           <tr>
-            <th scope="col" class="px-6 py-3">STT</th>
+            <th scope="col" class="px-6 py-3 sticky-col-1">STT</th>
             <th scope="col" class="px-6 py-3">Ảnh</th>
             <th scope="col" class="px-6 py-3">Mã chi tiết sản phẩm</th>
             <th scope="col" class="px-6 py-3">Tên sách</th>
@@ -178,12 +178,12 @@
             <th scope="col" class="px-6 py-3">Người dịch</th>
             <th scope="col" class="px-6 py-3">Thể loại</th>
             <th scope="col" class="px-6 py-3">Ngôn ngữ</th>
-            <th scope="col" class="px-6 py-3">Hành động</th>
+            <th scope="col" class="px-6 py-3 sticky-col-action">Hành động</th>
           </tr>
           </thead>
           <tbody>
           <tr class="bg-white border-b hover:bg-gray-50" v-for="(chiTiet, index) in paginatedChiTietSanPham" :key="chiTiet.id">
-            <td class="px-6 py-4">{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
+            <td class="px-6 py-4 sticky-col-1">{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
             <td class="px-6 py-4">
               <div class="relative w-20 h-20 mx-auto">
                 <div v-if="chiTiet.images && chiTiet.images.length > 0" class="image-container">
@@ -219,7 +219,7 @@
             <td class="px-6 py-4">{{ chiTiet.idNguoiDich?.tenNguoiDich || 'N/A' }}</td>
             <td class="px-6 py-4">{{ chiTiet.idTheLoai?.tenTheLoai || 'N/A' }}</td>
             <td class="px-6 py-4">{{ chiTiet.idNgonNgu?.tenNgonNgu || 'N/A' }}</td>
-            <td class="px-6 py-4 align-middle">
+            <td class="px-6 py-4 align-middle sticky-col-action">
               <div class="flex items-center justify-center space-x-3 h-full">
                 <a href="#" @click="openEditModal(chiTiet)" class="text-blue-600 hover:text-blue-800">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
@@ -1204,5 +1204,52 @@ th {
   opacity: 0;
   transition: opacity 0.5s ease-in-out;
   z-index: 0;
+}
+
+/* Sticky table styles */
+.sticky-table {
+  position: relative;
+}
+
+.sticky-col-1 {
+  position: sticky;
+  left: 0;
+  background-color: white;
+  z-index: 10;
+  border-right: 2px solid #e5e7eb;
+}
+
+.sticky-col-action {
+  position: sticky;
+  right: 0;
+  background-color: white;
+  z-index: 10;
+  border-left: 2px solid #e5e7eb;
+}
+
+/* Header sticky columns */
+thead .sticky-col-1 {
+  background-color: #f9fafb;
+  z-index: 20;
+}
+
+thead .sticky-col-action {
+  background-color: #f9fafb;
+  z-index: 20;
+}
+
+/* Hover effect for sticky columns */
+tbody tr:hover .sticky-col-1,
+tbody tr:hover .sticky-col-action {
+  background-color: #f3f4f6;
+}
+
+/* Ensure proper layering */
+.sticky-col-1 {
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+}
+
+.sticky-col-action {
+  box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
 }
 </style>

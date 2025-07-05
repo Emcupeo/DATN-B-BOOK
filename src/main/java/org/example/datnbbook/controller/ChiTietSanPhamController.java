@@ -3,6 +3,7 @@ package org.example.datnbbook.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.example.datnbbook.dto.ChiTietSanPhamDTO;
+import org.example.datnbbook.model.AnhSanPham;
 import org.example.datnbbook.model.ChatLieu;
 import org.example.datnbbook.model.ChiTietSanPham;
 import org.example.datnbbook.model.LoaiBia;
@@ -145,6 +146,18 @@ public class ChiTietSanPhamController {
         if (chiTietSanPhams.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
+        
+        // Debug: Log thông tin ảnh
+        for (ChiTietSanPham ctsp : chiTietSanPhams) {
+            System.out.println("ChiTietSanPham ID: " + ctsp.getId());
+            System.out.println("AnhSanPhams size: " + (ctsp.getAnhSanPhams() != null ? ctsp.getAnhSanPhams().size() : "null"));
+            if (ctsp.getAnhSanPhams() != null && !ctsp.getAnhSanPhams().isEmpty()) {
+                for (AnhSanPham anh : ctsp.getAnhSanPhams()) {
+                    System.out.println("  Anh ID: " + anh.getId() + ", URL: " + anh.getUrl());
+                }
+            }
+        }
+        
         return ResponseEntity.ok(chiTietSanPhams);
     }
 

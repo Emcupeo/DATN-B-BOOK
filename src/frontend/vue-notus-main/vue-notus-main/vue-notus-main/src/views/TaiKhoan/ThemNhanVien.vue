@@ -379,6 +379,4 @@ export default {
   background-color: #eee; 
 }
 
-/* vue-qrcode-reader might inject its own video styles, 
-   this is just a container style */
 </style> 

@@ -18,15 +18,13 @@
         <form @submit.prevent="handleSubmit" class="px-4 py-3">
             <div class="mb-4">
                 <label class="block mb-1 font-semibold">Ảnh bìa:</label>
-                <div class="border-dashed border-2 border-gray-300 rounded px-3 py-10 text-center cursor-pointer relative"
-                    @dragover.prevent @drop.prevent="handleFileDrop" @click="triggerFileInput">
-                    <p v-if="!book.cover">Kéo thả file hoặc click để chọn file</p>
-                    <div v-else class="relative w-fit mx-auto">
-                        <img :src="book.coverPreview" class="h-24 w-auto" alt="Ảnh bìa" />
-                        <span class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full px-2 py-0.5 cursor-pointer" @click="removeCover">❌</span>
-                    </div>
+                <ImageKitUpload 
+                    @upload-complete="handleImageUpload"
+                    :maxFiles="1"
+                />
+                <div v-if="book.coverUrl" class="mt-2">
+                    <img :src="book.coverUrl" class="h-24 w-auto rounded" alt="Ảnh bìa" />
                 </div>
-                <input ref="fileInput" type="file" class="hidden" @change="handleFileChange" />
             </div>
             <div class="mb-4">
                 <label for="title" class="block mb-1 font-semibold">Tên sách:</label>
@@ -66,13 +64,14 @@
             </div>
             <div class="mb-4">
                 <label for="categorySelect" class="block mb-1 font-semibold">Danh mục:</label>
-                <select v-model="book.category" id="categorySelect" class="w-full border rounded px-3 py-2">
+                <select v-model="book.category" id="categorySelect" class="w-full border rounded px-3 py-2" :disabled="loading">
                     <option value="">Chọn danh mục</option>
-                    <option value="Công nghệ">Công nghệ</option>
-                    <option value="Văn học">Văn học</option>
-                    <option value="Kinh doanh">Kinh doanh</option>
-                    <option value="Giáo dục">Giáo dục</option>
+                    <option v-for="danhMuc in danhMucList" :key="danhMuc.id" :value="danhMuc.id">
+                        {{ danhMuc.tenDanhMuc }}
+                    </option>
                 </select>
+                <div v-if="loading" class="text-sm text-gray-500 mt-1">Đang tải danh mục...</div>
+                <div v-if="error" class="text-sm text-red-500 mt-1">{{ error }}</div>
             </div>
             <div class="mb-4">
                 <label class="block mb-1 font-semibold">Thuộc tính:</label>
@@ -107,8 +106,14 @@
 
 
 <script>
+import ImageKitUpload from '../../components/ImageKitUpload.vue'
+import DanhMucService from '@/service/DanhMucService'
+
 export default {
     name: "ThemSach",
+    components: {
+        ImageKitUpload
+    },
     props: {
         color: {
             type: String,
@@ -119,41 +124,41 @@ export default {
     data() {
         return {
             book: {
-                cover: null,
-                coverPreview: null,
+                coverUrl: null,
                 title: "",
                 description: "",
                 price: null,
                 oldPrice: null,
                 status: "Còn hàng",
                 quantity: 0,
-                category: "",
+                category: null,
                 attributes: [],
             },
+            danhMucList: [],
+            loading: false,
+            error: null,
         };
     },
+    async created() {
+        await this.loadDanhMucList();
+    },
     methods: {
-        triggerFileInput() {
-            this.$refs.fileInput.click();
-        },
-        handleFileChange(event) {
-            const file = event.target.files[0];
-            if (file) {
-                this.book.cover = file;
-                this.book.coverPreview = URL.createObjectURL(file);
+        async loadDanhMucList() {
+            try {
+                this.loading = true;
+                this.danhMucList = await DanhMucService.getAll();
+                console.log('[DEBUG] Loaded danh muc list:', this.danhMucList);
+            } catch (error) {
+                console.error('[ERROR] Error loading danh muc list:', error);
+                this.error = 'Có lỗi xảy ra khi tải danh mục';
+            } finally {
+                this.loading = false;
             }
         },
-        handleFileDrop(event) {
-            const file = event.dataTransfer.files[0];
-            if (file) {
-                this.book.cover = file;
-                this.book.coverPreview = URL.createObjectURL(file);
+        handleImageUpload(uploadedImages) {
+            if (uploadedImages.length > 0) {
+                this.book.coverUrl = uploadedImages[0].url;
             }
-        },
-
-        removeCover() {
-            this.book.cover = null;
-            this.book.coverPreview = null;
         },
         handleSubmit() {
             console.log("Thêm sách:", this.book);

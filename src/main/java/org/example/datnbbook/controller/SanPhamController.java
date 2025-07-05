@@ -89,10 +89,19 @@ public class SanPhamController {
         return ResponseEntity.ok(sanPhams);
     }
 
+    @GetMapping("/by-category")
+    public ResponseEntity<List<SanPham>> getByCategory(@RequestParam Integer danhMucId) {
+        logger.info("[INFO] Fetching SanPham by category id: {}", danhMucId);
+        List<SanPham> sanPhams = sanPhamService.getByDanhMucId(danhMucId);
+        logger.debug("[DEBUG] Found {} SanPham records for category: {}", sanPhams.size(), danhMucId);
+        return ResponseEntity.ok(sanPhams);
+    }
+
     @PostMapping(value = "/create-with-details", consumes = "multipart/form-data")
     public ResponseEntity<SanPham> createWithDetails(
             @RequestParam("tenSanPham") String tenSanPham,
             @RequestParam(value = "moTaSanPham", required = false) String moTaSanPham,
+            @RequestParam(value = "idDanhMuc", required = false) Integer idDanhMuc,
             @RequestParam(value = "idTacGia", required = false) Integer idTacGia,
             @RequestParam(value = "idNhaXuatBan", required = false) Integer idNhaXuatBan,
             @RequestParam(value = "idNguoiDich", required = false) Integer idNguoiDich,
@@ -102,14 +111,15 @@ public class SanPhamController {
             @RequestParam("chiTietSanPhamList") String chiTietSanPhamListJson
     ) throws Exception {
         logger.info("[INFO] Creating SanPham with details: tenSanPham={}", tenSanPham);
-        logger.debug("[DEBUG] Request parameters: moTaSanPham={}, idTacGia={}, idNhaXuatBan={}, idNguoiDich={}, idTheLoai={}, idNgonNgu={}, moTaChiTiet={}",
-                moTaSanPham, idTacGia, idNhaXuatBan, idNguoiDich, idTheLoai, idNgonNgu, moTaChiTiet);
+        logger.debug("[DEBUG] Request parameters: moTaSanPham={}, idDanhMuc={}, idTacGia={}, idNhaXuatBan={}, idNguoiDich={}, idTheLoai={}, idNgonNgu={}, moTaChiTiet={}",
+                moTaSanPham, idDanhMuc, idTacGia, idNhaXuatBan, idNguoiDich, idTheLoai, idNgonNgu, moTaChiTiet);
 
         try {
             // Tạo SanPhamRequest
             SanPhamRequest requestSP = new SanPhamRequest();
             requestSP.setTenSanPham(tenSanPham);
             requestSP.setMoTaSanPham(moTaSanPham);
+            requestSP.setIdDanhMuc(idDanhMuc);
             requestSP.setIdTacGia(idTacGia);
             requestSP.setIdNhaXuatBan(idNhaXuatBan);
             requestSP.setIdNguoiDich(idNguoiDich);
@@ -166,6 +176,63 @@ public class SanPhamController {
             return ResponseEntity.ok(createdSanPham);
         } catch (Exception e) {
             logger.error("[ERROR] Error creating SanPham with details: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    @PostMapping(value = "/create-with-imagekit", consumes = "application/json")
+    public ResponseEntity<SanPham> createWithImageKit(@RequestBody SanPhamRequest request) throws Exception {
+        logger.info("[INFO] Creating SanPham with ImageKit: tenSanPham={}", request.getTenSanPham());
+        
+        try {
+            // Tạo SanPham
+            SanPham createdSanPham = sanPhamService.createWithDetails(request);
+            logger.info("[INFO] Created SanPham with id: {}", createdSanPham.getId());
+
+            // Xử lý ảnh từ ImageKit URLs
+            for (SanPhamRequest.ChiTietSanPhamDTO dto : request.getChiTietSanPhamList()) {
+                Integer idLoaiBia = dto.getIdLoaiBia();
+                logger.debug("[DEBUG] Processing chiTietSanPham with idLoaiBia: {}", idLoaiBia);
+
+                // Tìm tất cả chiTietSanPham theo idSanPham và idLoaiBia
+                List<ChiTietSanPham> chiTietListForLoaiBia = chiTietSanPhamRepository.findAllByIdSanPhamIdAndIdLoaiBiaId(
+                        createdSanPham.getId(), idLoaiBia
+                );
+                if (chiTietListForLoaiBia.isEmpty()) {
+                    logger.error("[ERROR] No ChiTietSanPham found for idSanPham: {} and idLoaiBia: {}", createdSanPham.getId(), idLoaiBia);
+                    throw new RuntimeException("No ChiTietSanPham found for idSanPham: " + createdSanPham.getId() + " and idLoaiBia: " + idLoaiBia);
+                }
+                logger.debug("[DEBUG] Found {} chiTietSanPham for idLoaiBia: {}", chiTietListForLoaiBia.size(), idLoaiBia);
+
+                // Xử lý ImageKit URLs
+                List<String> imageUrls = dto.getImageUrls();
+                if (imageUrls != null && !imageUrls.isEmpty()) {
+                    if (imageUrls.size() > 3) {
+                        logger.error("[ERROR] Maximum 3 images allowed per ChiTietSanPham, received: {}", imageUrls.size());
+                        throw new RuntimeException("Maximum 3 images allowed per ChiTietSanPham");
+                    }
+                    
+                    for (ChiTietSanPham chiTiet : chiTietListForLoaiBia) {
+                        for (String imageUrl : imageUrls) {
+                            // Tạo AnhSanPham với URL từ ImageKit
+                            AnhSanPham anhSanPham = new AnhSanPham();
+                            anhSanPham.setUrl(imageUrl);
+                            AnhSanPham savedAnh = anhSanPhamService.save(anhSanPham);
+                            
+                            // Liên kết ảnh với chi tiết sản phẩm
+                            chiTietSanPhamService.linkImageToChiTietSanPham(chiTiet.getId(), savedAnh.getId());
+                            logger.debug("[DEBUG] Linked ImageKit imageUrl: {} to chiTietSanPhamId: {}", imageUrl, chiTiet.getId());
+                        }
+                    }
+                } else {
+                    logger.debug("[DEBUG] No imageUrls provided for idLoaiBia: {}", idLoaiBia);
+                }
+            }
+
+            logger.info("[INFO] Successfully created SanPham and linked ImageKit images");
+            return ResponseEntity.ok(createdSanPham);
+        } catch (Exception e) {
+            logger.error("[ERROR] Error creating SanPham with ImageKit: {}", e.getMessage(), e);
             throw e;
         }
     }

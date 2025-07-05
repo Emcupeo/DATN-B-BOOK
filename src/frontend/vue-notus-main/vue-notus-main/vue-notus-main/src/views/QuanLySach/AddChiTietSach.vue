@@ -191,6 +191,31 @@
           </div>
         </div>
 
+        <!-- Danh mục -->
+        <div class="mt-6">
+          <label class="block text-sm font-medium text-gray-700">Danh mục</label>
+          <div class="flex items-center mt-1">
+            <select
+                v-model="formData.idDanhMuc"
+                class="block w-full h-[40px] p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500"
+                :disabled="loading"
+            >
+              <option value="">Chọn danh mục</option>
+              <option v-for="item in danhMucList" :key="item.id" :value="item.id">
+                {{ item.tenDanhMuc }}
+              </option>
+            </select>
+            <button
+                type="button"
+                @click="openAddModal('danhMuc')"
+                class="ml-2 text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 shadow-lg shadow-blue-500/50 font-medium rounded-lg text-sm px-3 py-2"
+            >
+              +
+            </button>
+          </div>
+          <div v-if="loading" class="text-sm text-gray-500 mt-1">Đang tải danh mục...</div>
+        </div>
+
         <!-- Mô tả sách -->
         <div class="mt-6">
           <label class="block text-sm font-medium text-gray-700">Mô tả sách</label>
@@ -259,7 +284,7 @@
                         type="button"
                         @click="$refs.imageInput.click()"
                         class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 shadow-lg shadow-blue-500/50 font-medium rounded-lg text-sm px-3 py-2"
-                        :disabled="imageModalImages.length >= 3"
+                        :disabled="selectedImages.length >= 3"
                     >
                       Thêm ảnh
                     </button>
@@ -269,13 +294,13 @@
                         accept="image/*"
                         multiple
                         style="display: none"
-                        :disabled="imageModalImages.length >= 3"
-                        @change="handleImageUpload($event)"
+                        :disabled="selectedImages.length >= 3"
+                        @change="handleFileSelect"
                     />
                     <div class="flex space-x-2 overflow-x-auto max-w-[300px]">
-                      <div v-for="(image, index) in imageModalImages" :key="index" class="relative">
+                      <div v-for="(image, index) in selectedImages" :key="index" class="relative">
                         <img
-                            :src="image.url"
+                            :src="image.preview"
                             class="w-24 h-24 object-cover rounded"
                             alt="Preview"
                         />
@@ -288,7 +313,7 @@
                       </div>
                     </div>
                   </div>
-                  <div v-if="imageModalImages.length >= 3" class="text-xs text-red-500 mt-1">Chỉ được tải lên tối đa 3 ảnh!</div>
+                  <div v-if="selectedImages.length >= 3" class="text-xs text-red-500 mt-1">Chỉ được tải lên tối đa 3 ảnh!</div>
                 </td>
               </tr>
               </tbody>
@@ -362,6 +387,9 @@ import ChatLieuService from "@/service/ChatLieuService";
 import NguoiDichService from "@/service/NguoiDichService";
 import TheLoaiService from "@/service/TheLoaiService";
 import NgonNguService from "@/service/NgonNguService";
+import DanhMucService from "@/service/DanhMucService";
+
+import ImageKitService from "@/service/ImageKitService";
 import api from "@/service/api";
 
 export default {
@@ -378,6 +406,7 @@ export default {
         idNgonNgu: null,
         idLoaiBia: null,
         idChatLieu: null,
+        idDanhMuc: null,
       },
       chiTietSanPham: {
         tenChiTietSanPham: "",
@@ -393,6 +422,7 @@ export default {
       nguoiDichList: [],
       theLoaiList: [],
       ngonNguList: [],
+      danhMucList: [],
       sanPhamList: [],
       showSanPhamList: false,
       loading: false,
@@ -400,8 +430,8 @@ export default {
       showAddModal: false,
       addModalType: "",
       newItemName: "",
-      imageModalImages: [],
-      newImages: [], // Store File objects temporarily
+      selectedImages: [],
+
     };
   },
   computed: {
@@ -414,7 +444,8 @@ export default {
           this.formData.idTheLoai &&
           this.formData.idNgonNgu &&
           this.formData.idLoaiBia &&
-          this.formData.idChatLieu
+          this.formData.idChatLieu &&
+          this.formData.idDanhMuc
       );
     },
   },
@@ -442,6 +473,7 @@ export default {
         this.nguoiDichList = await NguoiDichService.getAll();
         this.theLoaiList = await TheLoaiService.getAll();
         this.ngonNguList = await NgonNguService.getAll();
+        this.danhMucList = await DanhMucService.getAll();
         this.sanPhamList = await api.get("/san-pham").then((res) => res.data);
 
         console.log("[DEBUG] Loaded data:", {
@@ -452,6 +484,7 @@ export default {
           nguoiDichList: this.nguoiDichList.length,
           theLoaiList: this.theLoaiList.length,
           ngonNguList: this.ngonNguList.length,
+          danhMucList: this.danhMucList.length,
           sanPhamList: this.sanPhamList.length,
         });
 
@@ -469,6 +502,8 @@ export default {
           this.formData.idLoaiBia = this.loaiBiaList[0].id;
         if (this.chatLieuList.length > 0)
           this.formData.idChatLieu = this.chatLieuList[0].id;
+        if (this.danhMucList.length > 0)
+          this.formData.idDanhMuc = this.danhMucList[0].id;
       } catch (error) {
         console.error("[ERROR] Error loading initial data:", error);
         this.error = "Có lỗi xảy ra khi tải dữ liệu";
@@ -571,6 +606,11 @@ export default {
             this.chatLieuList.push(newItem);
             this.formData.idChatLieu = newItem.id;
             break;
+          case "danhMuc":
+            newItem = await DanhMucService.create({ tenDanhMuc: this.newItemName });
+            this.danhMucList.push(newItem);
+            this.formData.idDanhMuc = newItem.id;
+            break;
         }
         console.log("[DEBUG] Saved new item:", newItem);
         this.closeAddModal();
@@ -580,26 +620,30 @@ export default {
         alert("Có lỗi xảy ra khi thêm!");
       }
     },
-    async handleImageUpload(event) {
-      // Khi chọn ảnh, chỉ lưu tạm file vào mảng newImages, không upload lên server
+    handleFileSelect(event) {
+      console.log("[INFO] Handling file selection");
       const files = event.target.files;
-      if (files.length > 3 - this.imageModalImages.length) {
-        alert("Chỉ được tải lên tối đa 3 ảnh!");
-        return;
+      if (files) {
+        Array.from(files).forEach(file => {
+          if (this.selectedImages.length < 3) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              this.selectedImages.push({
+                file: file,
+                preview: e.target.result,
+                name: file.name
+              });
+            };
+            reader.readAsDataURL(file);
+          }
+        });
       }
-      for (let file of files) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          this.imageModalImages.push({ url: e.target.result, file });
-          this.newImages.push(file);
-        };
-        reader.readAsDataURL(file);
-      }
+      // Reset input để có thể chọn lại file đã chọn
+      event.target.value = '';
     },
     removeImage(index) {
       console.log("[INFO] Removing image at index:", index);
-      this.imageModalImages.splice(index, 1);
-      this.newImages.splice(index, 1);
+      this.selectedImages.splice(index, 1);
     },
     async saveSanPhamAndChiTiet() {
       console.log("[INFO] Saving SanPham and ChiTietSanPham");
@@ -609,21 +653,28 @@ export default {
       }
       try {
         this.loading = true;
-        const imageIds = [];
-        for (let image of this.imageModalImages) {
-          if (image.file) {
-            const formData = new FormData();
-            formData.append("file", image.file);
-            // Nếu cần gửi idLoaiBia, thêm vào formData
-            formData.append("idLoaiBia", this.formData.idLoaiBia);
-            const response = await api.post("/anh-san-pham/upload", formData, {
-              headers: {"Content-Type": "multipart/form-data"},
-            });
-            imageIds.push(response.data.id);
-          } else if (image.id) {
-            imageIds.push(image.id);
+        
+        console.log('[DEBUG] AddChiTietSach - Selected images:', this.selectedImages);
+        
+        // Upload ảnh lên ImageKit
+        const imageUrls = [];
+        if (this.selectedImages.length > 0) {
+          console.log('[DEBUG] AddChiTietSach - Uploading images to ImageKit...');
+          for (let image of this.selectedImages) {
+            try {
+              const result = await ImageKitService.uploadImage(image.file, image.name);
+              if (result.success) {
+                imageUrls.push(result.url);
+                console.log('[DEBUG] AddChiTietSach - Uploaded image:', result.url);
+              } else {
+                console.error('[ERROR] AddChiTietSach - Upload failed:', result.error);
+              }
+            } catch (error) {
+              console.error('[ERROR] AddChiTietSach - Upload error:', error);
+            }
           }
         }
+        console.log('[DEBUG] AddChiTietSach - Final imageUrls:', imageUrls);
         const chiTietSanPhamDTO = {
           tenChiTietSanPham: this.chiTietSanPham.tenChiTietSanPham,
           idLoaiBia: this.formData.idLoaiBia,
@@ -632,22 +683,25 @@ export default {
           soLuongTon: this.chiTietSanPham.soLuongTon,
           trongLuong: this.chiTietSanPham.trongLuong,
           kichThuoc: this.chiTietSanPham.kichThuoc,
-          imageIds: imageIds,
+          imageUrls: imageUrls,
         };
-        // Thay vì gửi sanPhamRequest với Content-Type: application/json
-        // Tạo FormData để gửi multipart/form-data
-        const formData = new FormData();
-        formData.append('tenSanPham', this.formData.tenSanPham);
-        formData.append('moTaSanPham', this.formData.moTaSanPham || '');
-        formData.append('idTacGia', this.formData.idTacGia);
-        formData.append('idNhaXuatBan', this.formData.idNhaXuatBan);
-        formData.append('idNguoiDich', this.formData.idNguoiDich);
-        formData.append('idTheLoai', this.formData.idTheLoai);
-        formData.append('idNgonNgu', this.formData.idNgonNgu);
-        formData.append('moTaChiTiet', this.chiTietSanPham.moTa || '');
-        formData.append('chiTietSanPhamList', JSON.stringify([chiTietSanPhamDTO]));
-        await api.post('/san-pham/create-with-details', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
+        // Tạo request object cho ImageKit
+        const sanPhamRequest = {
+          tenSanPham: this.formData.tenSanPham,
+          moTaSanPham: this.formData.moTaSanPham || '',
+          idTacGia: this.formData.idTacGia,
+          idNhaXuatBan: this.formData.idNhaXuatBan,
+          idNguoiDich: this.formData.idNguoiDich,
+          idTheLoai: this.formData.idTheLoai,
+          idNgonNgu: this.formData.idNgonNgu,
+          idDanhMuc: this.formData.idDanhMuc,
+          moTaChiTiet: this.chiTietSanPham.moTa || '',
+          chiTietSanPhamList: [chiTietSanPhamDTO]
+        };
+        console.log("[DEBUG] Sending request with imageUrls:", imageUrls);
+        console.log("[DEBUG] Full request:", sanPhamRequest);
+        await api.post('/san-pham/create-with-imagekit', sanPhamRequest, {
+          headers: { 'Content-Type': 'application/json' },
         });
         console.log("[INFO] Successfully saved SanPham and ChiTietSanPham");
         alert("Thêm sách và chi tiết thành công!");

@@ -9,4 +9,6 @@ public class SanPhamDTO {
     private String tenSanPham;
     private String moTa;
     private Boolean deleted;
+    private Integer idDanhMuc;
+    private String tenDanhMuc;
 } 

@@ -10,6 +10,7 @@ import java.util.List;
 public class SanPhamRequest {
     private String tenSanPham;
     private String moTaSanPham;
+    private Integer idDanhMuc;
     private Integer idTacGia;
     private Integer idNhaXuatBan;
     private Integer idNguoiDich;
@@ -29,5 +30,6 @@ public class SanPhamRequest {
         private Double trongLuong;
         private Double kichThuoc;
         private List<Integer> imageIds;
+        private List<String> imageUrls;
     }
 }

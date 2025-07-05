@@ -50,6 +50,7 @@ import NguoiDich from "@/views/QuanLySach/ThuocTinh/NguoiDich.vue";
 import NhaXuatBan from "@/views/QuanLySach/ThuocTinh/NhaXuatBan.vue";
 import TacGia from "@/views/QuanLySach/ThuocTinh/TacGia.vue";
 import TheLoai from "@/views/QuanLySach/ThuocTinh/TheLoai.vue";
+import DanhMucSach from "@/views/QuanLySach/DanhMucSach.vue";
 //
 import NhanVien from "@/views/TaiKhoan/NhanVien.vue";
 import KhachHang from "@/views/TaiKhoan/KhachHang.vue";
@@ -63,6 +64,8 @@ import KhachHangForm from "@/views/TaiKhoan/KhachHangForm.vue";
 import BoSach from "@/views/QuanLySach/BoSach.vue";
 import AddBoSach from "@/views/QuanLySach/AddBoSach.vue";
 import ChiTietBoSach from "@/views/QuanLySach/ChiTietBoSach.vue";
+import ThemNhanVien from "@/views/TaiKhoan/ThemNhanVien.vue";
+import SuaNhanVien from "@/views/TaiKhoan/SuaNhanVien.vue";
 
 const routes = [
   {
@@ -176,6 +179,11 @@ const routes = [
         path: "/admin/thuoc-tinh/the-loai",
         component: TheLoai,
       },
+      {
+        path: "/admin/danh-muc",
+        name: "DanhMuc",
+        component: DanhMucSach,
+      },
       //
       {
         path: "/admin/phieu-giam-gia",
@@ -200,6 +208,14 @@ const routes = [
       {
         path: "/admin/nhan-vien",
         component: NhanVien,
+      },
+      {
+        path: "/admin/nhan-vien/chinh-sua/:id",
+        component: SuaNhanVien,
+      },
+      {
+        path: "/admin/nhan-vien/them-moi",
+        component: ThemNhanVien,
       },
 
       {

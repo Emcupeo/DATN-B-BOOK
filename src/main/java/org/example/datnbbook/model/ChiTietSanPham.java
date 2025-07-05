@@ -125,13 +125,12 @@ public class ChiTietSanPham {
     public ChiTietSanPham(Integer chiTietSanPhamId) {
     }
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "chi_tiet_san_pham_anh",
             joinColumns = @JoinColumn(name = "chi_tiet_san_pham_id"),
             inverseJoinColumns = @JoinColumn(name = "anh_id")
     )
-    @JsonIgnore
     private List<AnhSanPham> anhSanPhams = new ArrayList<>();
 
 //    @OneToMany(mappedBy = "chiTietSanPham")

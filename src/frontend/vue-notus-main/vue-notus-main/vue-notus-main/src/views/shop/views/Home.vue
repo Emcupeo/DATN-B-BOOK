@@ -34,7 +34,7 @@
                 <div class="text-sm opacity-80">Khách hàng</div>
               </div>
               <div class="text-center">
-                <div class="text-3xl font-bold">10K+</div>
+                <div class="text-3xl font-bold">{{ products.length }}+</div>
                 <div class="text-sm opacity-80">Sách hay</div>
               </div>
               <div class="text-center">
@@ -74,19 +74,33 @@
         
         <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
           <button
-            v-for="category in categories"
-            :key="category"
-            @click="selectedCategory = category"
+            @click="selectedCategory = null"
             :class="[
               'group p-6 rounded-2xl transition-all duration-300 transform hover:-translate-y-2',
-              selectedCategory === category
+              selectedCategory === null
                 ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-xl'
                 : 'bg-white text-gray-700 hover:shadow-lg border border-gray-200'
             ]"
           >
-            <div class="text-3xl mb-3">{{ getCategoryIcon(category) }}</div>
-            <div class="font-semibold text-sm">{{ category }}</div>
-            <div class="text-xs opacity-70 mt-1">{{ getCategoryCount(category) }} sách</div>
+            <div class="text-3xl mb-3">📚</div>
+            <div class="font-semibold text-sm">Tất cả</div>
+            <div class="text-xs opacity-70 mt-1">{{ products.length }} sách</div>
+          </button>
+          
+          <button
+            v-for="category in categories"
+            :key="category.id"
+            @click="selectedCategory = category.id"
+            :class="[
+              'group p-6 rounded-2xl transition-all duration-300 transform hover:-translate-y-2',
+              selectedCategory === category.id
+                ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-xl'
+                : 'bg-white text-gray-700 hover:shadow-lg border border-gray-200'
+            ]"
+          >
+            <div class="text-3xl mb-3">{{ getCategoryIcon(category.tenDanhMuc) }}</div>
+            <div class="font-semibold text-sm">{{ category.tenDanhMuc }}</div>
+            <div class="text-xs opacity-70 mt-1">{{ getCategoryCount(category.id) }} sách</div>
           </button>
         </div>
       </div>
@@ -98,12 +112,12 @@
         <div class="flex justify-between items-center mb-12">
           <div>
             <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
-              {{ selectedCategory === 'Tất cả' ? 'Sách nổi bật' : selectedCategory }}
+              {{ selectedCategory === null ? 'Sách nổi bật' : getSelectedCategoryName() }}
             </h2>
             <p class="text-gray-600">Khám phá những cuốn sách được yêu thích nhất</p>
           </div>
           <div class="flex items-center space-x-4">
-            <span class="text-gray-600">{{ filteredBooks.length }} sản phẩm</span>
+            <span class="text-gray-600">{{ filteredProducts.length }} sản phẩm</span>
             <div class="flex space-x-2">
               <button class="p-2 rounded-lg border border-gray-200 hover:bg-gray-50">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -119,11 +133,27 @@
           </div>
         </div>
         
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        <!-- Loading State -->
+        <div v-if="loading" class="text-center py-12">
+          <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <p class="mt-4 text-gray-600">Đang tải dữ liệu...</p>
+        </div>
+
+        <!-- Error State -->
+        <div v-else-if="error" class="text-center py-12">
+          <div class="text-red-600 text-lg mb-4">⚠️</div>
+          <p class="text-gray-600">{{ error }}</p>
+          <button @click="loadData" class="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+            Thử lại
+          </button>
+        </div>
+
+        <!-- Products Grid -->
+        <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
           <BookCard
-            v-for="book in filteredBooks"
-            :key="book.id"
-            :book="book"
+            v-for="product in filteredProducts"
+            :key="product.id"
+            :book="product"
           />
         </div>
         
@@ -192,72 +222,12 @@
         </div>
       </div>
     </section>
-
-    <!-- Testimonials Section -->
-    <section class="py-16 bg-white">
-      <div class="container mx-auto px-4">
-        <div class="text-center mb-12">
-          <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Khách hàng nói gì?</h2>
-          <p class="text-lg text-gray-600">Những đánh giá chân thực từ khách hàng của chúng tôi</p>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div class="bg-gray-50 p-8 rounded-2xl">
-            <div class="flex text-yellow-400 mb-4">
-              <span v-for="i in 5" :key="i" class="text-lg">★</span>
-            </div>
-            <p class="text-gray-700 mb-6 italic">"Sách chất lượng rất tốt, giao hàng nhanh và nhân viên phục vụ rất nhiệt tình. Tôi rất hài lòng với dịch vụ của BBook!"</p>
-            <div class="flex items-center">
-              <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold mr-4">
-                N
-              </div>
-              <div>
-                <div class="font-semibold text-gray-800">Nguyễn Văn A</div>
-                <div class="text-sm text-gray-600">Khách hàng thân thiết</div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="bg-gray-50 p-8 rounded-2xl">
-            <div class="flex text-yellow-400 mb-4">
-              <span v-for="i in 5" :key="i" class="text-lg">★</span>
-            </div>
-            <p class="text-gray-700 mb-6 italic">"Giá cả hợp lý, sách đa dạng và chất lượng. Đặc biệt là dịch vụ giao hàng rất nhanh chóng và thuận tiện."</p>
-            <div class="flex items-center">
-              <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-teal-600 rounded-full flex items-center justify-center text-white font-bold mr-4">
-                T
-              </div>
-              <div>
-                <div class="font-semibold text-gray-800">Trần Thị B</div>
-                <div class="text-sm text-gray-600">Khách hàng mới</div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="bg-gray-50 p-8 rounded-2xl">
-            <div class="flex text-yellow-400 mb-4">
-              <span v-for="i in 5" :key="i" class="text-lg">★</span>
-            </div>
-            <p class="text-gray-700 mb-6 italic">"BBook là nơi tôi tin tưởng để mua sách. Sách luôn chính hãng và có nhiều ưu đãi hấp dẫn cho khách hàng."</p>
-            <div class="flex items-center">
-              <div class="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full flex items-center justify-center text-white font-bold mr-4">
-                L
-              </div>
-              <div>
-                <div class="font-semibold text-gray-800">Lê Văn C</div>
-                <div class="text-sm text-gray-600">Khách hàng VIP</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
   </div>
 </template>
 
 <script>
-import { ref, computed } from 'vue'
-import { useShopStore } from '../store'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRealDataStore } from '../store/realDataStore'
 import BookCard from '../components/BookCard.vue'
 
 export default {
@@ -266,45 +236,95 @@ export default {
     BookCard
   },
   setup() {
-    const store = useShopStore()
-    const selectedCategory = ref('Tất cả')
+    const store = useRealDataStore()
+    const selectedCategory = ref(null)
 
-    const books = computed(() => store.books.value)
+    const products = computed(() => store.products.value)
     const categories = computed(() => store.categories.value)
+    const loading = computed(() => store.loading.value)
+    const error = computed(() => store.error.value)
 
-    const filteredBooks = computed(() => {
-      if (selectedCategory.value === 'Tất cả') {
-        return books.value
+    const filteredProducts = ref([])
+
+    const loadFilteredProducts = async () => {
+      if (selectedCategory.value === null) {
+        filteredProducts.value = products.value
+      } else {
+        try {
+          filteredProducts.value = await store.getProductsByCategory(selectedCategory.value)
+        } catch (error) {
+          console.error('Error loading filtered products:', error)
+          filteredProducts.value = []
+        }
       }
-      return books.value.filter(book => book.category === selectedCategory.value)
+    }
+
+    watch(selectedCategory, () => {
+      loadFilteredProducts()
     })
 
-    const getCategoryIcon = (category) => {
+    watch(products, () => {
+      loadFilteredProducts()
+    })
+
+    const getCategoryIcon = (categoryName) => {
       const icons = {
-        'Tất cả': '📚',
         'Văn học': '📖',
         'Kinh tế': '💰',
         'Khoa học': '🔬',
         'Thiếu nhi': '🧸',
-        'Ngoại ngữ': '🌍'
+        'Ngoại ngữ': '🌍',
+        'Kỹ năng sống': '💡',
+        'Lịch sử': '📜',
+        'Phát triển bản thân': '🚀',
+        'Giáo dục': '🎓',
+        'Kinh doanh': '💼',
+        'Công nghệ': '💻',
+        'Y học': '🏥',
+        'Nghệ thuật': '🎨',
+        'Thể thao': '⚽',
+        'Du lịch': '✈️'
       }
-      return icons[category] || '📚'
+      return icons[categoryName] || '📚'
     }
 
-    const getCategoryCount = (category) => {
-      if (category === 'Tất cả') {
-        return books.value.length
+    const getCategoryCount = (categoryId) => {
+      if (categoryId === null) {
+        return products.value.length
       }
-      return books.value.filter(book => book.category === category).length
+      return products.value.filter(product => product.categoryId === categoryId).length
     }
+
+    const getSelectedCategoryName = () => {
+      if (selectedCategory.value === null) return 'Tất cả'
+      const category = categories.value.find(cat => cat.id === selectedCategory.value)
+      return category ? category.tenDanhMuc : 'Tất cả'
+    }
+
+    const loadData = async () => {
+      await Promise.all([
+        store.loadProducts(),
+        store.loadCategories()
+      ])
+    }
+
+    onMounted(async () => {
+      await loadData()
+      await loadFilteredProducts()
+    })
 
     return {
       selectedCategory,
-      books,
+      products,
       categories,
-      filteredBooks,
+      loading,
+      error,
+      filteredProducts,
       getCategoryIcon,
-      getCategoryCount
+      getCategoryCount,
+      getSelectedCategoryName,
+      loadData,
+      loadFilteredProducts
     }
   }
 }

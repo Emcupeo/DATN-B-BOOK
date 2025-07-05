@@ -27,6 +27,8 @@ public interface SanPhamRepository extends JpaRepository<SanPham, Integer> {
 
     List<SanPham> findAllByDeletedFalseOrderByIdDesc();
 
+    List<SanPham> findByDanhMuc_Id(Integer danhMucId);
+
 
     @Modifying
     @Transactional

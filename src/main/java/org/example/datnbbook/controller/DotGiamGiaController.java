@@ -2,6 +2,7 @@ package org.example.datnbbook.controller;
 
 import lombok.RequiredArgsConstructor;
 //import org.example.datnbbook.dto.DotGiamGiaRequest;
+import org.example.datnbbook.dto.DotGiamGiaRequest;
 import org.example.datnbbook.model.DotGiamGia;
 import org.example.datnbbook.service.DotGiamGiaService;
 import org.springframework.http.ResponseEntity;
@@ -22,38 +23,38 @@ public class DotGiamGiaController {
         return ResponseEntity.ok(dotGiamGiaService.getAll());
     }
 
-//    @PostMapping
-//    public ResponseEntity<DotGiamGia> create(@RequestBody DotGiamGiaRequest request) {
-//        DotGiamGia dotGiamGia = new DotGiamGia();
-//        dotGiamGia.setTenDotGiamGia(request.getTenDotGiamGia());
-//        dotGiamGia.setLoaiGiamGia(request.getLoaiGiamGia()); // Lấy từ request
-//        dotGiamGia.setSoPhanTramGiam(request.getLoaiGiamGia().equals("Phần trăm") ? request.getSoPhanTramGiam() : null);
-//        dotGiamGia.setGiaTriGiam(request.getLoaiGiamGia().equals("Tiền mặt") ? request.getGiaTriGiam() : null);
-//        dotGiamGia.setMoTa(null);
-//        dotGiamGia.setNgayBatDau(request.getNgayBatDau());
-//        dotGiamGia.setNgayKetThuc(request.getNgayKetThuc());
-//        dotGiamGia.setTrangThai(true);
-//
-//        DotGiamGia created = dotGiamGiaService.create(dotGiamGia, request.getSelectedProducts());
-//        return ResponseEntity.ok(created);
-//    }
+    @PostMapping
+    public ResponseEntity<DotGiamGia> create(@RequestBody DotGiamGiaRequest request) {
+        DotGiamGia dotGiamGia = new DotGiamGia();
+        dotGiamGia.setTenDotGiamGia(request.getTenDotGiamGia());
+        dotGiamGia.setLoaiGiamGia(request.getLoaiGiamGia()); // Lấy từ request
+        dotGiamGia.setSoPhanTramGiam(request.getLoaiGiamGia().equals("Phần trăm") ? request.getSoPhanTramGiam() : null);
+        dotGiamGia.setGiaTriGiam(request.getLoaiGiamGia().equals("Tiền mặt") ? request.getGiaTriGiam() : null);
+        dotGiamGia.setMoTa(null);
+        dotGiamGia.setNgayBatDau(request.getNgayBatDau());
+        dotGiamGia.setNgayKetThuc(request.getNgayKetThuc());
+        dotGiamGia.setTrangThai(true);
 
-//    @PutMapping("/{id}")
-//    public ResponseEntity<DotGiamGia> update(@PathVariable Integer id, @RequestBody DotGiamGiaRequest request) {
-//        DotGiamGia dotGiamGia = new DotGiamGia();
-//        dotGiamGia.setId(id);
-//        dotGiamGia.setTenDotGiamGia(request.getTenDotGiamGia());
-//        dotGiamGia.setLoaiGiamGia(request.getLoaiGiamGia()); // Lấy từ request
-//        dotGiamGia.setSoPhanTramGiam(request.getLoaiGiamGia().equals("Phần trăm") ? request.getSoPhanTramGiam() : null);
-//        dotGiamGia.setGiaTriGiam(request.getLoaiGiamGia().equals("Tiền mặt") ? request.getGiaTriGiam() : null);
-//        dotGiamGia.setMoTa(null);
-//        dotGiamGia.setNgayBatDau(request.getNgayBatDau());
-//        dotGiamGia.setNgayKetThuc(request.getNgayKetThuc());
-//        dotGiamGia.setTrangThai(true);
-//
-//        DotGiamGia updated = dotGiamGiaService.update(dotGiamGia, request.getSelectedProducts());
-//        return ResponseEntity.ok(updated);
-//    }
+        DotGiamGia created = dotGiamGiaService.create(dotGiamGia, request.getSelectedProducts());
+        return ResponseEntity.ok(created);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<DotGiamGia> update(@PathVariable Integer id, @RequestBody DotGiamGiaRequest request) {
+        DotGiamGia dotGiamGia = new DotGiamGia();
+        dotGiamGia.setId(id);
+        dotGiamGia.setTenDotGiamGia(request.getTenDotGiamGia());
+        dotGiamGia.setLoaiGiamGia(request.getLoaiGiamGia()); // Lấy từ request
+        dotGiamGia.setSoPhanTramGiam(request.getLoaiGiamGia().equals("Phần trăm") ? request.getSoPhanTramGiam() : null);
+        dotGiamGia.setGiaTriGiam(request.getLoaiGiamGia().equals("Tiền mặt") ? request.getGiaTriGiam() : null);
+        dotGiamGia.setMoTa(null);
+        dotGiamGia.setNgayBatDau(request.getNgayBatDau());
+        dotGiamGia.setNgayKetThuc(request.getNgayKetThuc());
+        dotGiamGia.setTrangThai(true);
+
+        DotGiamGia updated = dotGiamGiaService.update(dotGiamGia, request.getSelectedProducts());
+        return ResponseEntity.ok(updated);
+    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
