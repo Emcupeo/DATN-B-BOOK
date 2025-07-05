@@ -37,7 +37,7 @@ class HoaDonService {
     }
 
     addProductToOrder(hoaDonId, productData) {
-        return axios.post(`${API_URL_ListHoaDon}/${hoaDonId}/chi-tiet`, productData, {
+        return axios.post(`${API_URL_ListHoaDon}/${hoaDonId}/add-product`, productData, {
             headers: { "Content-Type": "application/json" }
         });
     }
@@ -49,16 +49,15 @@ class HoaDonService {
     }
 
     updateProductQuantity(hoaDonId, chiTietId, data) {
-        return axios.put(`${API_URL_ListHoaDon}/${hoaDonId}/chi-tiet/${chiTietId}`, {
-            soLuong: data.soLuong,
-            chiTietSanPham: { id: data.chiTietSanPhamId }
+        return axios.put(`${API_URL_ListHoaDon}/${hoaDonId}/update-product/${chiTietId}`, {
+            soLuong: data.soLuong
         }, {
             headers: { "Content-Type": "application/json" }
         });
     }
 
     removeProductFromOrder(hoaDonId, chiTietId) {
-        return axios.delete(`${API_URL_ListHoaDon}/${hoaDonId}/chi-tiet/${chiTietId}`, {
+        return axios.delete(`${API_URL_ListHoaDon}/${hoaDonId}/remove-product/${chiTietId}`, {
             headers: { "Content-Type": "application/json" }
         });
     }

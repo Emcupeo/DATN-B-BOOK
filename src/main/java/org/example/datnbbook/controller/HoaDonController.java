@@ -25,8 +25,15 @@ public class HoaDonController {
     private HoaDonService hoaDonService;
 
     @GetMapping("/hoa-don")
-    public ResponseEntity<List<HoaDon>> getHoaDon() {
-        List<HoaDon> hoaDons = hoaDonService.getAllHoaDon();
+    public ResponseEntity<List<HoaDon>> getHoaDon(@RequestParam(required = false) String trangThai) {
+        List<HoaDon> hoaDons;
+        if (trangThai != null && !trangThai.isEmpty()) {
+            hoaDons = hoaDonService.getAllHoaDon().stream()
+                    .filter(hd -> trangThai.equals(hd.getTrangThai()))
+                    .toList();
+        } else {
+            hoaDons = hoaDonService.getAllHoaDon();
+        }
         if (hoaDons.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
@@ -110,12 +117,17 @@ public class HoaDonController {
             Integer phuongThucThanhToanId = paymentData.get("phuongThucThanhToanId") != null ?
                     Integer.parseInt(paymentData.get("phuongThucThanhToanId").toString()) : null;
             String ghiChu = (String) paymentData.get("ghiChu");
+            String loaiHoaDon = (String) paymentData.get("loaiHoaDon");
+            BigDecimal tienKhachDua = paymentData.get("tienKhachDua") != null ? new BigDecimal(paymentData.get("tienKhachDua").toString()) : BigDecimal.ZERO;
 
             if (phuongThucThanhToanId == null) {
                 throw new IllegalArgumentException("Phương thức thanh toán ID không được để trống!");
             }
+            if (loaiHoaDon == null || loaiHoaDon.isEmpty()) {
+                throw new IllegalArgumentException("Loại hóa đơn không được để trống!");
+            }
 
-            HoaDon updatedHoaDon = hoaDonService.updatePayment(id, tienMat, chuyenKhoan, phuongThucThanhToanId, ghiChu);
+            HoaDon updatedHoaDon = hoaDonService.updatePayment(id, tienMat, chuyenKhoan, phuongThucThanhToanId, ghiChu, loaiHoaDon, tienKhachDua);
             return new ResponseEntity<>(updatedHoaDon, HttpStatus.OK);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -125,11 +137,16 @@ public class HoaDonController {
         }
     }
 
-    @PostMapping("/hoa-don/{orderId}/chi-tiet")
-    public ResponseEntity<HoaDonChiTiet> addProductToOrder(@PathVariable int orderId, @RequestBody HoaDonChiTiet productData) {
+    @PutMapping("/hoa-don/{id}/cap-nhat-thong-tin-khach-hang")
+    public ResponseEntity<HoaDon> updateCustomerInfo(@PathVariable int id, @RequestBody Map<String, Object> customerData) {
         try {
-            HoaDonChiTiet addedProduct = hoaDonService.addProductToOrder(orderId, productData);
-            return new ResponseEntity<>(addedProduct, HttpStatus.OK);
+            Long idKhachHang = customerData.get("idKhachHang") != null ? Long.parseLong(customerData.get("idKhachHang").toString()) : null;
+            String tenNguoiNhan = (String) customerData.get("tenNguoiNhan");
+            String soDienThoaiNguoiNhan = (String) customerData.get("soDienThoaiNguoiNhan");
+            String diaChiGiaoHang = (String) customerData.get("diaChiGiaoHang");
+
+            HoaDon updatedHoaDon = hoaDonService.updateCustomerInfo(id, idKhachHang, tenNguoiNhan, soDienThoaiNguoiNhan, diaChiGiaoHang);
+            return new ResponseEntity<>(updatedHoaDon, HttpStatus.OK);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
@@ -138,11 +155,15 @@ public class HoaDonController {
         }
     }
 
-    @PutMapping("/hoa-don/{orderId}/chi-tiet/{itemId}")
-    public ResponseEntity<HoaDonChiTiet> updateProductQuantity(@PathVariable int orderId, @PathVariable int itemId, @RequestBody HoaDonChiTiet updatedData) {
+    @PostMapping("/hoa-don")
+    public ResponseEntity<HoaDon> createHoaDon(@RequestBody Map<String, String> request) {
         try {
-            HoaDonChiTiet result = hoaDonService.updateProductQuantity(orderId, itemId, updatedData);
-            return new ResponseEntity<>(result, HttpStatus.OK);
+            String loaiHoaDon = request.get("loaiHoaDon");
+            if (loaiHoaDon == null || loaiHoaDon.isEmpty()) {
+                throw new IllegalArgumentException("Loại hóa đơn không được để trống!");
+            }
+            HoaDon newHoaDon = hoaDonService.createHoaDon(loaiHoaDon);
+            return new ResponseEntity<>(newHoaDon, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
@@ -151,12 +172,42 @@ public class HoaDonController {
         }
     }
 
-    @DeleteMapping("/hoa-don/{orderId}/chi-tiet/{itemId}")
-    public ResponseEntity<Void> removeProductFromOrder(@PathVariable int orderId, @PathVariable int itemId) {
+    @PostMapping("/hoa-don/{id}/add-product")
+    public ResponseEntity<HoaDonChiTiet> addProductToOrder(@PathVariable int id, @RequestBody Map<String, Object> productData) {
         try {
-            hoaDonService.removeProductFromOrder(orderId, itemId);
+            int chiTietSanPhamId = Integer.parseInt(productData.get("chiTietSanPhamId").toString());
+            int soLuong = Integer.parseInt(productData.get("soLuong").toString());
+            BigDecimal giaSanPham = new BigDecimal(productData.get("giaSanPham").toString());
+            HoaDonChiTiet hoaDonChiTiet = hoaDonService.addProductToOrder(id, chiTietSanPhamId, soLuong, giaSanPham);
+            return new ResponseEntity<>(hoaDonChiTiet, HttpStatus.OK);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PutMapping("/hoa-don/{id}/update-product/{chiTietId}")
+    public ResponseEntity<HoaDonChiTiet> updateProductQuantity(@PathVariable int id, @PathVariable int chiTietId, @RequestBody Map<String, Object> updatedData) {
+        try {
+            int soLuong = Integer.parseInt(updatedData.get("soLuong").toString());
+            HoaDonChiTiet updatedChiTiet = hoaDonService.updateProductQuantity(id, chiTietId, soLuong);
+            return new ResponseEntity<>(updatedChiTiet, HttpStatus.OK);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @DeleteMapping("/hoa-don/{id}/remove-product/{chiTietId}")
+    public ResponseEntity<Void> removeProductFromOrder(@PathVariable int id, @PathVariable int chiTietId) {
+        try {
+            hoaDonService.removeProductFromOrder(id, chiTietId);
             return new ResponseEntity<>(HttpStatus.OK);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | IllegalStateException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             e.printStackTrace();
