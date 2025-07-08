@@ -9,8 +9,8 @@
             <span>📧 Email: support@bbook.com</span>
           </div>
           <div class="flex items-center space-x-4">
-            <a href="#" class="hover:text-blue-400 transition-colors">Đăng nhập</a>
-            <a href="#" class="hover:text-blue-400 transition-colors">Đăng ký</a>
+            <router-link to="/login" class="hover:text-blue-400 transition-colors">Đăng nhập</router-link>
+            <router-link to="/register" class="hover:text-blue-400 transition-colors">Đăng ký</router-link>
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-package org.example.datnbbook.service;
+package org.example.datnbbook.service.impl;
 
 import jakarta.persistence.EntityManager;
 import org.example.datnbbook.dto.DiaChiDTO;
@@ -8,6 +8,7 @@ import org.example.datnbbook.model.DiaChi;
 import org.example.datnbbook.model.KhachHang;
 import org.example.datnbbook.repository.DiaChiRepository;
 import org.example.datnbbook.repository.KhachHangRepository;
+import org.example.datnbbook.service.KhachHangService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

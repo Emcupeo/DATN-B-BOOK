@@ -460,7 +460,6 @@ export default {
     },
     validateForm() {
       this.errors = {};
-      const currentDate = new Date();
       const ngayBatDau = new Date(this.newPhieu.ngayBatDau);
       const ngayKetThuc = new Date(this.newPhieu.ngayKetThuc);
 
@@ -478,6 +477,10 @@ export default {
         if (isNaN(giaTri) || giaTri <= 0) {
           this.errors.giaTriGiam = 'Giá trị giảm phải là số dương.';
         }
+        const giaTriDonHang = Number(this.newPhieu.giaTriDonHangToiThieu);
+        if (!isNaN(giaTriDonHang) && giaTri > giaTriDonHang) {
+          this.errors.giaTriGiam = 'Giá trị giảm không được lớn hơn giá trị đơn hàng tối thiểu.';
+        }
       }
       const giaTriDonHang = Number(this.newPhieu.giaTriDonHangToiThieu);
       if (isNaN(giaTriDonHang) || giaTriDonHang <= 0) {
@@ -489,8 +492,6 @@ export default {
       }
       if (!this.newPhieu.ngayBatDau) {
         this.errors.ngayBatDau = 'Ngày bắt đầu không được để trống.';
-      } else if (ngayBatDau < currentDate && !this.isEdit) {
-        this.errors.ngayBatDau = 'Ngày bắt đầu không được nhỏ hơn ngày hiện tại.';
       }
       if (!this.newPhieu.ngayKetThuc) {
         this.errors.ngayKetThuc = 'Ngày kết thúc không được để trống.';

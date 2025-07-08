@@ -23,6 +23,10 @@ import Maps from "@/views/admin/Maps.vue";
 // views for Auth layout
 import Login from "@/views/auth/Login.vue";
 import Register from "@/views/auth/Register.vue";
+import LoginCustomer from "@/views/auth/LoginCustomer.vue";
+import RegisterCustomer from "@/views/auth/RegisterCustomer.vue";
+import LoginAdmin from "@/views/auth/LoginAdmin.vue";
+import RegisterAdmin from "@/views/auth/RegisterAdmin.vue";
 
 // Shop views
 import ShopHome from "@/views/shop/views/Home.vue";
@@ -256,9 +260,30 @@ const routes = [
     ],
   },
 
+  {
+    path: "/login",
+    name: "LoginCustomer",
+    component: LoginCustomer,
+  },
+  {
+    path: "/register",
+    name: "RegisterCustomer",
+    component: RegisterCustomer,
+  },
+  {
+    path: "/admin/login",
+    name: "LoginAdmin",
+    component: LoginAdmin,
+  },
+  {
+    path: "/admin/register",
+    name: "RegisterAdmin",
+    component: RegisterAdmin,
+  },
+
   // Shop routes with layout
   {
-    path: "/shop",
+    path: "/",
     component: Shop,
     children: [
       { path: "", component: ShopHome },
@@ -273,7 +298,7 @@ const routes = [
     ]
   },
 
-  { path: "/:pathMatch(.*)*", redirect: "/shop" },
+  { path: "/:pathMatch(.*)*", redirect: "/" },
 
   {
     path: "/ban-hang",

@@ -20,7 +20,26 @@ const routes = [
     name: "ChinhSuaKhachHang",
     component: () => import("../views/TaiKhoan/KhachHangForm.vue"),
   },
-
+  {
+    path: "/login",
+    name: "LoginCustomer",
+    component: () => import("../views/auth/LoginCustomer.vue"),
+  },
+  {
+    path: "/register",
+    name: "RegisterCustomer",
+    component: () => import("../views/auth/RegisterCustomer.vue"),
+  },
+  {
+    path: "/admin/login",
+    name: "LoginAdmin",
+    component: () => import("../views/auth/LoginAdmin.vue"),
+  },
+  {
+    path: "/admin/register",
+    name: "RegisterAdmin",
+    component: () => import("../views/auth/RegisterAdmin.vue"),
+  },
 ];
 
 const router = createRouter({

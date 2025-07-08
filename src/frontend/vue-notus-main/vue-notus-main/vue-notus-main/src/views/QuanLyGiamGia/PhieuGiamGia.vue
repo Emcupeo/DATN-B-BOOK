@@ -123,6 +123,10 @@
                     {{ selectedPhieu.loaiApDung === 'PUBLIC' ? 'Công khai' : 'Khách hàng cụ thể' }}
                   </td>
                 </tr>
+                <tr>
+                  <td class="p-2 font-semibold">Giá trị đơn hàng tối thiểu</td>
+                  <td class="p-2">{{ formatNumber(selectedPhieu.giaTriDonHangToiThieu) }}đ</td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -280,6 +284,14 @@
             </svg>
           </span>
         </th>
+        <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('giaTriDonHangToiThieu')">
+          Giá trị đơn hàng tối thiểu
+          <span v-if="sortBy === 'giaTriDonHangToiThieu'" class="ml-1">
+            <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortDir === 'asc' ? 'M19 9l-7 7-7-7' : 'M5 15l7-7 7 7'"></path>
+            </svg>
+          </span>
+        </th>
         <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('ngayBatDau')">
           Ngày bắt đầu
           <span v-if="sortBy === 'ngayBatDau'" class="ml-1">
@@ -356,6 +368,7 @@
             <span v-if="phieu.loaiPhieu === 'PERCENT'">{{ phieu.soPhanTramGiam }}%</span>
             <span v-else>{{ formatNumber(phieu.giaTriGiam) }}đ</span>
           </td>
+          <td class="px-6 py-4">{{ formatNumber(phieu.giaTriDonHangToiThieu) }}đ</td>
           <td class="px-6 py-4">{{ formatDate(phieu.ngayBatDau) }}</td>
           <td class="px-6 py-4">{{ formatDate(phieu.ngayKetThuc) }}</td>
           <td class="px-6 py-4 text-center">
@@ -580,6 +593,7 @@ export default {
             : phieu.loaiPhieu === 'AMOUNT'
               ? `${this.formatNumber(phieu.giaTriGiam)}đ`
               : 'Không xác định',
+        giaTriDonHangToiThieu: phieu.giaTriDonHangToiThieu,
       };
       this.showModalDetail = true;
     },
@@ -655,6 +669,7 @@ export default {
         'Ngày Kết Thúc': this.formatDate(item.ngayKetThuc),
         'Tình Trạng': item.tinhTrang,
         'Loại Áp Dụng': item.loaiApDung === 'PUBLIC' ? 'Công khai' : 'Khách hàng cụ thể',
+        'Giá trị đơn hàng tối thiểu': `${this.formatNumber(item.giaTriDonHangToiThieu)}đ`,
       }));
 
       const ws = XLSX.utils.json_to_sheet(data);
@@ -669,6 +684,7 @@ export default {
         { wch: 20 },
         { wch: 15 },
         { wch: 20 },
+        { wch: 20 },
       ];
       ws['!cols'] = wscols;
 
@@ -678,7 +694,7 @@ export default {
         alignment: { horizontal: 'center', vertical: 'center' },
       };
 
-      ['A1', 'B1', 'C1', 'D1', 'E1', 'F1', 'G1', 'H1', 'I1', 'J1'].forEach((cell) => {
+      ['A1', 'B1', 'C1', 'D1', 'E1', 'F1', 'G1', 'H1', 'I1', 'J1', 'K1'].forEach((cell) => {
         if (ws[cell]) ws[cell].s = headerStyle;
       });
 
