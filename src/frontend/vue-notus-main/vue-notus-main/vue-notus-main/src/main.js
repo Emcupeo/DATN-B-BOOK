@@ -289,6 +289,7 @@ const routes = [
       { path: "", component: ShopHome },
       { path: "products", component: ShopProducts },
       { path: "book/:id", name: "ShopBookDetail", component: ShopBookDetail },
+      { path: "bo-sach/:id", name: "ShopBoSachDetail", component: () => import("@/views/shop/views/BoSachDetail.vue") },
       { path: "cart", component: ShopCart },
       { path: "checkout", component: ShopCheckout },
       { path: "wishlist", component: ShopWishlist },

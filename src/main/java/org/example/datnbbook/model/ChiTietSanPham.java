@@ -122,6 +122,9 @@ public class ChiTietSanPham {
     @Column(name = "deleted")
     private Boolean deleted;
 
+    @Column(name = "isbn", length = 20)
+    private String isbn;
+
     public ChiTietSanPham(Integer chiTietSanPhamId) {
     }
 

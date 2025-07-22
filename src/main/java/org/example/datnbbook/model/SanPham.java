@@ -18,6 +18,7 @@ import lombok.ToString;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Nationalized;
 
+import java.time.Instant;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -48,6 +49,12 @@ public class SanPham {
     @ColumnDefault("0")
     @Column(name = "deleted")
     private Boolean deleted = false;
+
+    @Column(name = "created_at")
+    private Instant createdAt;
+
+    @Column(name = "updated_at")
+    private Instant updatedAt;
 
     @ManyToOne
     @JoinColumn(name = "id_danh_muc")

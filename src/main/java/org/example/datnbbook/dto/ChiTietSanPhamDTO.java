@@ -40,4 +40,5 @@ public class ChiTietSanPhamDTO {
     private Boolean deleted;
     private List<String> images;
     private List<Integer> imageIds;
+    private String isbn;
 } 

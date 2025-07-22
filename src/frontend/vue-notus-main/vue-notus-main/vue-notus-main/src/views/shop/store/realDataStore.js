@@ -1,5 +1,6 @@
 import { reactive, computed } from 'vue'
 import ShopService from '../../../service/ShopService'
+import BoSachService from '../../../service/BoSachService'
 
 // Store data
 const state = reactive({
@@ -101,8 +102,11 @@ const loadProducts = async () => {
     for (const product of products) {
       try {
         const productDetailItems = await ShopService.getProductDetailItems(product.id)
-        console.log(`Category Product ${product.id} - ${product.tenSanPham}:`, productDetailItems)
-        
+        // Lấy ngày tạo từ trường createdAt của sản phẩm
+        let sortCreatedAt = 0;
+        if (product.createdAt && !isNaN(new Date(product.createdAt).getTime())) {
+          sortCreatedAt = new Date(product.createdAt).getTime();
+        }
         processedProducts.push({
           id: product.id,
           title: product.tenSanPham,
@@ -124,7 +128,9 @@ const loadProducts = async () => {
             : 'Chưa có thông tin',
           pages: 0, // Chưa có trường này trong database
           publishedDate: 'Chưa có thông tin', // Chưa có trường này trong database
-          sales: 0 // Chưa có trường này trong database
+          sales: 0, // Chưa có trường này trong database
+          productDetailItems: productDetailItems, // Lưu chi tiết sản phẩm để sắp xếp
+          sortCreatedAt
         })
       } catch (error) {
         console.error(`Error processing product ${product.id}:`, error)
@@ -144,12 +150,75 @@ const loadProducts = async () => {
           format: 'Chưa có thông tin',
           pages: 0,
           publishedDate: 'Chưa có thông tin',
-          sales: 0
+          sales: 0,
+          productDetailItems: [],
+          sortCreatedAt: 0
         })
       }
     }
 
+    // Lấy danh sách bộ sách và thêm vào processedProducts
+    try {
+      const boSachs = await BoSachService.getAll();
+      for (const boSach of boSachs) {
+        // Lấy chi tiết bộ sách
+        let chiTietList = [];
+        try {
+          chiTietList = await BoSachService.getBoSachChiTietByBoSachId(boSach.id);
+        } catch (e) { chiTietList = []; }
+        // Lấy danh sách tác giả từ các chi tiết sách
+        const tacGiaSet = new Set();
+        for (const chiTiet of chiTietList) {
+          if (chiTiet.idChiTietSanPham && chiTiet.idChiTietSanPham.idTacGia && chiTiet.idChiTietSanPham.idTacGia.tenTacGia) {
+            tacGiaSet.add(chiTiet.idChiTietSanPham.idTacGia.tenTacGia);
+          }
+        }
+        let author = 'Chưa có thông tin';
+        if (tacGiaSet.size === 1) author = Array.from(tacGiaSet)[0];
+        else if (tacGiaSet.size > 1) author = 'Nhiều tác giả';
+        // Map bộ sách về object hiển thị
+        let sortCreatedAt = 0;
+        if (boSach.createdAt && !isNaN(new Date(boSach.createdAt).getTime())) {
+          sortCreatedAt = new Date(boSach.createdAt).getTime();
+        } else {
+          sortCreatedAt = 0;
+        }
+        console.log('[DEBUG] BoSach', boSach.id, 'createdAt:', boSach.createdAt, '-> sortCreatedAt:', sortCreatedAt);
+        processedProducts.push({
+          id: boSach.id,
+          title: boSach.tenBoSach,
+          author,
+          price: boSach.giaTien,
+          image: boSach.url || 'https://images.pexels.com/photos/159711/books-bookstore-book-reading-159711.jpeg?auto=compress&cs=tinysrgb&w=400',
+          description: boSach.moTa || 'Chưa có mô tả',
+          category: 'Bộ sách',
+          categoryId: null,
+          inStock: boSach.soLuong > 0,
+          publisher: '',
+          language: '',
+          format: '',
+          pages: 0,
+          publishedDate: '',
+          sales: 0,
+          createdAt: boSach.createdAt,
+          sortCreatedAt
+        });
+      }
+    } catch (e) {
+      console.error('Lỗi khi tải bộ sách:', e);
+    }
+
     state.products = processedProducts
+    // Sắp xếp theo sortCreatedAt giảm dần, đan xen bộ sách và sản phẩm
+    state.products.sort((a, b) => b.sortCreatedAt - a.sortCreatedAt);
+    // Log kiểm tra thứ tự hiển thị
+    console.log('[DEBUG] Thứ tự hiển thị (title, sortCreatedAt, type):',
+      state.products.map(item => ({
+        title: item.title,
+        sortCreatedAt: item.sortCreatedAt,
+        type: item.category
+      }))
+    );
   } catch (error) {
     console.error('Error loading products:', error)
     state.error = 'Không thể tải danh sách sản phẩm'
@@ -228,7 +297,8 @@ const getProductsByCategory = async (categoryId) => {
             : 'Chưa có thông tin',
           pages: 0,
           publishedDate: 'Chưa có thông tin',
-          sales: 0
+          sales: 0,
+          productDetailItems: productDetailItems // Lưu chi tiết sản phẩm để sắp xếp
         })
       } catch (error) {
         console.error(`Error processing product ${product.id}:`, error)
@@ -247,7 +317,8 @@ const getProductsByCategory = async (categoryId) => {
           format: 'Chưa có thông tin',
           pages: 0,
           publishedDate: 'Chưa có thông tin',
-          sales: 0
+          sales: 0,
+          productDetailItems: [] // Không có chi tiết sản phẩm
         })
       }
     }

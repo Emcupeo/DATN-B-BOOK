@@ -48,6 +48,10 @@ public class BoSach {
     @Column(name = "mo_ta")
     private String moTa;
 
+    @Size(max = 500)
+    @Column(name = "url", length = 500)
+    private String url;
+
     @ColumnDefault("0")
     @Column(name = "so_luong")
     private Integer soLuong;

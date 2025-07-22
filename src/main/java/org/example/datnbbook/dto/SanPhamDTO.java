@@ -2,6 +2,8 @@ package org.example.datnbbook.dto;
 
 import lombok.Data;
 
+import java.time.Instant;
+
 @Data
 public class SanPhamDTO {
     private Integer id;
@@ -11,4 +13,6 @@ public class SanPhamDTO {
     private Boolean deleted;
     private Integer idDanhMuc;
     private String tenDanhMuc;
+    private Instant createdAt;
+    private Instant updatedAt;
 } 

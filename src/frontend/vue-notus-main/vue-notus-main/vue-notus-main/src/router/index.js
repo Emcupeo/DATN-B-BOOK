@@ -3,6 +3,8 @@ import { createRouter, createWebHistory } from "vue-router";
 // Đảm bảo đường dẫn chính xác
 import ThemNhanVien from "../views/TaiKhoan/ThemNhanVien.vue";
 import SuaNhanVien from "../views/TaiKhoan/SuaNhanVien.vue";
+import BookDetail from '../views/shop/views/BookDetail.vue';
+import BoSachDetail from '../views/shop/views/BoSachDetail.vue';
 
 const routes = [
   {
@@ -39,6 +41,16 @@ const routes = [
     path: "/admin/register",
     name: "RegisterAdmin",
     component: () => import("../views/auth/RegisterAdmin.vue"),
+  },
+  {
+    path: '/shop/book/:id',
+    name: 'BookDetail',
+    component: BookDetail,
+  },
+  {
+    path: '/shop/bo-sach/:id',
+    name: 'BoSachDetail',
+    component: BoSachDetail,
   },
 ];
 

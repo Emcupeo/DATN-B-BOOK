@@ -10,12 +10,14 @@ export default class SanPham {
         this.idTheLoai = data.idTheLoai || null;
         this.idNgonNgu = data.idNgonNgu || null;
         this.chiTietSanPham = data.chiTietSanPham || null;
+        this.danhMuc = data.danhMuc || null;
         this.deleted = data.deleted !== undefined ? data.deleted : false;
         this.tongSoLuongTon = data.tongSoLuongTon
         this.createdAt = data.createdAt || null;
         this.createdBy = data.createdBy || '';
         this.updatedAt = data.updatedAt || null;
         this.updatedBy = data.updatedBy || '';
+        this.isbn = data.isbn || '';
     }
 
     toJSON() {
@@ -23,7 +25,9 @@ export default class SanPham {
             id: this.id,
             tenSanPham: this.tenSanPham,
             moTa: this.moTa,
-            deleted: this.deleted
+            deleted: this.deleted,
+            danhMuc: this.danhMuc,
+            isbn: this.isbn,
         };
     }
 } 

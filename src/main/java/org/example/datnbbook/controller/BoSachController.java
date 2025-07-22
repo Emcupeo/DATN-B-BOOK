@@ -53,6 +53,9 @@ public class BoSachController {
         dto.setGiaTien(boSach.getGiaTien().doubleValue());
         dto.setMoTa(boSach.getMoTa());
         dto.setSoLuong(boSach.getSoLuong());
+        dto.setUrl(boSach.getUrl());
+        dto.setCreatedAt(boSach.getCreatedAt());
+        dto.setUpdatedAt(boSach.getUpdatedAt());
         return dto;
     }
 

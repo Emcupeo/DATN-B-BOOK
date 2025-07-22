@@ -4,6 +4,8 @@
       <h2 class="text-3xl font-bold mb-8 text-gray-800 text-center">
         {{ isEdit ? 'Sửa Bộ Sách' : 'Thêm Bộ Sách' }}
       </h2>
+      <!-- Upload ảnh bộ sách (custom) -->
+
       <div class="flex flex-row gap-8 items-start">
         <!-- Form nhập thông tin bộ sách -->
         <form @submit.prevent="handleSubmit" class="w-1/2 space-y-6">
@@ -41,9 +43,11 @@
                   v-model.number="form.soLuong"
                   id="soLuong"
                   type="number"
-                  min="0"
+                  :min="1"
+                  :max="minChiTietSoLuongTon"
                   class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3"
                   required
+                  @input="validateBoSachSoLuong"
               />
               <p v-if="errors.soLuong" class="text-red-500 text-xs mt-1">{{ errors.soLuong }}</p>
             </div>
@@ -61,103 +65,7 @@
           </div>
 
           <!-- Danh sách chi tiết sách đã chọn -->
-          <div v-if="form.chiTietSanPhams.length" class="mt-6">
-            <h3 class="text-sm font-medium text-gray-700 mb-2">Danh sách chi tiết sách đã chọn</h3>
-            <div class="border border-gray-300 rounded-lg p-4">
-              <table class="w-full text-sm text-center">
-                <thead class="text-sm text-gray-700 font-semibold bg-white">
-                <tr>
-                  <th class="px-6 py-3">Mã</th>
-                  <th class="px-6 py-3">Tên</th>
-                  <th class="px-6 py-3">Ngôn ngữ</th>
-                  <th class="px-6 py-3">Giá tiền</th>
-                  <th class="px-6 py-3">Số lượng</th>
-                  <th class="px-6 py-3">Hành động</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr
-                    v-for="(item, index) in form.chiTietSanPhams"
-                    :key="item.id"
-                    class="hover:bg-gray-100"
-                >
-                  <td class="px-6 py-3">{{ item.maChiTietSanPham }}</td>
-                  <td class="px-6 py-3">{{ item.tenChiTietSanPham }}</td>
-                  <td class="px-6 py-3">{{ item.idNgonNgu?.tenNgonNgu || 'N/A' }}</td>
-                  <td class="px-6 py-3">{{ item.gia ? item.gia.toLocaleString('vi-VN') + ' VNĐ' : 'N/A' }}</td>
-                  <td class="px-6 py-3">
-                    <input
-                        v-model.number="item.soLuong"
-                        type="number"
-                        min="1"
-                        :max="item.soLuongTon"
-                        class="w-20 p-2 border border-gray-300 rounded-lg text-center"
-                        @input="validateChiTietSoLuong(item, index)"
-                    />
-                    <p v-if="errors.chiTietSanPhams[index]" class="text-red-500 text-xs mt-1">
-                      {{ errors.chiTietSanPhams[index] }}
-                    </p>
-                  </td>
-                  <td class="px-6 py-3">
-                    <button
-                        type="button"
-                        @click="removeChiTietSanPham(index)"
-                        class="text-red-600 hover:text-red-800"
-                    >
-                      <svg
-                          class="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                      >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                  </td>
-                </tr>
-                </tbody>
-              </table>
-            </div>
-            <p
-                v-if="errors.chiTietSanPhams.length && !form.chiTietSanPhams.length"
-                class="text-red-500 text-sm mt-2"
-            >
-              Vui lòng chọn ít nhất một chi tiết sách
-            </p>
-          </div>
 
-          <!-- Nút hành động -->
-          <div class="flex justify-end space-x-3 mt-6">
-            <button
-                type="button"
-                @click="cancel"
-                class="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 focus:outline-none"
-            >
-              Hủy
-            </button>
-            <button
-                type="submit"
-                class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none flex items-center gap-2"
-            >
-              <svg
-                  class="w-5 h-5"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-              >
-                <path
-                    fill-rule="evenodd"
-                    d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                    clip-rule="evenodd"
-                ></path>
-              </svg>
-              {{ isEdit ? 'Cập nhật bộ sách' : 'Thêm bộ sách' }}
-            </button>
-          </div>
         </form>
 
         <!-- Bảng chọn chi tiết sản phẩm -->
@@ -263,6 +171,105 @@
           </div>
         </div>
       </div>
+      <!-- Upload ảnh bộ sách (di chuyển xuống dưới) -->
+
+      <!-- Danh sách chi tiết sách đã chọn (kéo dài, ở dưới cùng) -->
+      <div v-if="form.chiTietSanPhams.length" class="mt-12 w-4/5 mx-auto flex flex-col md:flex-row gap-8 items-start">
+        <div class="flex-1">
+          <h3 class="text-sm font-medium text-gray-700 mb-2">Danh sách chi tiết sách đã chọn</h3>
+          <div class="border border-gray-300 rounded-lg p-4">
+            <table class="w-full text-sm text-center">
+                <thead class="text-sm text-gray-700 font-semibold bg-white">
+                <tr>
+                  <th class="px-6 py-3">Mã</th>
+                  <th class="px-6 py-3">Tên</th>
+                  <th class="px-6 py-3">Ngôn ngữ</th>
+                  <th class="px-6 py-3">Giá tiền</th>
+                  <th class="px-6 py-3">Số lượng</th>
+                  <th class="px-6 py-3">Hành động</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr
+                    v-for="(item, index) in form.chiTietSanPhams"
+                    :key="item.id"
+                    class="hover:bg-gray-100"
+                >
+                  <td class="px-6 py-3">{{ item.maChiTietSanPham }}</td>
+                  <td class="px-6 py-3">{{ item.tenChiTietSanPham }}</td>
+                  <td class="px-6 py-3">{{ item.idNgonNgu?.tenNgonNgu || 'N/A' }}</td>
+                  <td class="px-6 py-3">{{ item.gia ? item.gia.toLocaleString('vi-VN') + ' VNĐ' : 'N/A' }}</td>
+                  <td class="px-6 py-3">
+                    <input
+                        v-model.number="item.soLuong"
+                        type="number"
+                        :min="1"
+                        :max="Math.min(item.soLuongTon, form.soLuong)"
+                        class="w-20 p-2 border border-gray-300 rounded-lg text-center"
+                        @input="validateChiTietSoLuong(item, index)"
+                    />
+                    <p v-if="errors.chiTietSanPhams[index]" class="text-red-500 text-xs mt-1">
+                      {{ errors.chiTietSanPhams[index] }}
+                    </p>
+                  </td>
+                  <td class="px-6 py-3">
+                    <button
+                        type="button"
+                        @click="removeChiTietSanPham(index)"
+                        class="text-red-600 hover:text-red-800"
+                    >
+                      <svg
+                          class="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                      >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+            <p v-if="errors.chiTietSanPhams.length && !form.chiTietSanPhams.length" class="text-red-500 text-sm mt-2">
+              Vui lòng chọn ít nhất một chi tiết sách
+            </p>
+          </div>
+        <div class="flex flex-col items-center md:mx-0 md:w-[320px] w-full">
+          <h3 class="text-sm font-medium text-gray-700 mb-2">Chọn ảnh</h3>
+          <div class="image-upload-container w-full">
+            <label for="imageInput" class="upload-box">
+              <div v-if="imagePreview" class="image-preview">
+                <img :src="imagePreview" alt="Preview">
+              </div>
+              <div v-else id="uploadPlaceholder">
+                <i class="fas fa-upload text-3xl text-gray-400 mb-2"></i>
+                <p>Click để chọn ảnh hoặc kéo thả</p>
+                <p>Hỗ trợ: JPG, PNG, GIF (≤ 5MB)</p>
+              </div>
+            </label>
+            <input type="file" id="imageInput" accept="image/*" @change="onImageChange" ref="imageInput" hidden>
+          </div>
+        </div>
+      </div>
+      <!-- Nút hành động dưới cùng bên phải -->
+      <div class="flex justify-end space-x-3 mt-10 w-full">
+        <button type="button" @click="cancel" class="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 focus:outline-none">
+          Hủy
+        </button>
+        <button type="button" @click="handleSubmit" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none flex items-center gap-2">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path>
+          </svg>
+          {{ isEdit ? 'Cập nhật bộ sách' : 'Thêm bộ sách' }}
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -270,6 +277,7 @@
 <script>
 import BoSachService from '@/service/BoSachService';
 import { useRouter } from 'vue-router';
+import ImageKitService from '@/service/ImageKitService';
 
 export default {
   name: 'AddBoSach',
@@ -301,6 +309,9 @@ export default {
       currentPage: 0,
       itemsPerPage: 6,
       isEdit: false,
+      uploading: false,
+      imageFile: null,
+      imagePreview: '',
     };
   },
   computed: {
@@ -325,6 +336,10 @@ export default {
     paginatedChiTietSanPhams() {
       const start = this.currentPage * this.itemsPerPage;
       return this.filteredChiTietSanPhams.slice(start, start + this.itemsPerPage);
+    },
+    minChiTietSoLuongTon() {
+      if (!this.form.chiTietSanPhams.length) return 1;
+      return Math.min(...this.form.chiTietSanPhams.map(item => item.soLuongTon || 0));
     },
   },
   async created() {
@@ -403,6 +418,20 @@ export default {
           item => item.id !== removedItem.id
       );
     },
+    validateBoSachSoLuong() {
+      // Không cho số lượng bộ sách lớn hơn số lượng tồn nhỏ nhất của các chi tiết
+      if (this.form.soLuong > this.minChiTietSoLuongTon) {
+        this.errors.soLuong = `Số lượng bộ sách không được vượt quá số lượng tồn nhỏ nhất của các chi tiết (${this.minChiTietSoLuongTon})`;
+      } else if (this.form.soLuong < 1) {
+        this.errors.soLuong = 'Số lượng bộ sách phải lớn hơn 0';
+      } else {
+        this.errors.soLuong = '';
+      }
+      // Kiểm tra lại số lượng từng chi tiết
+      this.form.chiTietSanPhams.forEach((item, idx) => {
+        this.validateChiTietSoLuong(item, idx);
+      });
+    },
     validateChiTietSoLuong(item, index) {
       const chiTiet = this.form.chiTietSanPhams.find(selected => selected.id === item.id);
       const chiTietIndex = chiTiet ? this.form.chiTietSanPhams.indexOf(chiTiet) : index;
@@ -410,9 +439,29 @@ export default {
         this.errors.chiTietSanPhams[chiTietIndex] = 'Số lượng phải lớn hơn 0';
       } else if (chiTiet && chiTiet.soLuong > chiTiet.soLuongTon) {
         this.errors.chiTietSanPhams[chiTietIndex] = `Số lượng không được vượt quá tồn kho (${chiTiet.soLuongTon})`;
+      } else if (chiTiet && chiTiet.soLuong > this.form.soLuong) {
+        this.errors.chiTietSanPhams[chiTietIndex] = `Số lượng chi tiết không được vượt quá số lượng bộ sách (${this.form.soLuong})`;
       } else {
         this.errors.chiTietSanPhams[chiTietIndex] = '';
       }
+    },
+    onImageChange(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        alert('Vui lòng chọn file ảnh hợp lệ!');
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Ảnh vượt quá dung lượng 5MB!');
+        return;
+      }
+      this.imageFile = file;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        this.imagePreview = ev.target.result;
+      };
+      reader.readAsDataURL(file);
     },
     async handleSubmit() {
       this.errors = {
@@ -422,7 +471,6 @@ export default {
         soLuong: '',
         chiTietSanPhams: new Array(this.form.chiTietSanPhams.length).fill(''),
       };
-
       let hasError = false;
       if (!this.form.tenBoSach.trim()) {
         this.errors.tenBoSach = 'Tên bộ sách không được để trống';
@@ -445,17 +493,31 @@ export default {
           if (this.errors.chiTietSanPhams[index]) hasError = true;
         });
       }
-
       if (hasError) return;
-
+      // Upload ảnh trước khi gửi payload
+      this.uploading = true;
+      let imageUrl = '';
+      try {
+        if (this.imageFile) {
+          const result = await ImageKitService.uploadImage(this.imageFile, this.imageFile.name);
+          if (result.success) imageUrl = result.url;
+          else throw new Error(result.error || 'Lỗi upload ảnh');
+        }
+      } catch (e) {
+        this.uploading = false;
+        alert('Lỗi upload ảnh: ' + (e.message || e));
+        return;
+      }
+      this.uploading = false;
       try {
         const payload = {
           tenBoSach: this.form.tenBoSach,
           giaTien: this.form.giaTien,
           moTa: this.form.moTa,
           soLuong: this.form.soLuong,
+          url: imageUrl,
           boSachChiTiets: this.form.chiTietSanPhams.map(item => ({
-            idChiTietSanPham: parseInt(item.id), // Ensure Integer
+            idChiTietSanPham: parseInt(item.id),
             soLuong: item.soLuong,
           })),
         };
@@ -491,5 +553,41 @@ export default {
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
 .font-roboto {
   font-family: 'Roboto', sans-serif;
+}
+.image-upload-container {
+  text-align: center;
+  border: 2px dashed #ccc;
+  border-radius: 12px;
+  padding: 20px;
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  margin-top: 10px;
+  cursor: pointer;
+  transition: border-color 0.3s ease;
+}
+.image-upload-container:hover {
+  border-color: #007bff;
+}
+.upload-box {
+  display: block;
+  cursor: pointer;
+}
+.image-preview {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+.image-preview img {
+  max-width: 250px;
+  max-height: 250px;
+  border-radius: 10px;
+  object-fit: contain;
+}
+#uploadPlaceholder {
+  color: #888;
+}
+.hidden {
+  display: none;
 }
 </style>

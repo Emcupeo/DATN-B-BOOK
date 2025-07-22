@@ -1,0 +1,2 @@
+ALTER TABLE dbo.bo_sach
+    ADD url NVARCHAR(500) NULL;

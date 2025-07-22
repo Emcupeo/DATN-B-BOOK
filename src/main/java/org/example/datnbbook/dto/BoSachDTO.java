@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.Instant;
 import java.util.List;
 
 @Data
@@ -22,6 +23,9 @@ public class BoSachDTO {
     @NotNull(message = "Số lượng không được để trống")
     @PositiveOrZero(message = "Số lượng phải không âm")
     private Integer soLuong;
+    private String url;
+    private Instant createdAt;
+    private Instant updatedAt;
     @NotEmpty(message = "Danh sách chi tiết bộ sách không được để trống")
     private List<BoSachChiTietDTO> boSachChiTiets;
 

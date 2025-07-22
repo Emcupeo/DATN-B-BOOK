@@ -626,15 +626,15 @@ export default {
       if (files) {
         Array.from(files).forEach(file => {
           if (this.selectedImages.length < 3) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
               this.selectedImages.push({
                 file: file,
                 preview: e.target.result,
                 name: file.name
               });
-            };
-            reader.readAsDataURL(file);
+        };
+        reader.readAsDataURL(file);
           }
         });
       }

@@ -7,6 +7,11 @@ export default class BoSach {
         this.soLuong = data.soLuong || 0;
         this.giaTien = data.giaTien || 0;
         this.deleted = data.deleted !== undefined ? data.deleted : true;
+        this.url = data.url || '';
+        this.createdAt = data.createdAt || null;
+        this.updatedAt = data.updatedAt || null;
+        this.createdBy = data.createdBy || '';
+        this.updatedBy = data.updatedBy || '';
     }
 
     toJSON() {
@@ -17,7 +22,12 @@ export default class BoSach {
             moTa: this.moTa,
             soLuong: this.soLuong,
             giaTien: this.giaTien,
-            deleted: this.deleted
+            deleted: this.deleted,
+            url: this.url,
+            createdAt: this.createdAt,
+            updatedAt: this.updatedAt,
+            createdBy: this.createdBy,
+            updatedBy: this.updatedBy
         };
     }
 }

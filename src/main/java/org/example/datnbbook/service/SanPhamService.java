@@ -157,6 +157,8 @@ public class SanPhamService {
             sanPhamDTO.setTenDanhMuc(sanPham.getDanhMuc().getTenDanhMuc());
         }
         
+        sanPhamDTO.setCreatedAt(sanPham.getCreatedAt());
+        sanPhamDTO.setUpdatedAt(sanPham.getUpdatedAt());
         return sanPhamDTO;
     }
 

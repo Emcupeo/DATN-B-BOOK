@@ -59,6 +59,7 @@ public class BoSachService {
         boSach.setGiaTien(BigDecimal.valueOf(dto.getGiaTien()));
         boSach.setMoTa(dto.getMoTa());
         boSach.setSoLuong(dto.getSoLuong());
+        boSach.setUrl(dto.getUrl());
         boSach.setDeleted(false);
         boSach.setCreatedBy("Admin");
         boSach.setUpdatedBy("Admin");

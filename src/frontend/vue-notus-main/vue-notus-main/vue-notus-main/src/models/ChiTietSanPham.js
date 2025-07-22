@@ -24,6 +24,7 @@ export default class ChiTietSanPham {
         this.updatedAt = data.updatedAt || null;
         this.updatedBy = data.updatedBy || '';
         this.deleted = data.deleted !== undefined ? data.deleted : false;
+        this.isbn = data.isbn || '';
     }
 
     toJSON() {
@@ -51,7 +52,8 @@ export default class ChiTietSanPham {
             createdBy: this.createdBy,
             updatedAt: this.updatedAt,
             updatedBy: this.updatedBy,
-            deleted: this.deleted
+            deleted: this.deleted,
+            isbn: this.isbn
         };
     }
 } 
