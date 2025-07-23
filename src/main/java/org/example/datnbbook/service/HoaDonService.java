@@ -54,6 +54,9 @@ public class HoaDonService {
     private KhachHangRepository khachHangRepository;
 
     @Autowired
+    private NhanVienRepository nhanVienRepository; // Thêm repository cho NhanVien
+
+    @Autowired
     private SpringTemplateEngine templateEngine;
 
     private String generateMaHinhThucThanhToan() {
@@ -75,7 +78,16 @@ public class HoaDonService {
     }
 
     public List<HoaDon> getAllHoaDon() {
-        return hoaDonRepository.findAll();
+        List<HoaDon> hoaDons = hoaDonRepository.findAllByOrderByCreatedAtDesc();
+        for (HoaDon hoaDon : hoaDons) {
+            if (hoaDon.getTongTien() == null && hoaDon.getHoaDonChiTiets() != null) {
+                BigDecimal tongTien = hoaDon.getHoaDonChiTiets().stream()
+                        .map(item -> item.getGiaSanPham() != null ? item.getGiaSanPham().multiply(BigDecimal.valueOf(item.getSoLuong())) : BigDecimal.ZERO)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                hoaDon.setTongTien(tongTien);
+            }
+        }
+        return hoaDons;
     }
 
     public HoaDon getHoaDonById(int id) {
@@ -270,14 +282,14 @@ public class HoaDonService {
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hóa đơn với ID: " + id));
 
         String trangThaiCu = hoaDon.getTrangThai();
-        hoaDon.setTrangThai("Hủy");
+        hoaDon.setTrangThai("Đã hủy");
         hoaDon.setDeleted(true);
         hoaDonRepository.save(hoaDon);
 
         LichSuHoaDon lichSu = new LichSuHoaDon();
         lichSu.setHoaDon(hoaDon);
         lichSu.setTrangThaiCu(trangThaiCu);
-        lichSu.setTrangThaiMoi("Hủy");
+        lichSu.setTrangThaiMoi("Đã hủy");
         lichSu.setCreatedAt(Instant.now());
         lichSu.setMaLichSuHoaDon(generateMaLichSuHoaDon());
         lichSuHoaDonRepository.save(lichSu);
@@ -304,7 +316,7 @@ public class HoaDonService {
             throw new IllegalArgumentException("Tổng tiền thanh toán không khớp với tổng hóa đơn!");
         }
 
-        if ("TaiQuay".equals(loaiHoaDon) && tienMat.compareTo(BigDecimal.ZERO) > 0) {
+        if ("Tại quầy".equals(loaiHoaDon) && tienMat.compareTo(BigDecimal.ZERO) > 0) {
             if (tienKhachDua.compareTo(thanhTien) < 0) {
                 throw new IllegalArgumentException("Tiền khách đưa không đủ để thanh toán!");
             }
@@ -332,7 +344,7 @@ public class HoaDonService {
         hoaDon.setUpdatedAt(Instant.now());
 
         // Set trạng thái dựa trên loại hóa đơn
-        String newTrangThai = "TaiQuay".equals(loaiHoaDon) ? "Hoàn thành" : "Chờ xác nhận";
+        String newTrangThai = "Tại quầy".equals(loaiHoaDon) ? "Hoàn thành" : "Chờ xác nhận";
         hoaDon.setTrangThai(newTrangThai);
 
         HoaDon updatedHoaDon = hoaDonRepository.save(hoaDon);
@@ -359,7 +371,13 @@ public class HoaDonService {
         hoaDon.setLoaiHoaDon(loaiHoaDon);
         hoaDon.setTrangThai("Tạo hóa đơn");
         hoaDon.setCreatedAt(Instant.now());
+        hoaDon.setNgayTao(Instant.now());
         hoaDon.setDeleted(false);
+
+        // Gán nhân viên mặc định với id = 1
+        NhanVien nhanVien = nhanVienRepository.findById(1)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy nhân viên với ID: 1"));
+        hoaDon.setNhanVien(nhanVien);
 
         HoaDon savedHoaDon = hoaDonRepository.save(hoaDon);
 
@@ -393,15 +411,6 @@ public class HoaDonService {
         hoaDon.setUpdatedAt(Instant.now());
 
         HoaDon updatedHoaDon = hoaDonRepository.save(hoaDon);
-
-        LichSuHoaDon lichSu = new LichSuHoaDon();
-        lichSu.setHoaDon(updatedHoaDon);
-        lichSu.setTrangThaiCu(hoaDon.getTrangThai());
-        lichSu.setTrangThaiMoi(hoaDon.getTrangThai());
-        lichSu.setCreatedAt(Instant.now());
-        lichSu.setMaLichSuHoaDon(generateMaLichSuHoaDon());
-        lichSu.setGhiChu("Cập nhật thông tin khách hàng");
-        lichSuHoaDonRepository.save(lichSu);
 
         return updatedHoaDon;
     }

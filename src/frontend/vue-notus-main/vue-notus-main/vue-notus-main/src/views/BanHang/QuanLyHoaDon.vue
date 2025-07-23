@@ -10,7 +10,6 @@
           <div v-for="(status, index) in sortedOrderHistory" :key="status.id" class="flex items-center">
             <div class="flex flex-col items-center">
               <div class="icon-wrapper" :class="getStatusClass(status.trangThaiMoi)">
-                <!-- Icon cho từng trạng thái -->
                 <i v-if="status.trangThaiMoi === 'Tạo hóa đơn'" class="fas fa-file-alt"></i>
                 <i v-if="status.trangThaiMoi === 'Chờ xác nhận'" class="fas fa-clock"></i>
                 <i v-if="status.trangThaiMoi === 'Chờ giao hàng'" class="fas fa-truck"></i>
@@ -25,7 +24,7 @@
           </div>
         </div>
 
-        <!-- Nút quay về trạng thái trước với confirm -->
+        <!-- Nút quay về trạng thái trước -->
         <div class="mt-4 flex justify-end">
           <button v-if="order.trangThai !== 'Tạo hóa đơn' && order.trangThai !== 'Chờ xác nhận'"
                   @click="quayVeTrangThai"
@@ -271,7 +270,6 @@
           <div class="bg-white p-6 rounded-lg shadow-lg w-3/4 max-h-[80vh] overflow-y-auto">
             <h3 class="text-lg font-semibold mb-4">Thêm sản phẩm</h3>
             <form @submit.prevent="addProduct" class="space-y-4">
-              <!-- Thanh tìm kiếm và nút hiển thị tất cả -->
               <div class="flex justify-between items-center mb-4">
                 <div class="w-1/2">
                   <label class="block text-sm font-medium mb-1">Tìm kiếm</label>
@@ -284,8 +282,6 @@
                   Hiển thị tất cả
                 </button>
               </div>
-
-              <!-- Bộ lọc -->
               <div class="grid grid-cols-5 gap-4 mb-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-700">Giá tối thiểu</label>
@@ -345,8 +341,6 @@
                   </select>
                 </div>
               </div>
-
-              <!-- Danh sách sản phẩm -->
               <div v-if="filteredProducts.length" class="max-h-64 overflow-y-auto">
                 <table class="w-full text-sm text-left text-gray-500">
                   <thead class="text-xs text-gray-700 uppercase bg-gray-50">
@@ -384,8 +378,6 @@
               </div>
               <p v-else-if="productSearchQuery || allProducts.length" class="text-gray-500">Không tìm thấy sản phẩm phù hợp.</p>
               <p v-else class="text-gray-500">Vui lòng tìm kiếm hoặc nhấn "Hiển thị tất cả" để xem danh sách sản phẩm.</p>
-
-              <!-- Sản phẩm đã chọn -->
               <div v-if="selectedProduct" class="mt-4">
                 <p class="font-medium">Sản phẩm đã chọn: {{ selectedProduct.tenChiTietSanPham }}</p>
                 <div class="flex items-center mt-2">
@@ -393,8 +385,6 @@
                   <input v-model.number="selectedProductQuantity" type="number" min="1" :max="selectedProduct.soLuongTon" class="w-20 border rounded px-3 py-2" required>
                 </div>
               </div>
-
-              <!-- Nút điều khiển -->
               <div class="flex justify-end gap-2 mt-4">
                 <button type="button" @click="closeAddProductModal" class="bg-red-500 text-white px-4 py-2 rounded">Hủy</button>
                 <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded" :disabled="!selectedProduct">Thêm</button>
@@ -447,6 +437,16 @@
                 <label class="block text-sm font-medium mb-1">Tổng tiền</label>
                 <input v-model="totalAmount" type="text" class="w-full border rounded px-3 py-2" readonly>
               </div>
+              <div v-if="paymentMethod === '1'" class="mb-4">
+                <div class="flex justify-between mb-2">
+                  <label class="block text-sm font-medium">Tiền khách đưa:</label>
+                  <input type="number" v-model.number="tienKhachDua" class="w-1/2 border rounded px-2 py-1 text-sm" placeholder="Nhập số tiền" min="0" required>
+                </div>
+                <div class="flex justify-between mb-2">
+                  <span class="text-gray-600 text-sm">Tiền trả khách:</span>
+                  <span class="font-medium text-sm" :class="{ 'text-red-500': tienTraKhach < 0 }">{{ formatCurrency(tienTraKhach) }}</span>
+                </div>
+              </div>
               <div class="mb-4">
                 <label class="block text-sm font-medium mb-1">Ghi chú</label>
                 <textarea v-model="paymentNote" class="w-full border rounded px-3 py-2" placeholder="Nhập ghi chú (nếu có)"></textarea>
@@ -455,7 +455,7 @@
                 <button type="button" @click="showPaymentModal = false" class="bg-red-500 text-white px-4 py-2 rounded">
                   Hủy
                 </button>
-                <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded">
+                <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded" :disabled="paymentMethod === '1' && (tienTraKhach < 0 || tienKhachDua <= 0)">
                   Xác nhận
                 </button>
               </div>
@@ -488,29 +488,27 @@ export default {
         return total + (item.thanhTien || item.soLuong * item.giaSanPham);
       }, 0);
     },
-
     sortedOrderHistory() {
       return [...this.order.lichSuHoaDons]
           .filter(history => history.createdAt)
           .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
     },
-
     tienGiamGia() {
       const phanTramGiam = this.order.phieuGiamGia?.soPhanTramGiam || 0;
       return (this.tongTienHang * phanTramGiam) / 100;
     },
-
     thanhTien() {
       const phiShip = this.order.phiShip || 0;
       return this.tongTienHang - this.tienGiamGia + phiShip;
     },
-
+    tienTraKhach() {
+      return this.paymentMethod === "1" ? this.tienKhachDua - this.thanhTien : 0;
+    },
     filteredProducts() {
       const products = this.productSearchQuery ? this.searchResults : this.allProducts;
       return products.filter(item => {
         const query = this.filters.searchQuery.toLowerCase().trim();
         const numericQuery = parseFloat(query);
-
         const matchesSearchQuery = !query || (
             item.maChiTietSanPham.toLowerCase().includes(query) ||
             item.tenChiTietSanPham.toLowerCase().includes(query) ||
@@ -520,7 +518,6 @@ export default {
                 item.kichThuoc === numericQuery
             ))
         );
-
         return (
             matchesSearchQuery &&
             (this.filters.minPrice === null || item.gia >= this.filters.minPrice) &&
@@ -536,7 +533,6 @@ export default {
       });
     },
   },
-
   data() {
     return {
       order: {
@@ -595,9 +591,9 @@ export default {
       paymentMethod: "1",
       totalAmount: "",
       paymentNote: "",
+      tienKhachDua: 0,
     };
   },
-
   watch: {
     filters: {
       handler() {
@@ -625,7 +621,6 @@ export default {
       deep: true
     }
   },
-
   methods: {
     async fetchOrder() {
       try {
@@ -660,10 +655,6 @@ export default {
           if (this.order.tongTien === null || this.order.tongTien === undefined) {
             this.order.tongTien = this.thanhTien;
           }
-          // Đảm bảo hinhThucThanhToan được cập nhật từ API
-          if (!this.order.hinhThucThanhToan.phuongThucThanhToan) {
-            await this.loadPaymentMethod();
-          }
         }
       } catch (error) {
         console.error("Lỗi khi tải hóa đơn:", error);
@@ -672,7 +663,6 @@ export default {
         this.loading = false;
       }
     },
-
     async loadProvinces() {
       try {
         this.provinces = await AddressService.getProvinces();
@@ -681,7 +671,6 @@ export default {
         alert("Không thể tải danh sách tỉnh/thành phố!");
       }
     },
-
     async loadInitialData() {
       try {
         this.loaiBiaList = await LoaiBiaService.getAll();
@@ -691,28 +680,17 @@ export default {
         this.nguoiDichList = await NguoiDichService.getAll();
         this.theLoaiList = await TheLoaiService.getAll();
         this.ngonNguList = await NgonNguService.getAll();
-        console.log("[DEBUG] Loaded initial data:", {
-          loaiBiaList: this.loaiBiaList.length,
-          tacGiaList: this.tacGiaList.length,
-          nhaXuatBanList: this.nhaXuatBanList.length,
-          chatLieuList: this.chatLieuList.length,
-          nguoiDichList: this.nguoiDichList.length,
-          theLoaiList: this.theLoaiList.length,
-          ngonNguList: this.ngonNguList.length
-        });
       } catch (error) {
-        console.error("[ERROR] Error loading initial data:", error);
-        alert("Có lỗi xảy ra khi tải dữ liệu danh sách");
+        console.error("Lỗi khi tải dữ liệu danh sách:", error);
+        alert("Có lỗi xảy ra khi tải dữ liệu danh sách!");
       }
     },
-
     async handleAddressProvinceChange() {
       this.districts = [];
       this.wards = [];
       this.selectedAddressDistrict = null;
       this.selectedAddressWard = null;
       this.customerFormData.tinhThanh = this.selectedAddressProvince ? this.selectedAddressProvince.name : '';
-
       if (this.selectedAddressProvince) {
         try {
           this.districts = await AddressService.getDistrictsByProvinceCode(this.selectedAddressProvince.code);
@@ -722,12 +700,10 @@ export default {
         }
       }
     },
-
     async handleAddressDistrictChange() {
       this.wards = [];
       this.selectedAddressWard = null;
       this.customerFormData.quanHuyen = this.selectedAddressDistrict ? this.selectedAddressDistrict.name : '';
-
       if (this.selectedAddressDistrict) {
         try {
           this.wards = await AddressService.getWardsByDistrictCode(this.selectedAddressDistrict.code);
@@ -737,11 +713,9 @@ export default {
         }
       }
     },
-
     handleWardChange() {
       this.customerFormData.xaPhuong = this.selectedAddressWard ? this.selectedAddressWard.name : '';
     },
-
     async saveCustomerInfo() {
       try {
         const orderId = this.$route.params.id;
@@ -750,7 +724,6 @@ export default {
           alert("Không tìm thấy ID hóa đơn!");
           return;
         }
-
         const updatedData = {
           tenNguoiNhan: this.customerFormData.tenNguoiNhan,
           soDienThoaiNguoiNhan: this.customerFormData.soDienThoaiNguoiNhan,
@@ -761,7 +734,6 @@ export default {
             xaPhuong: this.customerFormData.xaPhuong,
           },
         };
-
         const response = await HoaDonService.updateCustomerInfo(orderId, updatedData);
         if (response.status === 200) {
           alert("Cập nhật thông tin khách hàng thành công!");
@@ -776,13 +748,11 @@ export default {
         alert("Có lỗi xảy ra khi cập nhật thông tin khách hàng. Vui lòng thử lại!");
       }
     },
-
     formatDiaChi(order) {
       if (!order.diaChi) return "Không có";
       const { diaChiChiTiet, xaPhuong, quanHuyen, tinhThanh } = order.diaChi;
       return `${diaChiChiTiet || ''}, ${xaPhuong || ''}, ${quanHuyen || ''}, ${tinhThanh || ''}`;
     },
-
     getStatusClass(status) {
       return {
         "Tạo hóa đơn": "text-gray-500 bg-gray-200 px-2 py-1 rounded",
@@ -793,19 +763,16 @@ export default {
         "Hoàn thành": "text-green-500 bg-green-200 px-2 py-1 rounded",
       }[status] || "text-gray-500 bg-gray-200 px-2 py-1 rounded";
     },
-
     formatDate(dateString) {
       if (!dateString) return "Không có dữ liệu";
       return new Date(dateString).toLocaleString("vi-VN");
     },
-
     formatCurrency(value) {
       return new Intl.NumberFormat("vi-VN", {
         style: "currency",
         currency: "VND",
       }).format(value || 0);
     },
-
     getInvoiceTypeClass(type) {
       const typeClasses = {
         "Tại quầy": "text-purple-600 bg-purple-100 px-2 py-1 rounded",
@@ -813,7 +780,6 @@ export default {
       };
       return typeClasses[type] || "text-gray-600 bg-gray-100 px-2 py-1 rounded";
     },
-
     getPaymentClass(pttt) {
       switch (pttt) {
         case "Tiền mặt":
@@ -826,14 +792,12 @@ export default {
           return "bg-gray-200 text-gray-800 px-2 py-1 rounded";
       }
     },
-
     increaseQuantity(item) {
       if (this.order.trangThai !== 'Chờ giao hàng') return;
       item.soLuong = Number(item.soLuong) + 1;
       item.thanhTien = item.soLuong * item.giaSanPham;
       this.updateProductQuantity(item);
     },
-
     decreaseQuantity(item) {
       if (this.order.trangThai !== 'Chờ giao hàng') return;
       if (item.soLuong > 1) {
@@ -842,7 +806,6 @@ export default {
         this.updateProductQuantity(item);
       }
     },
-
     validateQuantity(item) {
       if (this.order.trangThai !== 'Chờ giao hàng') return;
       if (!/^\d+$/.test(item.soLuong) || Number(item.soLuong) < 1) {
@@ -851,7 +814,6 @@ export default {
       item.thanhTien = item.soLuong * item.giaSanPham;
       this.updateProductQuantity(item);
     },
-
     async updateProductQuantity(item) {
       try {
         const orderId = this.$route.params.id;
@@ -862,7 +824,7 @@ export default {
         const response = await HoaDonService.updateProductQuantity(orderId, item.id, updatedData);
         if (response.status === 200) {
           console.log("Cập nhật số lượng sản phẩm thành công:", item);
-          await this.fetchOrder(); // Làm mới dữ liệu để đồng bộ
+          await this.fetchOrder();
         } else {
           console.error("Cập nhật số lượng thất bại:", response.status);
           alert("Có lỗi xảy ra khi cập nhật số lượng!");
@@ -872,15 +834,12 @@ export default {
         alert("Có lỗi xảy ra khi cập nhật số lượng. Vui lòng thử lại!");
       }
     },
-
     openHistoryModal() {
       this.showHistoryModal = true;
     },
-
     closeHistoryModal() {
       this.showHistoryModal = false;
     },
-
     openAddProductModal() {
       this.showAddProductModal = true;
       this.productSearchQuery = '';
@@ -902,7 +861,6 @@ export default {
       };
       this.loadInitialData();
     },
-
     closeAddProductModal() {
       this.showAddProductModal = false;
       this.productSearchQuery = '';
@@ -924,7 +882,6 @@ export default {
       };
       this.clearImageIntervals();
     },
-
     async searchProducts() {
       if (this.productSearchQuery.trim()) {
         try {
@@ -953,7 +910,6 @@ export default {
         this.filters.searchQuery = '';
       }
     },
-
     async showAllProducts() {
       try {
         console.log("Đang tải toàn bộ sản phẩm chi tiết");
@@ -976,7 +932,6 @@ export default {
         alert("Có lỗi xảy ra khi tải danh sách sản phẩm!");
       }
     },
-
     setupImageIntervals() {
       const products = this.productSearchQuery ? this.searchResults : this.allProducts;
       products.forEach(product => {
@@ -990,19 +945,16 @@ export default {
         }
       });
     },
-
     clearImageIntervals() {
       Object.keys(this.imageIntervals).forEach(id => {
         clearInterval(this.imageIntervals[id]);
       });
       this.imageIntervals = {};
     },
-
     selectProduct(product) {
       this.selectedProduct = product;
       this.selectedProductQuantity = 1;
     },
-
     async addProduct() {
       if (!this.selectedProduct) {
         alert("Vui lòng chọn một sản phẩm trước khi thêm!");
@@ -1035,7 +987,6 @@ export default {
         alert(error.response?.data || "Có lỗi xảy ra khi thêm sản phẩm!");
       }
     },
-
     async xacNhanHoaDon() {
       try {
         const orderId = this.$route.params.id;
@@ -1058,7 +1009,6 @@ export default {
         alert("Có lỗi xảy ra khi xác nhận hóa đơn. Vui lòng thử lại!");
       }
     },
-
     async xacNhanGiaoHang() {
       try {
         const orderId = this.$route.params.id;
@@ -1081,7 +1031,6 @@ export default {
         alert("Có lỗi xảy ra khi xác nhận giao hàng. Vui lòng thử lại!");
       }
     },
-
     async xacNhanLayHang() {
       try {
         const orderId = this.$route.params.id;
@@ -1104,13 +1053,13 @@ export default {
         alert("Có lỗi xảy ra khi xác nhận lấy hàng. Vui lòng thử lại!");
       }
     },
-
     openPaymentModal() {
       if (!confirm("Bạn có chắc chắn muốn xác nhận thanh toán?")) return;
       this.totalAmount = this.formatCurrency(this.thanhTien);
+      this.tienKhachDua = 0;
+      this.paymentNote = "";
       this.showPaymentModal = true;
     },
-
     async submitPayment() {
       try {
         const orderId = this.$route.params.id;
@@ -1119,10 +1068,19 @@ export default {
           alert("Không tìm thấy ID hóa đơn!");
           return;
         }
+        if (this.paymentMethod === "1" && this.tienTraKhach < 0) {
+          alert("Số tiền khách đưa không đủ để thanh toán!");
+          return;
+        }
+        if (this.paymentMethod === "1" && this.tienKhachDua <= 0) {
+          alert("Vui lòng nhập số tiền khách đưa hợp lệ!");
+          return;
+        }
         const paymentData = {
           phuongThucThanhToanId: this.paymentMethod,
           tienMat: this.paymentMethod === "1" ? this.thanhTien : 0,
           chuyenKhoan: this.paymentMethod === "2" ? this.thanhTien : 0,
+          tienKhachDua: this.paymentMethod === "1" ? this.tienKhachDua : 0,
           ghiChu: this.paymentNote,
         };
         console.log("Gửi dữ liệu thanh toán:", paymentData);
@@ -1132,6 +1090,7 @@ export default {
           await HoaDonService.updateTrangThaiHoaDon(orderId, "Hoàn thành");
           alert("Xác nhận thanh toán thành công!");
           this.showPaymentModal = false;
+          this.tienKhachDua = 0;
           await this.fetchOrder();
         } else {
           console.error("Xác nhận thanh toán thất bại:", response.status);
@@ -1142,20 +1101,6 @@ export default {
         alert("Có lỗi xảy ra khi xác nhận thanh toán. Vui lòng thử lại!");
       }
     },
-
-    async loadPaymentMethod() {
-      try {
-        const orderId = this.$route.params.id;
-        if (!orderId) return;
-        const response = await HoaDonService.getPaymentMethod(orderId); // Giả định API này
-        if (response.status === 200) {
-          this.order.hinhThucThanhToan = response.data;
-        }
-      } catch (error) {
-        console.error("Lỗi khi tải phương thức thanh toán:", error);
-      }
-    },
-
     async huyDon() {
       if (!confirm("Bạn có chắc chắn muốn hủy đơn? Hành động này không thể hoàn tác!")) return;
       try {
@@ -1179,7 +1124,6 @@ export default {
         alert("Có lỗi xảy ra khi hủy đơn. Vui lòng thử lại!");
       }
     },
-
     async quayVeTrangThai() {
       if (!confirm("Bạn có chắc chắn muốn quay về trạng thái trước? Hành động này không thể hoàn tác!")) return;
       const orderId = this.$route.params.id;
@@ -1209,7 +1153,6 @@ export default {
         alert("Không có trạng thái trước để quay về!");
       }
     },
-
     async removeItem(itemId) {
       if (!confirm("Bạn có chắc chắn muốn xóa sản phẩm này? Hành động này không thể hoàn tác!")) return;
       try {
@@ -1223,7 +1166,6 @@ export default {
         alert("Có lỗi xảy ra khi xóa sản phẩm!");
       }
     },
-
     async printInvoice() {
       try {
         const orderId = this.$route.params.id;
@@ -1259,12 +1201,10 @@ export default {
       }
     },
   },
-
   async mounted() {
     await this.fetchOrder();
     await this.loadProvinces();
   },
-
   beforeUnmount() {
     this.clearImageIntervals();
   },
@@ -1276,7 +1216,6 @@ export default {
 .bg-yellow-500 { background-color: #facc15; }
 .bg-yellow-400 { background-color: #fbbf24; }
 .bg-gray-500 { background-color: #6b7280; }
-
 .icon-wrapper {
   width: 50px;
   height: 50px;
@@ -1287,7 +1226,6 @@ export default {
   font-size: 20px;
   color: white;
 }
-
 .progress-line {
   width: 80px;
   height: 8px;
@@ -1295,7 +1233,6 @@ export default {
   border-radius: 5px;
   margin: 0 10px;
 }
-
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.3s;
@@ -1304,11 +1241,9 @@ export default {
 .fade-leave-to {
   opacity: 0;
 }
-
 .status-column {
   width: 200px;
 }
-
 .image-container {
   position: relative;
   width: 100%;

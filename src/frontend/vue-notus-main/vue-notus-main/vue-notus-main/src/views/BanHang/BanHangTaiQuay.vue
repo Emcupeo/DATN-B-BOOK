@@ -129,7 +129,7 @@
           </div>
         </div>
 
-        <div class="mb-6">
+        <div class="mb-6" v-if="deliveryMethod === 'TaiQuay'">
           <h3 class="text-md font-semibold text-gray-900 mb-2">Hình thức thanh toán</h3>
           <div class="space-y-2">
             <label class="flex items-center space-x-2">
@@ -589,6 +589,11 @@ export default {
     this.clearImageIntervals();
   },
   methods: {
+    // Hàm ánh xạ giá trị deliveryMethod
+    mapDeliveryMethod(value) {
+      return value === 'TaiQuay' ? 'Tại quầy' : 'Giao hàng';
+    },
+
     formatCurrency(value) {
       return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(value || 0);
     },
@@ -606,6 +611,7 @@ export default {
           phieuGiamGia: order.phieuGiamGia || {},
           diaChiGiaoHang: order.diaChi || '',
           soDienThoaiNguoiNhan: order.soDienThoaiNguoiNhan || '',
+          loaiHoaDon: order.loaiHoaDon === 'Tại quầy' ? 'TaiQuay' : 'GiaoHang', // Ánh xạ ngược
         }));
         if (this.orders.length > 0) {
           this.selectedOrderIndex = 0;
@@ -613,7 +619,6 @@ export default {
         }
       } catch (error) {
         console.error('Lỗi khi tải danh sách hóa đơn:', error);
-        alert('Không thể tải danh sách hóa đơn. Vui lòng thử lại!');
       }
     },
     async fetchProductsForOrder() {
@@ -623,13 +628,12 @@ export default {
         this.paginatedProducts = response.data.hoaDonChiTiets || [];
       } catch (error) {
         console.error('Lỗi khi tải sản phẩm của hóa đơn:', error);
-        alert('Không thể tải danh sách sản phẩm. Vui lòng thử lại!');
       }
     },
     async createNewInvoice() {
       try {
         const response = await axios.post('http://localhost:8080/api/hoa-don', {
-          loaiHoaDon: this.deliveryMethod,
+          loaiHoaDon: this.mapDeliveryMethod(this.deliveryMethod), // Ánh xạ trước khi gửi
         });
         this.orders.push({
           ...response.data,
@@ -659,7 +663,7 @@ export default {
           chuyenKhoan: this.paymentMethod === 'chuyenKhoan' ? this.thanhTien : 0,
           phuongThucThanhToanId: this.paymentMethod === 'tienMat' ? 1 : 2,
           ghiChu: '',
-          loaiHoaDon: this.deliveryMethod,
+          loaiHoaDon: this.mapDeliveryMethod(this.deliveryMethod), // Ánh xạ trước khi gửi
           tienKhachDua: this.paymentMethod === 'tienMat' && this.deliveryMethod === 'TaiQuay' ? this.tienKhachDua : 0
         };
         await HoaDonService.updatePayment(orderId, paymentData);
@@ -740,7 +744,6 @@ export default {
         this.customers = await KhachHangService.getAll();
       } catch (error) {
         console.error('Lỗi khi tải danh sách khách hàng:', error);
-        alert('Không thể tải danh sách khách hàng. Vui lòng thử lại!');
       }
     },
     async searchCustomers() {
