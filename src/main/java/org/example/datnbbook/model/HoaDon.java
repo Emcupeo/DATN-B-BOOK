@@ -45,8 +45,9 @@ public class HoaDon {
     @JsonIgnoreProperties({"hibernateLazyInitializer", "hoaDons", "lichSuHoaDons"})
     private HinhThucThanhToan hinhThucThanhToan;
 
+
     @ColumnDefault("'HD'+right('-000'+CONVERT([nvarchar](5), NEXT VALUE FOR [dbo].[HDSeq]), 5)")
-    @Column(name = "ma_hoa_don", length = 20)
+    @Column(name = "ma_hoa_don", length = 20, nullable = false, insertable = false, updatable = false)
     private String maHoaDon;
 
     @Nationalized

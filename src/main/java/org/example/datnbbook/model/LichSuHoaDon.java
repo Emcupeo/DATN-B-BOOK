@@ -39,7 +39,7 @@ public class LichSuHoaDon {
     @JsonBackReference
     private NhanVien nhanVien;
 
-    @Column(name = "ma_lich_su_hoa_don", length = 10)
+    @Column(name = "ma_lich_su_hoa_don", length = 10, nullable = false, insertable = false, updatable = false)
     private String maLichSuHoaDon;
 
     @Nationalized

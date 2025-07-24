@@ -18,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -27,7 +29,6 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class HoaDonService {
@@ -54,28 +55,13 @@ public class HoaDonService {
     private KhachHangRepository khachHangRepository;
 
     @Autowired
-    private NhanVienRepository nhanVienRepository; // Thêm repository cho NhanVien
+    private NhanVienRepository nhanVienRepository;
 
     @Autowired
     private SpringTemplateEngine templateEngine;
 
-    private String generateMaHinhThucThanhToan() {
-        String uuidPart = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 5);
-        return "HTTT-" + uuidPart;
-    }
-
-    private String generateMaLichSuHoaDon() {
-        return "LSHD-" + UUID.randomUUID().toString();
-    }
-
-    private String generateMaHoaDon() {
-        String uuidPart = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 8);
-        return "HD-" + uuidPart;
-    }
-
-    private String generateMaHoaDonChiTiet() {
-        return "HDCT-" + UUID.randomUUID().toString().replaceAll("-", "").substring(0, 6);
-    }
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public List<HoaDon> getAllHoaDon() {
         List<HoaDon> hoaDons = hoaDonRepository.findAllByOrderByCreatedAtDesc();
@@ -270,7 +256,6 @@ public class HoaDonService {
         lichSu.setTrangThaiCu(trangThaiCu);
         lichSu.setTrangThaiMoi(trangThaiMoi);
         lichSu.setCreatedAt(Instant.now());
-        lichSu.setMaLichSuHoaDon(generateMaLichSuHoaDon());
         lichSuHoaDonRepository.save(lichSu);
 
         return hoaDon;
@@ -291,7 +276,6 @@ public class HoaDonService {
         lichSu.setTrangThaiCu(trangThaiCu);
         lichSu.setTrangThaiMoi("Đã hủy");
         lichSu.setCreatedAt(Instant.now());
-        lichSu.setMaLichSuHoaDon(generateMaLichSuHoaDon());
         lichSuHoaDonRepository.save(lichSu);
 
         return hoaDon;
@@ -326,7 +310,6 @@ public class HoaDonService {
         if (hinhThucThanhToan == null) {
             hinhThucThanhToan = new HinhThucThanhToan();
             hinhThucThanhToan.setCreatedAt(Instant.now());
-            hinhThucThanhToan.setMaHinhThucThanhToan(generateMaHinhThucThanhToan());
         }
 
         hinhThucThanhToan.setTienMat(tienMat);
@@ -343,7 +326,6 @@ public class HoaDonService {
         hoaDon.setTongTien(thanhTien);
         hoaDon.setUpdatedAt(Instant.now());
 
-        // Set trạng thái dựa trên loại hóa đơn
         String newTrangThai = "Tại quầy".equals(loaiHoaDon) ? "Hoàn thành" : "Chờ xác nhận";
         hoaDon.setTrangThai(newTrangThai);
 
@@ -354,7 +336,6 @@ public class HoaDonService {
         lichSu.setTrangThaiCu("Tạo hóa đơn");
         lichSu.setTrangThaiMoi(newTrangThai);
         lichSu.setCreatedAt(Instant.now());
-        lichSu.setMaLichSuHoaDon(generateMaLichSuHoaDon());
         lichSuHoaDonRepository.save(lichSu);
 
         return updatedHoaDon;
@@ -366,27 +347,31 @@ public class HoaDonService {
             throw new IllegalArgumentException("Loại hóa đơn không được để trống!");
         }
 
+        long soLuongHoaDonMoi = hoaDonRepository.countByTrangThai("Tạo hóa đơn");
+        if (soLuongHoaDonMoi >= 5) {
+            throw new IllegalStateException("Đã đạt giới hạn tối đa 5 hóa đơn mới. Không thể tạo thêm!");
+        }
+
         HoaDon hoaDon = new HoaDon();
-        hoaDon.setMaHoaDon(generateMaHoaDon());
         hoaDon.setLoaiHoaDon(loaiHoaDon);
         hoaDon.setTrangThai("Tạo hóa đơn");
         hoaDon.setCreatedAt(Instant.now());
         hoaDon.setNgayTao(Instant.now());
         hoaDon.setDeleted(false);
 
-        // Gán nhân viên mặc định với id = 1
         NhanVien nhanVien = nhanVienRepository.findById(1)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy nhân viên với ID: 1"));
         hoaDon.setNhanVien(nhanVien);
 
         HoaDon savedHoaDon = hoaDonRepository.save(hoaDon);
 
+        entityManager.refresh(savedHoaDon);
+
         LichSuHoaDon lichSu = new LichSuHoaDon();
         lichSu.setHoaDon(savedHoaDon);
         lichSu.setTrangThaiCu(null);
         lichSu.setTrangThaiMoi("Tạo hóa đơn");
         lichSu.setCreatedAt(Instant.now());
-        lichSu.setMaLichSuHoaDon(generateMaLichSuHoaDon());
         lichSuHoaDonRepository.save(lichSu);
 
         return savedHoaDon;
@@ -437,7 +422,6 @@ public class HoaDonService {
         hoaDonChiTiet.setSoLuong(soLuong);
         hoaDonChiTiet.setGiaSanPham(giaSanPham);
         hoaDonChiTiet.setThanhTien(giaSanPham.multiply(BigDecimal.valueOf(soLuong)));
-        hoaDonChiTiet.setMaHoaDonChiTiet(generateMaHoaDonChiTiet());
 
         chiTietSanPham.setSoLuongTon(chiTietSanPham.getSoLuongTon() - soLuong);
         chiTietSanPhamRepository.save(chiTietSanPham);

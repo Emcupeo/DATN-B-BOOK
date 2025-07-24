@@ -32,7 +32,7 @@ public class HoaDonChiTiet {
     @JsonIgnoreProperties({"hibernateLazyInitializer", "hoaDonChiTiets"})
     private ChiTietSanPham chiTietSanPham;
 
-    @Column(name = "ma_hoa_don_chi_tiet", length = 10)
+    @Column(name = "ma_hoa_don_chi_tiet", length = 10, nullable = false, insertable = false, updatable = false)
     private String maHoaDonChiTiet;
 
     @Column(name = "gia_san_pham", precision = 10, scale = 2)
