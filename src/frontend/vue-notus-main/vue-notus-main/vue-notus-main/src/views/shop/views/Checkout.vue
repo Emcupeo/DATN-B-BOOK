@@ -579,7 +579,7 @@ export default {
         const paymentPayload = {
           tienMat: paymentMethod.value === 'cod' ? finalTotal.value : 0,
           chuyenKhoan: paymentMethod.value === 'bank' ? finalTotal.value : 0,
-          phuongThucThanhToanId: paymentMethod.value === 'cod' ? 1 : 2, // 1: COD, 2: Bank
+          phuongThucThanhToanId: paymentMethod.value === 'cod' ? 4 : 1, // 4: Tiền mặt (COD), 1: Chuyển khoản (Bank)
           ghiChu: ghiChu.value || '',
           loaiHoaDon: 'Online',
           tienKhachDua: paymentMethod.value === 'cod' ? finalTotal.value : 0,

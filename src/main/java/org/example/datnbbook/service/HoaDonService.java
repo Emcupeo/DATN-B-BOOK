@@ -337,23 +337,44 @@ public class HoaDonService {
         hinhThucThanhToan = new HinhThucThanhToan();
         hinhThucThanhToan.setCreatedAt(Instant.now());
         String timestamp = String.valueOf(System.currentTimeMillis());
-        String suffix = timestamp.substring(Math.max(0, timestamp.length() - 6));
-        String maHinhThucThanhToan = "HTTT" + suffix;
+        String suffix = timestamp.substring(Math.max(0, timestamp.length() - 5)); // Giảm xuống 5 ký tự
+        String maHinhThucThanhToan = "HT" + suffix; // Giảm xuống 2 ký tự prefix
         hinhThucThanhToan.setMaHinhThucThanhToan(maHinhThucThanhToan);
         System.out.println("DEBUG: Set maHinhThucThanhToan: " + maHinhThucThanhToan);
 
         hinhThucThanhToan.setTienMat(tienMat);
+        System.out.println("DEBUG: Set tienMat: " + tienMat);
         hinhThucThanhToan.setChuyenKhoan(chuyenKhoan);
+        System.out.println("DEBUG: Set chuyenKhoan: " + chuyenKhoan);
         hinhThucThanhToan.setUpdatedAt(Instant.now());
+        System.out.println("DEBUG: Set updatedAt: " + Instant.now());
+        hinhThucThanhToan.setDeleted(false); // Explicitly set deleted field
+        System.out.println("DEBUG: Set deleted: false");
 
+        System.out.println("DEBUG: Looking for PhuongThucThanhToan with ID: " + phuongThucThanhToanId);
+        // Kiểm tra tất cả PhuongThucThanhToan trong database
+        List<PhuongThucThanhToan> allPhuongThucThanhToan = phuongThucThanhToanRepository.findAll();
+        System.out.println("DEBUG: Total PhuongThucThanhToan in DB: " + allPhuongThucThanhToan.size());
+        for (PhuongThucThanhToan ptt : allPhuongThucThanhToan) {
+            System.out.println("DEBUG: PhuongThucThanhToan - ID: " + ptt.getId() + ", Kieu: " + ptt.getKieuThanhToan() + ", Ma: " + ptt.getMaPhuongThucThanhToan());
+        }
+        
         PhuongThucThanhToan phuongThucThanhToan = phuongThucThanhToanRepository.findById(phuongThucThanhToanId)
                 .orElseThrow(() -> new IllegalArgumentException("Phương thức thanh toán không tồn tại với ID: " + phuongThucThanhToanId));
+        System.out.println("DEBUG: Found PhuongThucThanhToan: " + phuongThucThanhToan.getKieuThanhToan() + " (ID: " + phuongThucThanhToan.getId() + ")");
         hinhThucThanhToan.setPhuongThucThanhToan(phuongThucThanhToan);
+        System.out.println("DEBUG: Set phuongThucThanhToan to HinhThucThanhToan");
 
         System.out.println("DEBUG: Saving HinhThucThanhToan: " + hinhThucThanhToan);
-        hinhThucThanhToan = hinhThucThanhToanRepository.save(hinhThucThanhToan);
-        hinhThucThanhToanRepository.flush(); // Explicitly flush changes to DB
-        System.out.println("DEBUG: Saved HinhThucThanhToan ID: " + hinhThucThanhToan.getId()); // Added for debugging
+        try {
+            hinhThucThanhToan = hinhThucThanhToanRepository.save(hinhThucThanhToan);
+            hinhThucThanhToanRepository.flush(); // Explicitly flush changes to DB
+            System.out.println("DEBUG: Saved HinhThucThanhToan ID: " + hinhThucThanhToan.getId()); // Added for debugging
+        } catch (Exception e) {
+            System.out.println("DEBUG: Error saving HinhThucThanhToan: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
 
         System.out.println("DEBUG: Setting hinhThucThanhToan to HoaDon: " + hinhThucThanhToan.getId());
         hoaDon.setHinhThucThanhToan(hinhThucThanhToan);
@@ -381,8 +402,15 @@ public class HoaDonService {
         if (hinhThucThanhToan.getHoaDons() != null) {
             hinhThucThanhToan.getHoaDons().add(hoaDon);
         }
-        HoaDon updatedHoaDon = hoaDonRepository.saveAndFlush(hoaDon); // flush ngay lập tức
-        System.out.println("DEBUG: Saved HoaDon with hinhThucThanhToan ID: " + (updatedHoaDon.getHinhThucThanhToan() != null ? updatedHoaDon.getHinhThucThanhToan().getId() : "NULL"));
+        HoaDon updatedHoaDon;
+        try {
+            updatedHoaDon = hoaDonRepository.saveAndFlush(hoaDon); // flush ngay lập tức
+            System.out.println("DEBUG: Saved HoaDon with hinhThucThanhToan ID: " + (updatedHoaDon.getHinhThucThanhToan() != null ? updatedHoaDon.getHinhThucThanhToan().getId() : "NULL"));
+        } catch (Exception e) {
+            System.out.println("DEBUG: Error saving HoaDon: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
 
         // Đọc lại từ DB thay vì refresh
         updatedHoaDon = hoaDonRepository.findById(updatedHoaDon.getId()).orElse(null);
