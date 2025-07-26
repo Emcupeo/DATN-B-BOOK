@@ -110,30 +110,21 @@ public class HoaDonController {
     }
 
     @PutMapping("/hoa-don/{id}/cap-nhat-thanh-toan")
-    public ResponseEntity<HoaDon> updatePayment(@PathVariable int id, @RequestBody Map<String, Object> paymentData) {
+    public ResponseEntity<HoaDon> updatePayment(@PathVariable int id, @RequestBody Map<String, Object> request) {
         try {
-            BigDecimal tienMat = paymentData.get("tienMat") != null ? new BigDecimal(paymentData.get("tienMat").toString()) : BigDecimal.ZERO;
-            BigDecimal chuyenKhoan = paymentData.get("chuyenKhoan") != null ? new BigDecimal(paymentData.get("chuyenKhoan").toString()) : BigDecimal.ZERO;
-            Integer phuongThucThanhToanId = paymentData.get("phuongThucThanhToanId") != null ?
-                    Integer.parseInt(paymentData.get("phuongThucThanhToanId").toString()) : null;
-            String ghiChu = (String) paymentData.get("ghiChu");
-            String loaiHoaDon = (String) paymentData.get("loaiHoaDon");
-            BigDecimal tienKhachDua = paymentData.get("tienKhachDua") != null ? new BigDecimal(paymentData.get("tienKhachDua").toString()) : BigDecimal.ZERO;
-
-            if (phuongThucThanhToanId == null) {
-                throw new IllegalArgumentException("Phương thức thanh toán ID không được để trống!");
-            }
-            if (loaiHoaDon == null || loaiHoaDon.isEmpty()) {
-                throw new IllegalArgumentException("Loại hóa đơn không được để trống!");
-            }
-
-            HoaDon updatedHoaDon = hoaDonService.updatePayment(id, tienMat, chuyenKhoan, phuongThucThanhToanId, ghiChu, loaiHoaDon, tienKhachDua);
-            return new ResponseEntity<>(updatedHoaDon, HttpStatus.OK);
-        } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            BigDecimal tienMat = new BigDecimal(request.get("tienMat").toString());
+            BigDecimal chuyenKhoan = new BigDecimal(request.get("chuyenKhoan").toString());
+            Integer phuongThucThanhToanId = Integer.valueOf(request.get("phuongThucThanhToanId").toString());
+            String ghiChu = request.get("ghiChu") != null ? request.get("ghiChu").toString() : "";
+            String loaiHoaDon = request.get("loaiHoaDon").toString();
+            BigDecimal tienKhachDua = new BigDecimal(request.get("tienKhachDua").toString());
+            Long phieuGiamGiaId = request.get("phieuGiamGiaId") != null ? 
+                Long.valueOf(request.get("phieuGiamGiaId").toString()) : null;
+            
+            HoaDon updatedHoaDon = hoaDonService.updatePayment(id, tienMat, chuyenKhoan, phuongThucThanhToanId, ghiChu, loaiHoaDon, tienKhachDua, phieuGiamGiaId);
+            return ResponseEntity.ok(updatedHoaDon);
         } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.badRequest().build();
         }
     }
 
@@ -152,6 +143,16 @@ public class HoaDonController {
         } catch (Exception e) {
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PutMapping("/hoa-don/{id}")
+    public ResponseEntity<HoaDon> updateHoaDon(@PathVariable int id, @RequestBody Map<String, Object> data) {
+        try {
+            HoaDon hoaDon = hoaDonService.updateHoaDon(id, data);
+            return new ResponseEntity<>(hoaDon, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -175,14 +176,18 @@ public class HoaDonController {
     @PostMapping("/hoa-don/{id}/add-product")
     public ResponseEntity<HoaDonChiTiet> addProductToOrder(@PathVariable int id, @RequestBody Map<String, Object> productData) {
         try {
+            System.out.println("DEBUG: addProductToOrder called with id=" + id + ", productData=" + productData);
             int chiTietSanPhamId = Integer.parseInt(productData.get("chiTietSanPhamId").toString());
             int soLuong = Integer.parseInt(productData.get("soLuong").toString());
             BigDecimal giaSanPham = new BigDecimal(productData.get("giaSanPham").toString());
             HoaDonChiTiet hoaDonChiTiet = hoaDonService.addProductToOrder(id, chiTietSanPhamId, soLuong, giaSanPham);
             return new ResponseEntity<>(hoaDonChiTiet, HttpStatus.OK);
         } catch (IllegalArgumentException | IllegalStateException e) {
+            System.out.println("DEBUG: addProductToOrder error: " + e.getMessage());
+            e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
+            System.out.println("DEBUG: addProductToOrder unexpected error: " + e.getMessage());
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }

@@ -53,7 +53,7 @@
         <!-- Right Actions -->
         <div class="flex items-center space-x-4">
           <!-- Wishlist -->
-          <router-link to="/shop/wishlist" class="relative p-3 text-gray-600 hover:text-red-500 hover:bg-red-50 transition-all duration-200 rounded-full group">
+          <router-link to="/wishlist" class="relative p-3 text-gray-600 hover:text-red-500 hover:bg-red-50 transition-all duration-200 rounded-full group">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
             </svg>
@@ -67,7 +67,7 @@
           </router-link>
 
           <!-- Cart -->
-          <router-link to="/shop/cart" class="relative p-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 rounded-full group">
+          <router-link to="/cart" class="relative p-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 rounded-full group">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
             </svg>
@@ -94,7 +94,7 @@
             <!-- Dropdown Menu -->
             <div class="absolute right-0 mt-3 w-56 bg-white rounded-xl shadow-2xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
               <div class="py-3">
-                <router-link to="/shop/profile" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                <router-link to="/profile" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
                   <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                   </svg>
@@ -106,7 +106,7 @@
                   </svg>
                   Đơn hàng
                 </a>
-                <router-link to="/shop/wishlist" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                <router-link to="/wishlist" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
                   <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
                   </svg>
@@ -168,7 +168,7 @@
                     class="group"
                   >
                     <router-link 
-                      :to="`/shop/products?category=${encodeURIComponent(category.name)}`"
+                      :to="`/products?category=${encodeURIComponent(category.name)}`"
                       class="flex items-center justify-between p-4 rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700 transition-all duration-200 border border-transparent hover:border-blue-200"
                       @click="showCategories = false"
                     >
@@ -191,7 +191,7 @@
                 <!-- View All Categories -->
                 <div class="mt-6 pt-6 border-t border-gray-100">
                   <router-link 
-                    to="/shop/products" 
+                    to="/products" 
                     class="flex items-center justify-center w-full py-3 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 font-semibold text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                     @click="showCategories = false"
                   >
@@ -213,19 +213,19 @@
             Trang chủ
           </router-link>
           <router-link 
-            to="/shop/products" 
+            to="/products" 
             class="px-6 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 font-medium transition-all duration-200 rounded-lg"
           >
             Sản phẩm
           </router-link>
           <router-link 
-            to="/shop/wishlist" 
+            to="/wishlist" 
             class="px-6 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 font-medium transition-all duration-200 rounded-lg"
           >
             Yêu thích
           </router-link>
           <router-link 
-            to="/shop/contact" 
+            to="/contact" 
             class="px-6 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 font-medium transition-all duration-200 rounded-lg"
           >
             Liên hệ
@@ -238,13 +238,13 @@
 
 <script>
 import { computed, ref, onMounted, onUnmounted } from 'vue'
-import { useShopStore } from '../store'
+import { useRealDataStore } from '../store/realDataStore'
 import { useWishlist } from '../store/wishlist'
 
 export default {
   name: 'Header',
   setup() {
-    const store = useShopStore()
+    const store = useRealDataStore()
     const wishlist = useWishlist()
     const cartItemCount = computed(() => store.cartItemCount.value)
     const showCategories = ref(false)
@@ -270,7 +270,7 @@ export default {
       }
 
       // Đếm số lượng sách theo danh mục - sử dụng .value để lấy giá trị từ computed
-      store.books.value.forEach(book => {
+      store.products.value.forEach(book => {
         if (categoryCounts[book.category]) {
           categoryCounts[book.category]++
         } else {

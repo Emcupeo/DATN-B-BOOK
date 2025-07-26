@@ -168,7 +168,7 @@
         >
           <td class="px-4 py-3">{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
           <td class="px-6 py-4 font-medium text-gray-900">{{ invoice.maHoaDon }}</td>
-          <td class="px-6 py-4">{{ invoice.nhanVien.maNhanVien }}</td>
+          <td class="px-6 py-4">{{ invoice.nhanVien ? invoice.nhanVien.maNhanVien : '' }}</td>
           <td class="px-6 py-4">{{ invoice.tenNguoiNhan }}</td>
           <td class="px-6 py-4">{{ invoice.soDienThoaiNguoiNhan }}</td>
           <td class="px-6 py-4">{{ getTotalProducts(invoice.hoaDonChiTiets) }}</td>

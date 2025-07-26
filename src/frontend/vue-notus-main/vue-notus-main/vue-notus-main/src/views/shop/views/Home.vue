@@ -160,7 +160,7 @@
         <!-- Load More Button -->
         <div class="text-center mt-12">
           <router-link 
-            to="/shop/products"
+            to="/products"
             class="inline-block bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-full font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
           >
             Xem tất cả sản phẩm

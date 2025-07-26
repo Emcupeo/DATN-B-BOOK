@@ -88,7 +88,7 @@
         </div>
 
         <router-link 
-          to="/shop/checkout"
+          to="/checkout"
           class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors block text-center font-semibold"
         >
           Tiến hành thanh toán
@@ -107,12 +107,12 @@
 
 <script>
 import { computed } from 'vue'
-import { useShopStore } from '../store'
+import { useRealDataStore } from '../store/realDataStore'
 
 export default {
   name: 'Cart',
   setup() {
-    const store = useShopStore()
+    const store = useRealDataStore()
 
     const cartItems = computed(() => store.cart.value)
     const cartTotal = computed(() => store.cartTotal.value)

@@ -43,12 +43,12 @@ const routes = [
     component: () => import("../views/auth/RegisterAdmin.vue"),
   },
   {
-    path: '/shop/book/:id',
+    path: '/book/:id',
     name: 'BookDetail',
     component: BookDetail,
   },
   {
-    path: '/shop/bo-sach/:id',
+    path: '/bo-sach/:id',
     name: 'BoSachDetail',
     component: BoSachDetail,
   },

@@ -514,7 +514,7 @@
 
 <script>
 import { ref, reactive, computed, watch } from 'vue'
-import { useShopStore } from '../store'
+import { useRealDataStore } from '../store/realDataStore'
 import BookCard from '../components/BookCard.vue'
 
 export default {
@@ -523,7 +523,7 @@ export default {
     BookCard
   },
   setup() {
-    const store = useShopStore()
+    const store = useRealDataStore()
     
     // Reactive data
     const viewMode = ref('grid')
@@ -553,7 +553,7 @@ export default {
     const formats = ['Bìa mềm', 'Bìa cứng', 'E-book', 'Audiobook']
 
     // Computed properties
-    const books = computed(() => store.books.value)
+    const books = computed(() => store.products.value)
     const categories = computed(() => store.categories.value)
 
     const priceRange = computed(() => {

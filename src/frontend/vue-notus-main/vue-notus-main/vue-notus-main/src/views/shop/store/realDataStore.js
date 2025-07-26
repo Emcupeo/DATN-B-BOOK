@@ -1,4 +1,4 @@
-import { reactive, computed } from 'vue'
+import { reactive, computed, watch } from 'vue'
 import ShopService from '../../../service/ShopService'
 import BoSachService from '../../../service/BoSachService'
 
@@ -165,7 +165,9 @@ const loadProducts = async () => {
         let chiTietList = [];
         try {
           chiTietList = await BoSachService.getBoSachChiTietByBoSachId(boSach.id);
-        } catch (e) { chiTietList = []; }
+        } catch (e) { // eslint-disable-next-line no-empty
+          chiTietList = [];
+        }
         // Lấy danh sách tác giả từ các chi tiết sách
         const tacGiaSet = new Set();
         for (const chiTiet of chiTietList) {
@@ -329,6 +331,27 @@ const getProductsByCategory = async (categoryId) => {
     return []
   }
 }
+
+// Load cart from localStorage khi khởi tạo
+const loadCart = () => {
+  try {
+    const saved = localStorage.getItem('cart')
+    if (saved) {
+      state.cart = JSON.parse(saved)
+    }
+  } catch (e) {
+    state.cart = []
+  }
+}
+loadCart()
+
+// Save cart vào localStorage mỗi khi thay đổi
+watch(() => state.cart, (val) => {
+  try {
+    localStorage.setItem('cart', JSON.stringify(val))
+  // eslint-disable-next-line no-empty
+  } catch (e) {}
+}, { deep: true })
 
 // Export store
 export const useRealDataStore = () => {

@@ -70,7 +70,7 @@
         <h3 class="text-xl font-semibold text-gray-800 mb-2">Danh sách yêu thích trống</h3>
         <p class="text-gray-600 mb-6">Bạn chưa có sản phẩm nào trong danh sách yêu thích</p>
         <router-link 
-          to="/shop/products"
+          to="/products"
           class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
         >
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -171,7 +171,7 @@
                 {{ book.inStock ? 'Thêm vào giỏ' : 'Hết hàng' }}
               </button>
               <router-link 
-                :to="`/shop/book/${book.id}`"
+                :to="`/book/${book.id}`"
                 class="py-2 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -255,25 +255,25 @@
 
 <script>
 import { computed } from 'vue'
-import { useShopStore } from '../store'
+import { useRealDataStore } from '../store/realDataStore'
 import { useWishlist } from '../store/wishlist'
 
 export default {
   name: 'Wishlist',
   setup() {
-    const store = useShopStore()
+    const store = useRealDataStore()
     const wishlist = useWishlist()
 
     // Lấy danh sách sách yêu thích từ shop store dựa trên wishlist IDs
     const wishlistBooks = computed(() => {
-      return wishlist.items.value.map(id => store.getBookById(id)).filter(Boolean)
+      return wishlist.items.value.map(id => store.getProductById(id)).filter(Boolean)
     })
 
     // Recommendations based on wishlist categories
     const recommendations = computed(() => {
       if (wishlistBooks.value.length === 0) return []
       const categories = [...new Set(wishlistBooks.value.map(book => book.category))]
-      const recommended = store.books.value
+      const recommended = store.products.value
         .filter(book => categories.includes(book.category) && !wishlist.isIn(book.id))
         .sort((a, b) => b.rating - a.rating)
         .slice(0, 4)

@@ -98,7 +98,7 @@
         <div class="flex justify-between items-center">
           <h3 class="text-md font-semibold">Thông tin đơn hàng - Đơn tại quầy</h3>
           <div class="flex gap-2">
-            <button v-if="order.trangThai === 'Chờ giao hàng'" @click="showCustomerForm = true" class="bg-blue-500 text-white px-3 py-1 rounded">
+            <button v-if="order.trangThai === 'Chờ giao hàng'" @click="openCustomerForm" class="bg-blue-500 text-white px-3 py-1 rounded">
               Cập nhật thông tin khách hàng
             </button>
           </div>
@@ -750,6 +750,7 @@ export default {
     },
     formatDiaChi(order) {
       if (!order.diaChi) return "Không có";
+      if (typeof order.diaChi === 'string') return order.diaChi;
       const { diaChiChiTiet, xaPhuong, quanHuyen, tinhThanh } = order.diaChi;
       return `${diaChiChiTiet || ''}, ${xaPhuong || ''}, ${quanHuyen || ''}, ${tinhThanh || ''}`;
     },
@@ -1198,6 +1199,17 @@ export default {
       } catch (error) {
         console.error("Lỗi khi in hóa đơn:", error);
         alert("Có lỗi xảy ra khi in hóa đơn. Vui lòng thử lại!");
+      }
+    },
+    async openCustomerForm() {
+      this.showCustomerForm = true;
+      // Gán lại selectedAddressProvince, District, Ward từ order.diaChi (nếu có)
+      if (this.order.diaChi && typeof this.order.diaChi !== 'string') {
+        this.selectedAddressProvince = this.provinces.find(p => p.name === this.order.diaChi.tinhThanh) || null;
+        await this.handleAddressProvinceChange();
+        this.selectedAddressDistrict = this.districts.find(d => d.name === this.order.diaChi.quanHuyen) || null;
+        await this.handleAddressDistrictChange();
+        this.selectedAddressWard = this.wards.find(w => w.name === this.order.diaChi.xaPhuong) || null;
       }
     },
   },

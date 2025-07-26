@@ -175,7 +175,7 @@
               <h3 class="text-lg font-semibold text-gray-800 mb-2">Chưa có đơn hàng nào</h3>
               <p class="text-gray-600 mb-4">Bạn chưa có đơn hàng nào. Hãy bắt đầu mua sắm!</p>
               <router-link 
-                to="/shop/products"
+                to="/products"
                 class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 Mua sắm ngay
@@ -211,7 +211,7 @@
                     <p class="text-sm font-medium text-gray-800">{{ formatPrice(order.total) }}</p>
                   </div>
                   <router-link 
-                    :to="`/shop/order/${order.id}`"
+                    :to="`/order/${order.id}`"
                     class="text-blue-600 hover:text-blue-700 text-sm font-medium"
                   >
                     Xem chi tiết

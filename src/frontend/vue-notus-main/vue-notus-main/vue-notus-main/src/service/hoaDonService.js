@@ -36,6 +36,12 @@ class HoaDonService {
         });
     }
 
+    huyDon(id) {
+        return axios.put(`${API_URL_ListHoaDon}/${id}/huy-don`, null, {
+            headers: { "Content-Type": "application/json" }
+        });
+    }
+
     addProductToOrder(hoaDonId, productData) {
         return axios.post(`${API_URL_ListHoaDon}/${hoaDonId}/add-product`, productData, {
             headers: { "Content-Type": "application/json" }
@@ -64,6 +70,18 @@ class HoaDonService {
 
     updateCustomerInfo(hoaDonId, data) {
         return axios.put(`${API_URL_ListHoaDon}/${hoaDonId}/cap-nhat-thong-tin-khach-hang`, data, {
+            headers: { "Content-Type": "application/json" }
+        });
+    }
+
+    updateHoaDon(id, data) {
+        return axios.put(`${API_URL_ListHoaDon}/${id}`, data, {
+            headers: { "Content-Type": "application/json" }
+        });
+    }
+
+    createHoaDon(data) {
+        return axios.post(API_URL_ListHoaDon, data, {
             headers: { "Content-Type": "application/json" }
         });
     }
