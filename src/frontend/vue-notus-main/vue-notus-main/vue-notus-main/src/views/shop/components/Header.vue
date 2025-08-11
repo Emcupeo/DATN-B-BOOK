@@ -9,8 +9,14 @@
             <span>📧 Email: support@bbook.com</span>
           </div>
           <div class="flex items-center space-x-4">
-            <router-link to="/login" class="hover:text-blue-400 transition-colors">Đăng nhập</router-link>
-            <router-link to="/register" class="hover:text-blue-400 transition-colors">Đăng ký</router-link>
+            <template v-if="!authStore.isAuthenticated">
+              <router-link to="/auth/login" class="hover:text-blue-400 transition-colors">Đăng nhập</router-link>
+              <router-link to="/auth/register" class="hover:text-blue-400 transition-colors">Đăng ký</router-link>
+            </template>
+            <template v-else>
+              <span class="text-blue-400">Xin chào, {{ userDisplayName }}!</span>
+              <button @click="handleLogout" class="hover:text-red-400 transition-colors">Đăng xuất</button>
+            </template>
           </div>
         </div>
       </div>
@@ -53,7 +59,7 @@
         <!-- Right Actions -->
         <div class="flex items-center space-x-4">
           <!-- Wishlist -->
-          <router-link to="/wishlist" class="relative p-3 text-gray-600 hover:text-red-500 hover:bg-red-50 transition-all duration-200 rounded-full group">
+          <router-link to="/shop/wishlist" class="relative p-3 text-gray-600 hover:text-red-500 hover:bg-red-50 transition-all duration-200 rounded-full group">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
             </svg>
@@ -67,7 +73,7 @@
           </router-link>
 
           <!-- Cart -->
-          <router-link to="/cart" class="relative p-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 rounded-full group">
+          <router-link to="/shop/cart" class="relative p-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 rounded-full group">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
             </svg>
@@ -81,11 +87,12 @@
           </router-link>
 
           <!-- User Menu -->
-          <div class="relative group">
+          <div v-if="authStore.isAuthenticated" class="relative group">
             <button class="flex items-center space-x-3 p-3 rounded-full hover:bg-gray-100 transition-all duration-200">
               <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center shadow-sm">
-                <span class="text-white font-semibold text-sm">U</span>
+                <span class="text-white font-semibold text-sm">{{ userInitial }}</span>
               </div>
+              <span class="hidden md:block text-sm font-medium text-gray-700">{{ userDisplayName }}</span>
               <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
               </svg>
@@ -94,31 +101,37 @@
             <!-- Dropdown Menu -->
             <div class="absolute right-0 mt-3 w-56 bg-white rounded-xl shadow-2xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
               <div class="py-3">
-                <router-link to="/profile" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                <button @click="openProfileModal" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors w-full text-left">
                   <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                   </svg>
-                  Tài khoản của tôi
-                </router-link>
-                <a href="#" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                  Thông tin cá nhân
+                </button>
+                <button @click="openChangePasswordModal" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors w-full text-left">
+                  <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m-2-2a2 2 0 00-2 2m2-2h2a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9a2 2 0 012-2h2m0 0V6a3 3 0 016 0v1m-6 0a3 3 0 106 0v1m-6 0h6"></path>
+                  </svg>
+                  Đổi mật khẩu
+                </button>
+                <router-link to="/shop/profile" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
                   <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                   </svg>
-                  Đơn hàng
-                </a>
-                <router-link to="/wishlist" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                  Đơn hàng của tôi
+                </router-link>
+                <router-link to="/shop/wishlist" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
                   <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
                   </svg>
                   Yêu thích
                 </router-link>
                 <hr class="my-2 border-gray-100">
-                <a href="#" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors">
+                <button @click="handleLogout" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors w-full text-left">
                   <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
                   </svg>
                   Đăng xuất
-                </a>
+                </button>
               </div>
             </div>
           </div>
@@ -168,7 +181,7 @@
                     class="group"
                   >
                     <router-link 
-                      :to="`/products?category=${encodeURIComponent(category.name)}`"
+                      :to="`/shop/products?category=${encodeURIComponent(category.name)}`"
                       class="flex items-center justify-between p-4 rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700 transition-all duration-200 border border-transparent hover:border-blue-200"
                       @click="showCategories = false"
                     >
@@ -191,7 +204,7 @@
                 <!-- View All Categories -->
                 <div class="mt-6 pt-6 border-t border-gray-100">
                   <router-link 
-                    to="/products" 
+                    to="/shop/products" 
                     class="flex items-center justify-center w-full py-3 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 font-semibold text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                     @click="showCategories = false"
                   >
@@ -213,19 +226,19 @@
             Trang chủ
           </router-link>
           <router-link 
-            to="/products" 
+            to="/shop/products" 
             class="px-6 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 font-medium transition-all duration-200 rounded-lg"
           >
             Sản phẩm
           </router-link>
           <router-link 
-            to="/wishlist" 
+            to="/shop/wishlist" 
             class="px-6 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 font-medium transition-all duration-200 rounded-lg"
           >
             Yêu thích
           </router-link>
           <router-link 
-            to="/contact" 
+            to="/shop/contact" 
             class="px-6 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 font-medium transition-all duration-200 rounded-lg"
           >
             Liên hệ
@@ -233,23 +246,57 @@
         </div>
       </div>
     </nav>
+
+    <!-- Profile Modal -->
+    <ProfileModal
+      :isOpen="showProfileModal"
+      @close="showProfileModal = false"
+    />
+
+    <!-- Change Password Modal -->
+    <ChangePasswordModal
+      :isOpen="showChangePasswordModal"
+      @close="showChangePasswordModal = false"
+    />
   </header>
 </template>
 
 <script>
 import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useRealDataStore } from '../store/realDataStore'
 import { useWishlist } from '../store/wishlist'
+import { useAuthStore } from '@/store/auth'
+import ProfileModal from '@/components/Modals/ProfileModal.vue'
+import ChangePasswordModal from '@/components/Modals/ChangePasswordModal.vue'
 
 export default {
   name: 'Header',
+  components: {
+    ProfileModal,
+    ChangePasswordModal
+  },
   setup() {
     const store = useRealDataStore()
     const wishlist = useWishlist()
+    const authStore = useAuthStore()
+    const router = useRouter()
     const cartItemCount = computed(() => store.cartItemCount.value)
     const showCategories = ref(false)
     const wishlistCount = ref(wishlist.getCount())
+    const showProfileModal = ref(false)
+    const showChangePasswordModal = ref(false)
     let hideTimeout = null
+
+    // Handle logout
+    const handleLogout = async () => {
+      try {
+        authStore.logout()
+        await router.push('/shop')
+      } catch (error) {
+        console.error('Logout error:', error)
+      }
+    }
 
     // Tạo danh mục từ dữ liệu sách
     const categories = computed(() => {
@@ -322,6 +369,19 @@ export default {
       wishlistCount.value = event.detail.count
     }
 
+    // Modal functions
+    const openProfileModal = () => {
+      showProfileModal.value = true
+    }
+
+    const openChangePasswordModal = () => {
+      showChangePasswordModal.value = true
+    }
+
+    // Computed properties to safely handle string operations
+    const userDisplayName = computed(() => authStore.userName || 'User')
+    const userInitial = computed(() => (authStore.userName || 'U').charAt(0).toUpperCase())
+
     // Setup on mount
     onMounted(() => {
       // Listen for wishlist updates
@@ -335,15 +395,24 @@ export default {
     })
 
     return {
+      store,
+      authStore,
       cartItemCount,
       showCategories,
       categories,
       wishlistCount,
+      showProfileModal,
+      showChangePasswordModal,
       toggleCategories,
       handleMouseEnter,
       handleMouseLeave,
       handleDropdownEnter,
-      handleDropdownLeave
+      handleDropdownLeave,
+      handleLogout,
+      openProfileModal,
+      openChangePasswordModal,
+      userDisplayName,
+      userInitial
     }
   }
 }

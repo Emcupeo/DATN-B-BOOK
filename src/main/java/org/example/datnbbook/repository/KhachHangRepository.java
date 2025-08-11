@@ -44,4 +44,8 @@ public interface KhachHangRepository extends JpaRepository<KhachHang, Long> {
             "LOWER(k.email) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(k.soDienThoai) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     List<KhachHang> search(@Param("keyword") String keyword);
+    
+    // Tạo mã khách hàng tự động bằng cách đếm số bản ghi
+    @Query(value = "SELECT 'KH' + RIGHT('00000' + CAST((SELECT ISNULL(MAX(CAST(SUBSTRING(ma_khach_hang, 3, 5) AS INT)), 0) + 1 FROM khach_hang WHERE ma_khach_hang LIKE 'KH%') AS VARCHAR(5)), 5)", nativeQuery = true)
+    String getNextMaKhachHang();
 }

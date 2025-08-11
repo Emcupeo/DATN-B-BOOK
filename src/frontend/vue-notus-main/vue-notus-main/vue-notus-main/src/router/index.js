@@ -52,6 +52,22 @@ const routes = [
     name: 'BoSachDetail',
     component: BoSachDetail,
   },
+  {
+    path: "/admin/nhan-vien",
+    name: "NhanVien",
+    component: () => import("../views/TaiKhoan/NhanVien.vue"),
+  },
+  {
+    path: "/admin/nhan-vien/them-moi",
+    name: "ThemNhanVien",
+    component: ThemNhanVien,
+  },
+  {
+    path: "/admin/nhan-vien/chinh-sua/:id",
+    name: "ChinhSuaNhanVien",
+    component: SuaNhanVien,
+  },
+
 ];
 
 const router = createRouter({

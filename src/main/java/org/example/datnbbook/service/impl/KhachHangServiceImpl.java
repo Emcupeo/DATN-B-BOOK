@@ -4,11 +4,15 @@ import jakarta.persistence.EntityManager;
 import org.example.datnbbook.dto.DiaChiDTO;
 import org.example.datnbbook.dto.KhachHangAddressDTO;
 import org.example.datnbbook.dto.KhachHangDTO;
+import org.example.datnbbook.dto.NguoiDungDTO;
 import org.example.datnbbook.model.DiaChi;
 import org.example.datnbbook.model.KhachHang;
+import org.example.datnbbook.model.NguoiDung;
 import org.example.datnbbook.repository.DiaChiRepository;
 import org.example.datnbbook.repository.KhachHangRepository;
 import org.example.datnbbook.service.KhachHangService;
+import org.example.datnbbook.service.AuthService;
+import org.example.datnbbook.service.EmailService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,6 +25,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,7 +43,25 @@ public class KhachHangServiceImpl implements KhachHangService {
     @Autowired
     private EntityManager entityManager;
 
+    @Autowired
+    private AuthService authService;
+
+    @Autowired
+    private EmailService emailService;
+
+    private final Random random = new Random();
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    private String generateRandomPassword() {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+        StringBuilder password = new StringBuilder();
+
+        for (int i = 0; i < 12; i++) {
+            password.append(chars.charAt(random.nextInt(chars.length())));
+        }
+
+        return password.toString();
+    }
 
     @Override
     public List<KhachHangDTO> getAll() {
@@ -120,30 +143,15 @@ public class KhachHangServiceImpl implements KhachHangService {
                 diaChiRepository.save(address);
             });
 
-            // Create or update addresses
-            List<DiaChi> updatedAddresses = new ArrayList<>();
+            // Create new addresses
+            List<DiaChi> newAddresses = new ArrayList<>();
 
             // Check if there's any default address in the new list
             boolean hasDefaultAddress = khachHangDTO.getDanhSachDiaChi().stream()
                     .anyMatch(DiaChiDTO::getMacDinh);
 
             for (DiaChiDTO diaChiDTO : khachHangDTO.getDanhSachDiaChi()) {
-                DiaChi diaChi;
-                if (diaChiDTO.getId() != null) {
-                    // Try to find existing address
-                    Optional<DiaChi> existingAddress = existingAddresses.stream()
-                            .filter(a -> a.getId().equals(diaChiDTO.getId()))
-                            .findFirst();
-
-                    if (existingAddress.isPresent()) {
-                        diaChi = existingAddress.get();
-                        diaChi.setDeleted(false);
-                    } else {
-                        diaChi = new DiaChi();
-                    }
-                } else {
-                    diaChi = new DiaChi();
-                }
+                DiaChi diaChi = new DiaChi();
 
                 // Update address properties
                 diaChi.setDiaChiChiTiet(diaChiDTO.getDiaChiChiTiet());
@@ -154,26 +162,22 @@ public class KhachHangServiceImpl implements KhachHangService {
                 // Handle default address logic
                 if (diaChiDTO.getMacDinh()) {
                     // If this address is set as default, set all other addresses to non-default
-                    updatedAddresses.forEach(addr -> {
-                        addr.setMacDinh(false);
-                        diaChiRepository.save(addr);
-                    });
+                    newAddresses.forEach(addr -> addr.setMacDinh(false));
                     diaChi.setMacDinh(true);
                 } else {
                     // If no address is set as default in the list, make the first one default
-                    diaChi.setMacDinh(!hasDefaultAddress && updatedAddresses.isEmpty());
+                    diaChi.setMacDinh(!hasDefaultAddress && newAddresses.isEmpty());
                 }
 
                 diaChi.setKhachHang(existingKhachHang);
+                diaChi.setDeleted(false);
 
                 // Save the address
                 diaChi = diaChiRepository.save(diaChi);
-                updatedAddresses.add(diaChi);
+                newAddresses.add(diaChi);
             }
 
-            // Clear and add all addresses
-            existingKhachHang.getDanhSachDiaChi().clear();
-            existingKhachHang.getDanhSachDiaChi().addAll(updatedAddresses);
+            // Don't touch the collection, let Hibernate handle it automatically
         }
 
         // Save the customer
@@ -231,12 +235,39 @@ public class KhachHangServiceImpl implements KhachHangService {
         KhachHang khachHang = new KhachHang();
         updateKhachHangFromAddressDTO(khachHang, dto);
 
-        // Generate customer code using SQL Server sequence
+        // Generate customer code using MAX logic
         String customerCode = generateCustomerCode();
         khachHang.setMaKhachHang(customerCode);
 
         // Save customer first to get ID
         KhachHang savedKhachHang = khachHangRepository.save(khachHang);
+
+        // Tạo tài khoản NguoiDung tương ứng
+        String randomPassword = generateRandomPassword();
+        try {
+            NguoiDungDTO nguoiDungDTO = new NguoiDungDTO();
+            nguoiDungDTO.setTenDangNhap(customerCode);
+            nguoiDungDTO.setMatKhau(randomPassword);
+            nguoiDungDTO.setEmail(savedKhachHang.getEmail());
+            nguoiDungDTO.setHoTen(savedKhachHang.getHoTen());
+            nguoiDungDTO.setLoaiNguoiDung(NguoiDung.LoaiNguoiDung.KHACH_HANG);
+            nguoiDungDTO.setTrangThai(true);
+            
+            authService.createNguoiDung(nguoiDungDTO);
+        } catch (Exception e) {
+            System.err.println("Không thể tạo tài khoản đăng nhập cho KH " + customerCode + ": " + e.getMessage());
+        }
+
+        // Gửi email thông tin đăng nhập cho khách hàng
+        try {
+            emailService.sendCustomerCredentials(
+                    savedKhachHang.getEmail(),
+                    customerCode,
+                    randomPassword
+            );
+        } catch (Exception e) {
+            System.err.println("Không thể gửi email thông tin đăng nhập cho KH " + customerCode + ": " + e.getMessage());
+        }
 
         // Create addresses
         if (dto.getDanhSachDiaChi() != null && !dto.getDanhSachDiaChi().isEmpty()) {
@@ -245,7 +276,7 @@ public class KhachHangServiceImpl implements KhachHangService {
                     .collect(Collectors.toList());
 
             diaChiRepository.saveAll(addresses);
-            savedKhachHang.setDanhSachDiaChi(addresses);
+            // Don't set the collection directly, let Hibernate manage it
         }
 
         return savedKhachHang;
@@ -261,13 +292,12 @@ public class KhachHangServiceImpl implements KhachHangService {
     }
 
     private String generateCustomerCode() {
-        // Execute native query to get next sequence value
-        Long seqVal = (Long) entityManager
-                .createNativeQuery("SELECT NEXT VALUE FOR [dbo].[KHSeq]")
+        // Use MAX() logic instead of sequence
+        String result = (String) entityManager
+                .createNativeQuery("SELECT 'KH' + RIGHT('00000' + CAST((SELECT ISNULL(MAX(CAST(SUBSTRING(ma_khach_hang, 3, 5) AS INT)), 0) + 1 FROM khach_hang WHERE ma_khach_hang LIKE 'KH%') AS VARCHAR(5)), 5)")
                 .getSingleResult();
-
-        // Format: KH00001, KH00002, etc.
-        return String.format("KH%05d", seqVal);
+        
+        return result;
     }
 
     // Helper methods

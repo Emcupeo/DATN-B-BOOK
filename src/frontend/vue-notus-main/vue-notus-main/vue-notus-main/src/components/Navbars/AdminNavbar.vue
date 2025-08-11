@@ -1,39 +1,36 @@
 <template>
   <!-- Thanh điều hướng -->
   <nav
-    class="absolute top-0 left-0 w-full z-10 bg-transparent md:flex-row md:flex-nowrap md:justify-start flex items-center p-4"
+    class="sticky top-0 left-0 w-full z-10 bg-white shadow-md md:flex-row md:flex-nowrap md:justify-start flex items-center p-4 border-b border-gray-200"
   >
     <div
       class="w-full mx-auto items-center flex justify-between md:flex-nowrap flex-wrap md:px-10 px-4"
     >
       <!-- Thương hiệu -->
-      <a
-        class="text-white text-sm uppercase hidden lg:inline-block font-semibold"
-        href="javascript:void(0)"
-      >
-        Bảng điều khiển
-      </a>
-      <!-- Ô tìm kiếm -->
-      <!-- <form
-        class="md:flex hidden flex-row flex-wrap items-center lg:ml-auto mr-3"
-      >
-        <div class="relative flex w-full flex-wrap items-stretch">
-          <span
-            class="z-10 h-full leading-snug font-normal absolute text-center text-blueGray-300 bg-transparent rounded text-base items-center justify-center w-8 pl-3 py-3"
-          >
-            <i class="fas fa-search"></i>
-          </span>
-          <input
-            type="text"
-            placeholder="Tìm kiếm..."
-            class="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 relative bg-white rounded text-sm shadow outline-none focus:outline-none focus:ring w-full pl-10"
-          />
+      <div class="flex items-center">
+        <a
+          class="text-gray-800 text-lg font-bold hidden lg:inline-block"
+          href="javascript:void(0)"
+        >
+          <i class="fas fa-tachometer-alt text-blue-600 mr-2"></i>
+          Bảng điều khiển
+        </a>
+      </div>
+      
+      <!-- Thông tin người dùng -->
+      <div class="flex items-center space-x-4">
+        <!-- Welcome message -->
+        <div class="hidden md:block text-gray-600">
+          <span class="text-sm">Xin chào, </span>
+          <span class="font-semibold text-gray-800">{{ userDisplayName }}</span>
+          <span class="text-xs text-gray-500 ml-2">({{ roleDisplayName }})</span>
         </div>
-      </form> -->
-      <!-- Người dùng -->
-      <ul class="flex-col md:flex-row list-none items-center hidden md:flex">
-        <user-dropdown />
-      </ul>
+        
+        <!-- Người dùng -->
+        <ul class="flex-col md:flex-row list-none items-center flex">
+          <user-dropdown />
+        </ul>
+      </div>
     </div>
   </nav>
   <!-- Kết thúc Thanh điều hướng -->
@@ -41,10 +38,32 @@
 
 <script>
 import UserDropdown from "@/components/Dropdowns/UserDropdown.vue";
+import { useAuthStore } from "@/store/auth";
 
 export default {
   components: {
     UserDropdown,
   },
+  setup() {
+    const authStore = useAuthStore();
+    
+    return {
+      authStore
+    };
+  },
+  computed: {
+    roleDisplayName() {
+      const roleMap = {
+        'ADMIN': 'Quản trị viên',
+        'NHAN_VIEN': 'Nhân viên',
+        'KHACH_HANG': 'Khách hàng'
+      };
+      return roleMap[this.authStore.userRole] || 'Người dùng';
+    },
+    
+    userDisplayName() {
+      return this.authStore.userName || 'Admin';
+    }
+  }
 };
 </script>

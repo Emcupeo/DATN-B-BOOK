@@ -56,6 +56,36 @@ public class EmailService {
         mailSender.send(message);
     }
 
+    public void sendCustomerCredentials(String toEmail, String customerCode, String password) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+        
+        helper.setFrom("duyennckth02248@fpt.edu.vn");
+        helper.setTo(toEmail);
+        helper.setSubject("Chào mừng bạn đến với B-Book!");
+        
+        String content = String.format("""
+            <html>
+            <body>
+                <h2>Chào mừng bạn đến với B-Book!</h2>
+                <p>Xin chào,</p>
+                <p>Cảm ơn bạn đã đăng ký tài khoản tại B-Book. Dưới đây là thông tin đăng nhập của bạn:</p>
+                <p><strong>Mã khách hàng:</strong> %s</p>
+                <p><strong>Tên đăng nhập:</strong> %s</p>
+                <p><strong>Mật khẩu:</strong> %s</p>
+                <p>Bạn có thể sử dụng thông tin này để đăng nhập vào hệ thống và khám phá những cuốn sách tuyệt vời.</p>
+                <p>Vui lòng đổi mật khẩu sau khi đăng nhập lần đầu để bảo mật tài khoản.</p>
+                <p>Chúc bạn có những trải nghiệm mua sắm tuyệt vời!</p>
+                <p>Trân trọng,</p>
+                <p>Đội ngũ B-Book</p>
+            </body>
+            </html>
+            """, customerCode, customerCode, password);
+        
+        helper.setText(content, true);
+        mailSender.send(message);
+    }
+
     public void sendVoucherEmail(String to, String customerName, String voucherType, Double voucherValue) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");

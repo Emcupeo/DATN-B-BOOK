@@ -14,6 +14,9 @@ import Admin from "@/layouts/Admin.vue";
 import Auth from "@/layouts/Auth.vue";
 import Shop from "@/layouts/Shop.vue";
 
+// Auth
+import { useAuthStore } from "@/store/auth";
+
 // views for Admin layout
 import Dashboard from "@/views/admin/Dashboard.vue";
 import Settings from "@/views/admin/Settings.vue";
@@ -148,6 +151,7 @@ const routes = [
         path: "/admin/thuoc-tinh",
         redirect: "/admin/thuoc-tinh/chat-lieu",
       },
+      //
       {
         path: "/admin/thuoc-tinh/chat-lieu",
         component: ChatLieu,
@@ -212,6 +216,16 @@ const routes = [
       {
         path: "/admin/nhan-vien",
         component: NhanVien,
+      },
+      {
+        path: "/admin/nhan-vien/them-moi",
+        name: "ThemNhanVien",
+        component: ThemNhanVien,
+      },
+      {
+        path: "/admin/nhan-vien/chinh-sua/:id",
+        name: "ChinhSuaNhanVien",
+        component: SuaNhanVien,
       },
       {
         path: "/admin/nhan-vien/chinh-sua/:id",
@@ -314,4 +328,59 @@ const router = createRouter({
   routes,
 });
 
-createApp(App).use(router).mount("#app");
+// Create app instance
+const app = createApp(App);
+
+// Initialize auth store
+const authStore = useAuthStore();
+authStore.initializeAuth();
+
+// Router Guards
+router.beforeEach((to, from, next) => {
+  const isAuthenticated = authStore.isAuthenticated;
+
+  console.log('Router Guard:', {
+    to: to.path,
+    from: from.path,
+    isAuthenticated,
+    user: authStore.user,
+    userRole: authStore.user?.loaiNguoiDung
+  });
+
+  // Public routes (không cần đăng nhập)
+  const publicRoutes = ['/shop', '/auth/login', '/auth/register'];
+  const isPublicRoute = publicRoutes.some(route => to.path.startsWith(route)) || to.path === '/';
+
+  // Nếu chưa đăng nhập và không phải public route
+  if (!isAuthenticated && !isPublicRoute) {
+    console.log('Redirecting to login - not authenticated');
+    return next('/auth/login');
+  }
+
+  // Nếu đã đăng nhập và đang ở auth routes
+  if (isAuthenticated && to.path.startsWith('/auth')) {
+    const defaultRoute = authStore.defaultRoute;
+    console.log('Redirecting from auth to defaultRoute:', defaultRoute);
+    return next(defaultRoute);
+  }
+
+  // Kiểm tra quyền truy cập theo role
+  if (isAuthenticated) {
+    const canAccess = authStore.canAccessRoute(to.path);
+    console.log('Can access route:', to.path, '=', canAccess);
+
+    if (!canAccess) {
+      // Redirect về trang phù hợp với role
+      const defaultRoute = authStore.defaultRoute;
+      console.log('Access denied, redirecting to defaultRoute:', defaultRoute);
+      return next(defaultRoute);
+    }
+  }
+
+  console.log('Route allowed:', to.path);
+  // Route hợp lệ
+  next();
+});
+
+// Use router and mount app
+app.use(router).mount("#app");

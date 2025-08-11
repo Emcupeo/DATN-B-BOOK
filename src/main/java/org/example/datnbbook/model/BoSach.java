@@ -61,11 +61,11 @@ public class BoSach {
     private Boolean deleted;
 
     @ColumnDefault("getdate()")
-    @Column(name = "created_at")
+    @Column(name = "created_at", columnDefinition = "DATETIME")
     private Instant createdAt;
 
     @ColumnDefault("getdate()")
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", columnDefinition = "DATETIME")
     private Instant updatedAt;
 
     @Size(max = 100)
