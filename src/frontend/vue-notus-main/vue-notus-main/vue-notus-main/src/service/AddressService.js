@@ -1,4 +1,4 @@
-const API_URL = 'https://provinces.open-api.vn/api';
+const API_URL = 'http://localhost:8080/api/provinces';
 
 class AddressService {
     async getProvinces() {
@@ -16,7 +16,7 @@ class AddressService {
         try {
             const response = await fetch(`${API_URL}/p/${provinceCode}?depth=2`);
             const data = await response.json();
-            return data.districts;
+            return data.districts || [];
         } catch (error) {
             console.error('Error fetching districts:', error);
             throw error;
@@ -27,11 +27,20 @@ class AddressService {
         try {
             const response = await fetch(`${API_URL}/d/${districtCode}?depth=2`);
             const data = await response.json();
-            return data.wards;
+            return data.wards || [];
         } catch (error) {
             console.error('Error fetching wards:', error);
             throw error;
         }
+    }
+
+    // Alias methods để tương thích với code cũ
+    async getDistrictsByProvinceCode(provinceCode) {
+        return this.getDistricts(provinceCode);
+    }
+
+    async getWardsByDistrictCode(districtCode) {
+        return this.getWards(districtCode);
     }
 }
 
