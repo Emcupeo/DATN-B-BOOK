@@ -1,5 +1,6 @@
 package org.example.datnbbook.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -29,7 +30,14 @@ public class DiaChi extends BaseEntity {
     @Column(name = "mac_dinh")
     private Boolean macDinh = false;
 
+    @Column(name = "ten_nguoi_nhan")
+    private String tenNguoiNhan;
+
+    @Column(name = "so_dien_thoai_nguoi_nhan")
+    private String soDienThoaiNguoiNhan;
+
     @ManyToOne
     @JoinColumn(name = "khach_hang_id")
+    @JsonManagedReference
     private KhachHang khachHang;
 }

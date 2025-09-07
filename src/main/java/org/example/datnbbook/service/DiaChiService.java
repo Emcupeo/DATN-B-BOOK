@@ -59,6 +59,8 @@ public class DiaChiService {
         diaChi.setTinhThanh(diaChiDTO.getTinhThanh());
         diaChi.setQuanHuyen(diaChiDTO.getQuanHuyen());
         diaChi.setXaPhuong(diaChiDTO.getXaPhuong());
+        diaChi.setTenNguoiNhan(diaChiDTO.getTenNguoiNhan());
+        diaChi.setSoDienThoaiNguoiNhan(diaChiDTO.getSoDienThoaiNguoiNhan());
 
         // Xử lý địa chỉ mặc định
         if (Boolean.TRUE.equals(diaChiDTO.getMacDinh()) && !Boolean.TRUE.equals(diaChi.getMacDinh())) {

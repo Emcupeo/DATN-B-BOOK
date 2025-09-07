@@ -30,6 +30,7 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -69,13 +70,19 @@ public class HoaDonService {
     private EntityManager entityManager;
 
     public List<HoaDon> getAllHoaDon() {
+        // Sử dụng repository để lấy tất cả hóa đơn
         List<HoaDon> hoaDons = hoaDonRepository.findAllByOrderByCreatedAtDesc();
+        
+        // Force load từng hóa đơn với relationships
         for (HoaDon hoaDon : hoaDons) {
-            if (hoaDon.getTongTien() == null && hoaDon.getHoaDonChiTiets() != null) {
-                BigDecimal tongTien = hoaDon.getHoaDonChiTiets().stream()
-                        .map(item -> item.getGiaSanPham() != null ? item.getGiaSanPham().multiply(BigDecimal.valueOf(item.getSoLuong())) : BigDecimal.ZERO)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add);
-                hoaDon.setTongTien(tongTien);
+            // Force load hoaDonChiTiets bằng cách gọi getHoaDonById
+            HoaDon fullHoaDon = getHoaDonById(hoaDon.getId());
+            if (fullHoaDon != null) {
+                // Copy dữ liệu từ fullHoaDon
+                hoaDon.setNgayDatHang(fullHoaDon.getNgayDatHang());
+                hoaDon.setTongTien(fullHoaDon.getTongTien());
+                hoaDon.setHoaDonChiTiets(fullHoaDon.getHoaDonChiTiets());
+                hoaDon.setTrangThai(fullHoaDon.getTrangThai());
             }
         }
         return hoaDons;
@@ -394,7 +401,20 @@ public class HoaDonService {
             System.out.println("DEBUG: Set phieuGiamGia ID: " + phieuGiamGiaId);
         }
 
-        String newTrangThai = "Tại quầy".equals(loaiHoaDon) ? "Hoàn thành" : "Chờ xác nhận";
+        // Set trạng thái dựa trên loại hóa đơn và phương thức thanh toán
+        String newTrangThai;
+        if ("Tại quầy".equals(loaiHoaDon)) {
+            newTrangThai = "Hoàn thành";
+        } else if ("Online".equals(loaiHoaDon) && phuongThucThanhToanId == 1) {
+            // VNPAY (phuongThucThanhToanId = 1) - bắt đầu từ "Đã thanh toán"
+            newTrangThai = "Đã thanh toán";
+        } else if ("Online".equals(loaiHoaDon) && phuongThucThanhToanId == 4) {
+            // COD (phuongThucThanhToanId = 4) - bắt đầu từ "Chờ xác nhận"
+            newTrangThai = "Chờ xác nhận";
+        } else {
+            // Mặc định
+            newTrangThai = "Chờ xác nhận";
+        }
         hoaDon.setTrangThai(newTrangThai);
 
         // Đảm bảo hóa đơn được lưu với id_hinh_thuc_thanh_toan
@@ -422,6 +442,21 @@ public class HoaDonService {
         lichSu.setTrangThaiMoi(newTrangThai);
         lichSu.setCreatedAt(Instant.now());
         lichSuHoaDonRepository.save(lichSu);
+
+        // Trừ số lượng phiếu giảm giá khi đơn hàng thành công
+        if (phieuGiamGiaId != null && ("Hoàn thành".equals(newTrangThai) || "Đã thanh toán".equals(newTrangThai))) {
+            try {
+                PhieuGiamGia phieuGiamGia = phieuGiamGiaRepository.findById(phieuGiamGiaId).orElse(null);
+                if (phieuGiamGia != null && phieuGiamGia.getSoLuong() > 0) {
+                    phieuGiamGia.setSoLuong(phieuGiamGia.getSoLuong() - 1);
+                    phieuGiamGiaRepository.save(phieuGiamGia);
+                    System.out.println("DEBUG: Decreased voucher quantity for ID: " + phieuGiamGiaId + ", remaining: " + phieuGiamGia.getSoLuong());
+                }
+            } catch (Exception e) {
+                System.out.println("DEBUG: Error updating voucher quantity: " + e.getMessage());
+                // Không throw exception để không ảnh hưởng đến việc tạo đơn hàng
+            }
+        }
 
         return updatedHoaDon;
     }
@@ -464,15 +499,22 @@ public class HoaDonService {
 
     @Transactional
     public HoaDon updateCustomerInfo(int id, Long idKhachHang, String tenNguoiNhan, String soDienThoaiNguoiNhan, String diaChiGiaoHang) {
+        System.out.println("DEBUG: HoaDonService.updateCustomerInfo called");
+        System.out.println("DEBUG: id=" + id + ", idKhachHang=" + idKhachHang + ", tenNguoiNhan=" + tenNguoiNhan + ", soDienThoaiNguoiNhan=" + soDienThoaiNguoiNhan + ", diaChiGiaoHang=" + diaChiGiaoHang);
+        
         HoaDon hoaDon = hoaDonRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hóa đơn với ID: " + id));
+
+        System.out.println("DEBUG: Found HoaDon: " + hoaDon.getMaHoaDon() + ", current diaChi: " + hoaDon.getDiaChi());
 
         if (idKhachHang != null) {
             KhachHang khachHang = khachHangRepository.findById(idKhachHang)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khách hàng với ID: " + idKhachHang));
             hoaDon.setKhachHang(khachHang);
+            System.out.println("DEBUG: Set khachHang: " + khachHang.getHoTen());
         } else {
             hoaDon.setKhachHang(null);
+            System.out.println("DEBUG: Set khachHang to null");
         }
 
         hoaDon.setTenNguoiNhan(tenNguoiNhan != null ? tenNguoiNhan : "Khách lẻ");
@@ -480,7 +522,9 @@ public class HoaDonService {
         hoaDon.setDiaChi(diaChiGiaoHang);
         hoaDon.setUpdatedAt(Instant.now());
 
+        System.out.println("DEBUG: Before save - diaChi: " + hoaDon.getDiaChi());
         HoaDon updatedHoaDon = hoaDonRepository.save(hoaDon);
+        System.out.println("DEBUG: After save - diaChi: " + updatedHoaDon.getDiaChi());
 
         return updatedHoaDon;
     }
@@ -591,5 +635,18 @@ public class HoaDonService {
         
         hoaDon.setUpdatedAt(java.time.Instant.now());
         return hoaDonRepository.save(hoaDon);
+    }
+
+    // Tra cứu đơn hàng theo mã hóa đơn và số điện thoại người nhận
+    public HoaDon lookupOrderByCodeAndPhone(String orderCode, String phoneNumber) {
+        // Sử dụng repository method để tìm kiếm hiệu quả hơn
+        Optional<HoaDon> hoaDonOpt = hoaDonRepository.findByMaHoaDonAndSoDienThoaiNguoiNhan(orderCode, phoneNumber);
+        
+        if (hoaDonOpt.isPresent()) {
+            // Trả về hóa đơn đầy đủ với relationships
+            return getHoaDonById(hoaDonOpt.get().getId());
+        }
+        
+        return null; // Không tìm thấy
     }
 }

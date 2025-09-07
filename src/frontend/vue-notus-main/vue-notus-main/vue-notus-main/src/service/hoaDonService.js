@@ -85,6 +85,21 @@ class HoaDonService {
             headers: { "Content-Type": "application/json" }
         });
     }
+
+    // Tra cứu đơn hàng cho khách hàng chưa đăng nhập
+    lookupOrder(orderCode, phoneNumber) {
+        const requestData = {
+            orderCode: orderCode,
+            phoneNumber: phoneNumber
+        };
+        
+        console.log('🔍 DEBUG: Sending request to:', `${API_URL_ListHoaDon}/lookup-order`);
+        console.log('🔍 DEBUG: Request data:', requestData);
+        
+        return axios.post(`${API_URL_ListHoaDon}/lookup-order`, requestData, {
+            headers: { "Content-Type": "application/json" }
+        });
+    }
 }
 
 export default new HoaDonService();

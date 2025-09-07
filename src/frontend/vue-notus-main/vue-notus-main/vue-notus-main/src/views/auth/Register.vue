@@ -177,7 +177,7 @@
             </router-link>
           </div>
           <div class="w-1/2 text-right">
-            <router-link to="/shop" class="text-blueGray-200">
+            <router-link to="/" class="text-blueGray-200">
               <small>Quay về trang chủ</small>
             </router-link>
           </div>

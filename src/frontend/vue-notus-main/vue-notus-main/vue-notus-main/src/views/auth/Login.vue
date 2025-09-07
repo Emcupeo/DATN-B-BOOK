@@ -182,7 +182,7 @@ export default {
           setTimeout(async () => {
             // Redirect theo role dựa trên user vừa đăng nhập
             const user = result.user || this.authStore.user
-            let defaultRoute = '/shop'
+            let defaultRoute = '/'
             
             if (user && user.loaiNguoiDung) {
               switch (user.loaiNguoiDung) {
@@ -193,10 +193,10 @@ export default {
                   defaultRoute = '/admin/ban-hang-tai-quay'
                   break
                 case 'KHACH_HANG':
-                  defaultRoute = '/shop'
+                  defaultRoute = '/'
                   break
                 default:
-                  defaultRoute = '/shop'
+                  defaultRoute = '/'
               }
             }
             

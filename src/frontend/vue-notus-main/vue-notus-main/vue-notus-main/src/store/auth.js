@@ -19,7 +19,7 @@ export const useAuthStore = () => {
   const userName = computed(() => String(state.user?.hoTen || state.user?.tenDangNhap || ''))
   const userRole = computed(() => String(state.user?.loaiNguoiDung || ''))
   const defaultRoute = computed(() => {
-    if (!state.user) return '/shop'
+    if (!state.user) return '/'
     
     switch (state.user.loaiNguoiDung) {
       case 'ADMIN':
@@ -27,9 +27,9 @@ export const useAuthStore = () => {
       case 'NHAN_VIEN':
         return '/admin/ban-hang-tai-quay'
       case 'KHACH_HANG':
-        return '/shop'
+        return '/'
       default:
-        return '/shop'
+        return '/'
     }
   })
 
@@ -111,23 +111,27 @@ export const useAuthStore = () => {
     
     const role = state.user?.loaiNguoiDung
     
-    // Admin và nhân viên có thể truy cập admin routes
+    // Admin area requires ADMIN or NHAN_VIEN
     if (route.startsWith('/admin')) {
+      // Cho phép các trang công khai của admin khi đã đăng nhập (login/register hiếm khi dùng sau đăng nhập nhưng để an toàn không chặn)
+      if (route.startsWith('/admin/login') || route.startsWith('/admin/register')) return true
       return role === 'ADMIN' || role === 'NHAN_VIEN'
     }
     
-    // Tất cả user có thể truy cập shop routes
-    if (route.startsWith('/shop')) {
-      return true
-    }
-    
-    // Public routes
-    const publicRoutes = ['/auth/login', '/auth/register', '/']
-    return publicRoutes.includes(route) || publicRoutes.some(r => route.startsWith(r))
+    // Mọi route không thuộc /admin đều hợp lệ cho người đã đăng nhập
+    // Bao gồm '/', '/cart', '/products', '/book/:id', v.v.
+    return true
   }
 
   const clearError = () => {
     state.error = null
+  }
+
+  const updateUser = (userData) => {
+    if (state.user) {
+      state.user = { ...state.user, ...userData }
+      localStorage.setItem('user', JSON.stringify(state.user))
+    }
   }
 
   return {
@@ -153,6 +157,7 @@ export const useAuthStore = () => {
     logout,
     clearAuth,
     canAccessRoute,
-    clearError
+    clearError,
+    updateUser
   }
 }

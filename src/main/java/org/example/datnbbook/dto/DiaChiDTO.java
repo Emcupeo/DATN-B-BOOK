@@ -16,4 +16,6 @@ public class DiaChiDTO {
     private String quanHuyen;
     private String xaPhuong;
     private Boolean macDinh;
+    private String tenNguoiNhan;
+    private String soDienThoaiNguoiNhan;
 } 

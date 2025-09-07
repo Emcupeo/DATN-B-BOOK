@@ -26,7 +26,7 @@
     <div class="container mx-auto px-4">
       <div class="flex items-center justify-between h-20">
         <!-- Logo -->
-        <router-link to="/shop" class="flex items-center space-x-3">
+        <router-link to="/" class="flex items-center space-x-3">
           <img src="@/assets/img/bbook-logo.png" alt="BBook Logo" class="w-12 h-12 object-contain" />
           <div>
             <span class="text-2xl font-bold text-gray-800">BBook</span>
@@ -59,7 +59,7 @@
         <!-- Right Actions -->
         <div class="flex items-center space-x-4">
           <!-- Wishlist -->
-          <router-link to="/shop/wishlist" class="relative p-3 text-gray-600 hover:text-red-500 hover:bg-red-50 transition-all duration-200 rounded-full group">
+          <router-link to="/wishlist" class="relative p-3 text-gray-600 hover:text-red-500 hover:bg-red-50 transition-all duration-200 rounded-full group">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
             </svg>
@@ -73,7 +73,7 @@
           </router-link>
 
           <!-- Cart -->
-          <router-link to="/shop/cart" class="relative p-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 rounded-full group">
+          <router-link to="/cart" class="relative p-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 rounded-full group">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
             </svg>
@@ -113,13 +113,20 @@
                   </svg>
                   Đổi mật khẩu
                 </button>
-                <router-link to="/shop/profile" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                <router-link to="/profile?tab=orders" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
                   <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                   </svg>
                   Đơn hàng của tôi
                 </router-link>
-                <router-link to="/shop/wishlist" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                <router-link to="/profile?tab=addresses" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                  <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  </svg>
+                  Sổ địa chỉ
+                </router-link>
+                <router-link to="/wishlist" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
                   <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
                   </svg>
@@ -181,7 +188,7 @@
                     class="group"
                   >
                     <router-link 
-                      :to="`/shop/products?category=${encodeURIComponent(category.name)}`"
+                      :to="`/products?category=${encodeURIComponent(category.name)}`"
                       class="flex items-center justify-between p-4 rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700 transition-all duration-200 border border-transparent hover:border-blue-200"
                       @click="showCategories = false"
                     >
@@ -204,7 +211,7 @@
                 <!-- View All Categories -->
                 <div class="mt-6 pt-6 border-t border-gray-100">
                   <router-link 
-                    to="/shop/products" 
+                    to="/products" 
                     class="flex items-center justify-center w-full py-3 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 font-semibold text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                     @click="showCategories = false"
                   >
@@ -220,28 +227,34 @@
 
           <!-- Main Navigation -->
           <router-link 
-            to="/shop" 
+            to="/" 
             class="px-6 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 font-medium transition-all duration-200 rounded-lg"
           >
             Trang chủ
           </router-link>
           <router-link 
-            to="/shop/products" 
+            to="/products" 
             class="px-6 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 font-medium transition-all duration-200 rounded-lg"
           >
             Sản phẩm
           </router-link>
           <router-link 
-            to="/shop/wishlist" 
+            to="/wishlist" 
             class="px-6 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 font-medium transition-all duration-200 rounded-lg"
           >
             Yêu thích
           </router-link>
           <router-link 
-            to="/shop/contact" 
+            to="/contact" 
             class="px-6 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 font-medium transition-all duration-200 rounded-lg"
           >
             Liên hệ
+          </router-link>
+          <router-link 
+            to="/order-lookup" 
+            class="px-6 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 font-medium transition-all duration-200 rounded-lg"
+          >
+            Tra cứu đơn hàng
           </router-link>
         </div>
       </div>
@@ -292,7 +305,7 @@ export default {
     const handleLogout = async () => {
       try {
         authStore.logout()
-        await router.push('/shop')
+        await router.push('/')
       } catch (error) {
         console.error('Logout error:', error)
       }
@@ -369,13 +382,13 @@ export default {
       wishlistCount.value = event.detail.count
     }
 
-    // Modal functions
+    // Navigation functions
     const openProfileModal = () => {
-      showProfileModal.value = true
+      router.push('/profile?tab=profile')
     }
 
     const openChangePasswordModal = () => {
-      showChangePasswordModal.value = true
+      router.push('/profile?tab=security')
     }
 
     // Computed properties to safely handle string operations

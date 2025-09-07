@@ -6,7 +6,8 @@ import BoSachService from '../../../service/BoSachService'
 const state = reactive({
   products: [],
   categories: [],
-  cart: [],
+  cart: [], // Giỏ hàng chính cho "Thêm vào giỏ"
+  buyNowCart: [], // Giỏ hàng riêng cho "Mua ngay"
   loading: false,
   error: null
 })
@@ -18,6 +19,15 @@ const cartItemCount = computed(() => {
 
 const cartTotal = computed(() => {
   return state.cart.reduce((total, item) => total + (item.price * item.quantity), 0)
+})
+
+// Computed properties cho Buy Now Cart
+const buyNowCartItemCount = computed(() => {
+  return state.buyNowCart.reduce((total, item) => total + item.quantity, 0)
+})
+
+const buyNowCartTotal = computed(() => {
+  return state.buyNowCart.reduce((total, item) => total + (item.price * item.quantity), 0)
 })
 
 // Helper function to process author information
@@ -90,6 +100,12 @@ const isProductInStock = (productDetailItems) => {
   return productDetailItems.some(item => item.soLuongTon > 0)
 }
 
+// Helper to sum total stock quantity
+const getTotalStockQuantity = (productDetailItems) => {
+  if (!productDetailItems || productDetailItems.length === 0) return 0
+  return productDetailItems.reduce((sum, item) => sum + (Number(item.soLuongTon) || 0), 0)
+}
+
 // Actions
 const loadProducts = async () => {
   try {
@@ -117,6 +133,7 @@ const loadProducts = async () => {
           category: product.danhMuc ? product.danhMuc.tenDanhMuc : 'Chưa phân loại',
           categoryId: product.danhMuc ? product.danhMuc.id : null,
           inStock: isProductInStock(productDetailItems),
+          stockQuantity: getTotalStockQuantity(productDetailItems),
           publisher: productDetailItems.length > 0 && productDetailItems[0].idNhaXuatBan 
             ? productDetailItems[0].idNhaXuatBan.tenNhaXuatBan 
             : 'Chưa có thông tin',
@@ -145,6 +162,7 @@ const loadProducts = async () => {
           category: product.danhMuc ? product.danhMuc.tenDanhMuc : 'Chưa phân loại',
           categoryId: product.danhMuc ? product.danhMuc.id : null,
           inStock: false,
+          stockQuantity: 0,
           publisher: 'Chưa có thông tin',
           language: 'Chưa có thông tin',
           format: 'Chưa có thông tin',
@@ -196,6 +214,7 @@ const loadProducts = async () => {
           category: 'Bộ sách',
           categoryId: null,
           inStock: boSach.soLuong > 0,
+          stockQuantity: Number(boSach.soLuong) || 0,
           publisher: '',
           language: '',
           format: '',
@@ -261,6 +280,80 @@ const updateCartQuantity = ({ productId, quantity }) => {
 
 const clearCart = () => {
   state.cart = []
+}
+
+// Tạo giỏ hàng tạm thời cho "Mua ngay" - không ảnh hưởng giỏ hàng chính
+const createBuyNowCart = (product) => {
+  // Lưu giỏ hàng hiện tại
+  const currentCart = [...state.cart]
+  
+  // Tạo giỏ hàng mới chỉ với sản phẩm được chọn
+  const buyNowProduct = { ...product, quantity: 1 }
+  state.cart = [buyNowProduct]
+  
+  // Trả về giỏ hàng cũ để có thể khôi phục sau
+  return currentCart
+}
+
+// Khôi phục giỏ hàng cũ
+const restoreCart = (previousCart) => {
+  state.cart = previousCart
+}
+
+// Buy Now Cart functions
+const addToBuyNowCart = async (product) => {
+  console.log('🛒 addToBuyNowCart called with product:', product)
+  console.log('📦 Current buyNowCart before add:', state.buyNowCart)
+  
+  const existingItem = state.buyNowCart.find(item => item.id === product.id)
+  
+  if (existingItem) {
+    existingItem.quantity += 1
+    console.log('➕ Updated existing item quantity:', existingItem)
+  } else {
+    // Đảm bảo sản phẩm có đầy đủ thông tin như sản phẩm trong cart thông thường
+    let enrichedProduct = { ...product }
+    
+    // Nếu sản phẩm thiếu productDetailItems, thử lấy từ store
+    if (!enrichedProduct.productDetailItems || enrichedProduct.productDetailItems.length === 0) {
+      console.log('🔍 Product missing productDetailItems, trying to enrich...')
+      
+      // Tìm sản phẩm tương ứng trong products list
+      const fullProduct = state.products.find(p => p.id === product.id)
+      if (fullProduct && fullProduct.productDetailItems) {
+        enrichedProduct.productDetailItems = fullProduct.productDetailItems
+        console.log('✅ Enriched product with productDetailItems:', enrichedProduct.productDetailItems)
+      } else {
+        console.warn('⚠️ Could not find productDetailItems for product:', product.title)
+      }
+    }
+    
+    const newItem = {
+      ...enrichedProduct,
+      quantity: 1
+    }
+    state.buyNowCart.push(newItem)
+    console.log('➕ Added new item to buyNowCart:', newItem)
+  }
+  
+  console.log('📦 buyNowCart after add:', state.buyNowCart)
+}
+
+const removeFromBuyNowCart = (productId) => {
+  state.buyNowCart = state.buyNowCart.filter(item => item.id !== productId)
+}
+
+const updateBuyNowCartQuantity = ({ productId, quantity }) => {
+  const item = state.buyNowCart.find(item => item.id === productId)
+  if (item) {
+    item.quantity = quantity
+  }
+}
+
+const clearBuyNowCart = () => {
+  console.log('🧹 clearBuyNowCart called, clearing:', state.buyNowCart)
+  state.buyNowCart = []
+  console.log('🧹 buyNowCart after clear:', state.buyNowCart)
 }
 
 const getProductById = (id) => {
@@ -360,12 +453,15 @@ export const useRealDataStore = () => {
     products: computed(() => state.products),
     categories: computed(() => state.categories),
     cart: computed(() => state.cart),
+    buyNowCart: computed(() => state.buyNowCart),
     loading: computed(() => state.loading),
     error: computed(() => state.error),
     
     // Computed
     cartItemCount,
     cartTotal,
+    buyNowCartItemCount,
+    buyNowCartTotal,
     
     // Actions
     loadProducts,
@@ -374,6 +470,13 @@ export const useRealDataStore = () => {
     removeFromCart,
     updateCartQuantity,
     clearCart,
+    createBuyNowCart,
+    restoreCart,
+    // Buy Now Cart actions
+    addToBuyNowCart,
+    removeFromBuyNowCart,
+    updateBuyNowCartQuantity,
+    clearBuyNowCart,
     getProductById,
     getProductsByCategory
   }

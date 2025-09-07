@@ -9,16 +9,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 @RequestMapping("/api/provinces")
 @CrossOrigin(origins = "*")
 public class ProvincesController {
-
+    
     @Autowired
     private RestTemplate restTemplate;
 
-    private static final String PROVINCES_API_BASE = "https://provinces.open-api.vn/api/v1";
+    private static final String PROVINCES_API_BASE = "https://provinces.open-api.vn/api";
 
     @GetMapping("/p")
     public ResponseEntity<String> getProvinces() {
         try {
-            String response = restTemplate.getForObject(PROVINCES_API_BASE + "/p", String.class);
+            String response = restTemplate.getForObject(PROVINCES_API_BASE + "/p/", String.class);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Error fetching provinces: " + e.getMessage());
@@ -52,4 +52,4 @@ public class ProvincesController {
             return ResponseEntity.internalServerError().body("Error fetching wards: " + e.getMessage());
         }
     }
-} 
+}

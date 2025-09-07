@@ -1,5 +1,7 @@
 <template>
   <div id="app" class="font-sans">
+    <!-- VNPAY Callback Handler - chạy toàn cục -->
+    <VnpayCallbackHandler />
     <transition name="slide" mode="out-in">
       <router-view />
     </transition>

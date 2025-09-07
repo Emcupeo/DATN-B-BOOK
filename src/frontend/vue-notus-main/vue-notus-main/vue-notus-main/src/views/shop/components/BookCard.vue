@@ -1,7 +1,8 @@
 <template>
   <div 
+    @click="viewDetails"
     :class="[
-      'group bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-blue-200',
+      'group bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-blue-200 cursor-pointer',
       viewMode === 'list' ? 'flex' : 'block'
     ]"
   >
@@ -27,7 +28,7 @@
       <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
         <div class="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 flex space-x-2">
           <button 
-            @click="toggleWishlist"
+            @click.stop="toggleWishlist"
             :class="[
               'w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-colors',
               isInWishlist
@@ -40,7 +41,7 @@
             </svg>
           </button>
           <button 
-            @click="quickView"
+            @click.stop="quickView"
             class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-blue-50 hover:text-blue-500 transition-colors"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -51,15 +52,7 @@
         </div>
       </div>
 
-      <!-- Stock Status -->
-      <div class="absolute bottom-3 right-3">
-        <span v-if="book.inStock" class="bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium">
-          Còn hàng
-        </span>
-        <span v-else class="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-medium">
-          Hết hàng
-        </span>
-      </div>
+      <!-- Stock Status (moved to price row for better visibility) -->
     </div>
     
     <!-- Content -->
@@ -117,48 +110,56 @@
       </div>
 
       <div>
-        <!-- Price -->
+        <!-- Price + Stock -->
         <div class="flex items-center justify-between mb-4">
           <div>
             <span class="text-xl font-bold text-red-600">
               {{ formatPrice(book.price) }}
             </span>
           </div>
+          <div>
+            <span 
+              v-if="book.inStock" 
+              class="inline-flex items-center bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold"
+            >
+              <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+              </svg>
+              Còn {{ book.stockQuantity || 0 }}
+            </span>
+            <span 
+              v-else 
+              class="inline-flex items-center bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-semibold"
+            >
+              <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 012 0v2a1 1 0 11-2 0V9zm5 0a1 1 0 10-2 0v2a1 1 0 002 0V9z" clip-rule="evenodd"/>
+              </svg>
+              Hết hàng
+            </span>
+          </div>
         </div>
         
         <!-- Actions -->
         <div class="flex space-x-2">
-          <router-link 
-            v-if="book.category === 'Bộ sách'"
-            :to="{ name: 'ShopBoSachDetail', params: { id: book.id } }"
-            class="flex-1 bg-gray-100 text-gray-800 px-4 py-2 rounded-lg text-center hover:bg-gray-200 transition-colors text-sm font-medium flex items-center justify-center"
-          >
-            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-            </svg>
-            Chi tiết
-          </router-link>
-          <router-link 
-            v-else
-            :to="{ name: 'ShopBookDetail', params: { id: book.id } }"
-            class="flex-1 bg-gray-100 text-gray-800 px-4 py-2 rounded-lg text-center hover:bg-gray-200 transition-colors text-sm font-medium flex items-center justify-center"
-          >
-            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-            </svg>
-            Chi tiết
-          </router-link>
           <button 
-            @click="addToCart"
+            @click.stop="addToCart"
             :disabled="!book.inStock"
-            class="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 text-sm font-medium flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+            class="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 py-2 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 text-sm font-medium flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"></path>
             </svg>
             {{ book.inStock ? 'Thêm vào giỏ' : 'Hết hàng' }}
+          </button>
+          <button 
+            @click.stop="buyNow"
+            :disabled="!book.inStock"
+            class="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-3 py-2 rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-200 text-sm font-medium flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+            {{ book.inStock ? 'Mua ngay' : 'Hết hàng' }}
           </button>
         </div>
 
@@ -178,6 +179,7 @@
 import { useRealDataStore } from '../store/realDataStore'
 import { useWishlist } from '../store/wishlist'
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 
 export default {
   name: 'BookCard',
@@ -193,6 +195,7 @@ export default {
     }
   },
   setup(props) {
+    const router = useRouter()
     const store = useRealDataStore()
     const wishlist = useWishlist()
 
@@ -208,6 +211,35 @@ export default {
     const addToCart = () => {
       if (props.book.inStock) {
         store.addToCart(props.book)
+      }
+    }
+
+    const buyNow = async () => {
+      if (props.book.inStock) {
+        console.log('🛒 Buy Now clicked for product:', props.book.title)
+        
+        // Xóa buyNowCart cũ và thêm sản phẩm mới
+        store.clearBuyNowCart()
+        console.log('🧹 Cleared buyNowCart')
+        
+        await store.addToBuyNowCart(props.book)
+        console.log('➕ Added to buyNowCart:', props.book.title)
+        console.log('📦 buyNowCart after add:', store.buyNowCart.value)
+        
+        // Backup vào localStorage để đảm bảo không mất dữ liệu
+        localStorage.setItem('buyNowCartBackup', JSON.stringify(store.buyNowCart.value))
+        console.log('💾 Backed up buyNowCart to localStorage')
+        
+        // Redirect đến trang checkout với buyNowCart
+        router.push('/checkout?mode=buynow')
+      }
+    }
+
+    const viewDetails = () => {
+      if (props.book.category === 'Bộ sách') {
+        window.location.href = `/bo-sach/${props.book.id}`
+      } else {
+        window.location.href = `/book/${props.book.id}`
       }
     }
 
@@ -227,6 +259,8 @@ export default {
     return {
       formatPrice,
       addToCart,
+      buyNow,
+      viewDetails,
       toggleWishlist,
       quickView,
       isInWishlist

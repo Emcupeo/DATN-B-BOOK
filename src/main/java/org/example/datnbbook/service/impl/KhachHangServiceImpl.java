@@ -80,6 +80,8 @@ public class KhachHangServiceImpl implements KhachHangService {
                                 diaChiDTO.setQuanHuyen(diaChi.getQuanHuyen());
                                 diaChiDTO.setXaPhuong(diaChi.getXaPhuong());
                                 diaChiDTO.setMacDinh(diaChi.getMacDinh());
+                                diaChiDTO.setTenNguoiNhan(diaChi.getTenNguoiNhan());
+                                diaChiDTO.setSoDienThoaiNguoiNhan(diaChi.getSoDienThoaiNguoiNhan());
                                 return diaChiDTO;
                             })
                             .collect(Collectors.toList()));
@@ -107,6 +109,8 @@ public class KhachHangServiceImpl implements KhachHangService {
                     diaChiDTO.setQuanHuyen(diaChi.getQuanHuyen());
                     diaChiDTO.setXaPhuong(diaChi.getXaPhuong());
                     diaChiDTO.setMacDinh(diaChi.getMacDinh());
+                    diaChiDTO.setTenNguoiNhan(diaChi.getTenNguoiNhan());
+                    diaChiDTO.setSoDienThoaiNguoiNhan(diaChi.getSoDienThoaiNguoiNhan());
                     return diaChiDTO;
                 })
                 .collect(Collectors.toList()));

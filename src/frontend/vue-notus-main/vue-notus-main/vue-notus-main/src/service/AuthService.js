@@ -107,7 +107,7 @@ const AuthService = {
   // Lấy route mặc định theo role
   getDefaultRoute() {
     const user = this.getCurrentUser()
-    if (!user) return '/shop'
+    if (!user) return '/'
     
     switch (user.loaiNguoiDung) {
       case 'ADMIN':
@@ -115,9 +115,9 @@ const AuthService = {
       case 'NHAN_VIEN':
         return '/admin/ban-hang-tai-quay'
       case 'KHACH_HANG':
-        return '/shop'
+        return '/'
       default:
-        return '/shop'
+        return '/'
     }
   },
 
@@ -125,8 +125,8 @@ const AuthService = {
   canAccessRoute(route) {
     const user = this.getCurrentUser()
     if (!user) {
-      // Chỉ cho phép truy cập shop và auth routes khi chưa đăng nhập
-      return route.startsWith('/shop') || route.startsWith('/auth') || route === '/'
+      // Chỉ cho phép truy cập shop (base '/') và auth routes khi chưa đăng nhập
+      return !route.startsWith('/admin') || route.startsWith('/auth') || route === '/'
     }
 
     // Admin có thể truy cập tất cả
@@ -136,12 +136,12 @@ const AuthService = {
 
     // Nhân viên chỉ truy cập được admin routes
     if (user.loaiNguoiDung === 'NHAN_VIEN') {
-      return route.startsWith('/admin') || route.startsWith('/shop')
+      return route.startsWith('/admin') || !route.startsWith('/admin')
     }
 
     // Khách hàng chỉ truy cập được shop
     if (user.loaiNguoiDung === 'KHACH_HANG') {
-      return route.startsWith('/shop') || route === '/'
+      return !route.startsWith('/admin') || route === '/'
     }
 
     return false

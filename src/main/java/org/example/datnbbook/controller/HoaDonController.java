@@ -13,10 +13,11 @@ import org.springframework.web.bind.annotation.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@CrossOrigin(origins = {"http://localhost:3000"})
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:8080", "http://localhost:8081", "http://localhost:8082"})
 @RestController
 @RequestMapping("/api")
 public class HoaDonController {
@@ -47,6 +48,27 @@ public class HoaDonController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(hoaDon, HttpStatus.OK);
+    }
+
+    @GetMapping("/hoa-don/{id}/debug")
+    public ResponseEntity<Map<String, Object>> getHoaDonDebug(@PathVariable int id) {
+        HoaDon hoaDon = hoaDonService.getHoaDonById(id);
+        if (hoaDon == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        
+        Map<String, Object> debugInfo = new HashMap<>();
+        debugInfo.put("id", hoaDon.getId());
+        debugInfo.put("maHoaDon", hoaDon.getMaHoaDon());
+        debugInfo.put("ngayDatHang", hoaDon.getNgayDatHang());
+        debugInfo.put("tongTien", hoaDon.getTongTien());
+        debugInfo.put("hoaDonChiTiets", hoaDon.getHoaDonChiTiets());
+        debugInfo.put("hoaDonChiTietsSize", hoaDon.getHoaDonChiTiets() != null ? hoaDon.getHoaDonChiTiets().size() : 0);
+        debugInfo.put("trangThai", hoaDon.getTrangThai());
+        // Loại bỏ khachHang để tránh lỗi ByteBuddyInterceptor
+        // debugInfo.put("khachHang", hoaDon.getKhachHang());
+        
+        return new ResponseEntity<>(debugInfo, HttpStatus.OK);
     }
 
     @GetMapping("/invoice/{id}")
@@ -131,16 +153,33 @@ public class HoaDonController {
     @PutMapping("/hoa-don/{id}/cap-nhat-thong-tin-khach-hang")
     public ResponseEntity<HoaDon> updateCustomerInfo(@PathVariable int id, @RequestBody Map<String, Object> customerData) {
         try {
+            System.out.println("DEBUG: updateCustomerInfo called for order ID: " + id);
+            System.out.println("DEBUG: Received customerData: " + customerData);
+            
             Long idKhachHang = customerData.get("idKhachHang") != null ? Long.parseLong(customerData.get("idKhachHang").toString()) : null;
             String tenNguoiNhan = (String) customerData.get("tenNguoiNhan");
             String soDienThoaiNguoiNhan = (String) customerData.get("soDienThoaiNguoiNhan");
+            // Nhận cả diaChi và diaChiGiaoHang để tương thích ngược
+            String diaChi = (String) customerData.get("diaChi");
             String diaChiGiaoHang = (String) customerData.get("diaChiGiaoHang");
+            // Ưu tiên diaChi, nếu không có thì dùng diaChiGiaoHang
+            String finalDiaChi = diaChi != null ? diaChi : diaChiGiaoHang;
+            
+            System.out.println("DEBUG: Parsed data - idKhachHang: " + idKhachHang);
+            System.out.println("DEBUG: Parsed data - tenNguoiNhan: " + tenNguoiNhan);
+            System.out.println("DEBUG: Parsed data - soDienThoaiNguoiNhan: " + soDienThoaiNguoiNhan);
+            System.out.println("DEBUG: Parsed data - diaChi: " + diaChi);
+            System.out.println("DEBUG: Parsed data - diaChiGiaoHang: " + diaChiGiaoHang);
+            System.out.println("DEBUG: Final diaChi to save: " + finalDiaChi);
 
-            HoaDon updatedHoaDon = hoaDonService.updateCustomerInfo(id, idKhachHang, tenNguoiNhan, soDienThoaiNguoiNhan, diaChiGiaoHang);
+            HoaDon updatedHoaDon = hoaDonService.updateCustomerInfo(id, idKhachHang, tenNguoiNhan, soDienThoaiNguoiNhan, finalDiaChi);
+            System.out.println("DEBUG: Order updated successfully, diaChi in DB: " + updatedHoaDon.getDiaChi());
             return new ResponseEntity<>(updatedHoaDon, HttpStatus.OK);
         } catch (IllegalArgumentException e) {
+            System.out.println("DEBUG: IllegalArgumentException in updateCustomerInfo: " + e.getMessage());
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
+            System.out.println("DEBUG: Exception in updateCustomerInfo: " + e.getMessage());
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -215,6 +254,51 @@ public class HoaDonController {
         } catch (IllegalArgumentException | IllegalStateException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // Test endpoint
+    @GetMapping("/hoa-don/test")
+    public ResponseEntity<String> testEndpoint() {
+        return new ResponseEntity<>("Test endpoint working!", HttpStatus.OK);
+    }
+
+    // Tra cứu đơn hàng cho khách hàng chưa đăng nhập
+    @PostMapping("/hoa-don/lookup-order")
+    public ResponseEntity<HoaDon> lookupOrder(@RequestBody Map<String, String> request) {
+        try {
+            System.out.println("🔍 DEBUG: Received lookup request: " + request);
+            
+            String orderCode = request.get("orderCode");
+            String phoneNumber = request.get("phoneNumber");
+            
+            System.out.println("🔍 DEBUG: orderCode = " + orderCode);
+            System.out.println("🔍 DEBUG: phoneNumber = " + phoneNumber);
+            
+            if (orderCode == null || orderCode.trim().isEmpty()) {
+                System.out.println("❌ DEBUG: orderCode is null or empty");
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+            
+            if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
+                System.out.println("❌ DEBUG: phoneNumber is null or empty");
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+            
+            System.out.println("🔍 DEBUG: Calling service with orderCode=" + orderCode + ", phoneNumber=" + phoneNumber);
+            HoaDon hoaDon = hoaDonService.lookupOrderByCodeAndPhone(orderCode.trim(), phoneNumber.trim());
+            
+            if (hoaDon == null) {
+                System.out.println("❌ DEBUG: No order found");
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+            
+            System.out.println("✅ DEBUG: Order found: " + hoaDon.getMaHoaDon());
+            return new ResponseEntity<>(hoaDon, HttpStatus.OK);
+        } catch (Exception e) {
+            System.out.println("❌ DEBUG: Exception in lookupOrder: " + e.getMessage());
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }

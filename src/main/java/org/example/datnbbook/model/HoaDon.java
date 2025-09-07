@@ -113,7 +113,7 @@ public class HoaDon {
     @Column(name = "deleted")
     private Boolean deleted;
 
-    @OneToMany(mappedBy = "hoaDon")
+    @OneToMany(mappedBy = "hoaDon", fetch = FetchType.EAGER)
     @JsonManagedReference
     private Set<HoaDonChiTiet> hoaDonChiTiets = new LinkedHashSet<>();
 

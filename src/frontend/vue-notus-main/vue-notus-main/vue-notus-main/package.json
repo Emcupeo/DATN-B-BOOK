@@ -27,7 +27,6 @@
     "html-webpack-plugin": "^4.5.2",
     "html5-qrcode": "^2.3.8",
     "imagekit": "^6.0.0",
-    "pinia": "^3.0.3",
     "vue": "3.0.7",
     "vue-router": "4.0.5",
     "vue3-qrcode-reader": "^0.0.1",

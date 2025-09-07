@@ -227,14 +227,7 @@ const routes = [
         name: "ChinhSuaNhanVien",
         component: SuaNhanVien,
       },
-      {
-        path: "/admin/nhan-vien/chinh-sua/:id",
-        component: SuaNhanVien,
-      },
-      {
-        path: "/admin/nhan-vien/them-moi",
-        component: ThemNhanVien,
-      },
+      
 
       {
         path: "/admin/khach-hang",
@@ -295,7 +288,7 @@ const routes = [
     component: RegisterAdmin,
   },
 
-  // Shop routes with layout
+  // Shop routes with layout (base at "/")
   {
     path: "/",
     component: Shop,
@@ -306,14 +299,20 @@ const routes = [
       { path: "bo-sach/:id", name: "ShopBoSachDetail", component: () => import("@/views/shop/views/BoSachDetail.vue") },
       { path: "cart", component: ShopCart },
       { path: "checkout", component: ShopCheckout },
+      { path: "payment-success", component: () => import("@/views/shop/views/PaymentSuccess.vue") },
+      { path: "payment-cancel", component: () => import("@/views/shop/views/PaymentCancel.vue") },
+      { path: "payment-error", component: () => import("@/views/shop/views/PaymentError.vue") },
+      { path: "order-success", component: () => import("@/views/shop/views/OrderSuccess.vue") },
       { path: "wishlist", component: ShopWishlist },
       { path: "contact", component: ShopContact },
       { path: "profile", component: ShopProfile },
       { path: "order/:id", name: "ShopOrderDetail", component: ShopOrderDetail },
+      { path: "order-lookup", name: "OrderLookup", component: () => import("@/views/shop/views/OrderLookup.vue") },
     ]
   },
 
-  { path: "/:pathMatch(.*)*", redirect: "/" },
+  { path: "/payment/cancel", component: () => import("@/views/shop/views/PaymentCancel.vue") },
+  { path: "/:pathMatch(.*)*", name: "NotFound", component: () => import("@/views/NotFound.vue") },
 
   {
     path: "/ban-hang",
@@ -337,6 +336,17 @@ authStore.initializeAuth();
 
 // Router Guards
 router.beforeEach((to, from, next) => {
+  // Handle VNPAY return anywhere: capture query and redirect to checkout for processing
+  if (to.query && to.query.vnp_ResponseCode) {
+    try {
+      const search = window.location.search || ''
+      localStorage.setItem('vnpayCallbackQuery', search)
+    } catch (e) {
+      // eslint-disable-next-line no-unused-vars
+      const _ignored = e
+    }
+    return next('/checkout')
+  }
   const isAuthenticated = authStore.isAuthenticated;
 
   console.log('Router Guard:', {
@@ -348,8 +358,14 @@ router.beforeEach((to, from, next) => {
   });
 
   // Public routes (không cần đăng nhập)
-  const publicRoutes = ['/shop', '/auth/login', '/auth/register'];
-  const isPublicRoute = publicRoutes.some(route => to.path.startsWith(route)) || to.path === '/';
+  // Cho phép mọi route không thuộc /admin, cộng thêm /auth/* và trang đăng nhập/đăng ký admin
+  const isPublicRoute = (
+    to.path === '/' ||
+    to.path.startsWith('/auth') ||
+    to.path.startsWith('/admin/login') ||
+    to.path.startsWith('/admin/register') ||
+    !to.path.startsWith('/admin')
+  );
 
   // Nếu chưa đăng nhập và không phải public route
   if (!isAuthenticated && !isPublicRoute) {
