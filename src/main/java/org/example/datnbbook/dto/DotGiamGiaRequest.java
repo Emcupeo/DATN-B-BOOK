@@ -17,5 +17,8 @@ public class DotGiamGiaRequest {
     private Instant ngayBatDau;
     private Instant ngayKetThuc;
     private Integer soLuongTon;
+    // Frontend đang gửi mảng id với tên chiTietSanPhamIds
+    private List<Integer> chiTietSanPhamIds;
+    // Tương thích cũ (nếu có nơi khác vẫn dùng selectedProducts)
     private List<Integer> selectedProducts;
 }

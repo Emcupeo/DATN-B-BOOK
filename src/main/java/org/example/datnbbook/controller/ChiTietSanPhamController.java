@@ -41,7 +41,9 @@ public class ChiTietSanPhamController {
 
     @GetMapping("/all")
     public ResponseEntity<List<ChiTietSanPham>> getAll() {
-        return ResponseEntity.ok(chiTietSanPhamService.getAll());
+        List<ChiTietSanPham> chiTietSanPhams = chiTietSanPhamService.getAll();
+        System.out.println("ChiTietSanPhamController.getAll(): Found " + chiTietSanPhams.size() + " products");
+        return ResponseEntity.ok(chiTietSanPhams);
     }
 
     @PostMapping

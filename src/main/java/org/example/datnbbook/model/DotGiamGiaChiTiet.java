@@ -45,6 +45,9 @@ public class DotGiamGiaChiTiet {
     @Column(name = "gia_sau_giam", precision = 10, scale = 2)
     private BigDecimal giaSauGiam;
 
+    @Column(name = "gia_ban_dau", precision = 10, scale = 2)
+    private BigDecimal giaBanDau;
+
     @ColumnDefault("1")
     @Column(name = "trang_thai")
     private Boolean trangThai;

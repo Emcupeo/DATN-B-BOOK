@@ -7,6 +7,7 @@ import org.example.datnbbook.model.DotGiamGia;
 import org.example.datnbbook.service.DotGiamGiaService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.example.datnbbook.dto.ActiveDiscountDetailDTO;
 
 import java.util.List;
 
@@ -23,6 +24,13 @@ public class DotGiamGiaController {
         return ResponseEntity.ok(dotGiamGiaService.getAll());
     }
 
+    // Lấy chi tiết giảm giá đang hoạt động cho một CTSP
+    @GetMapping("/active-detail/{ctspId}")
+    public ResponseEntity<ActiveDiscountDetailDTO> getActiveDetail(@PathVariable Integer ctspId) {
+        var detail = dotGiamGiaService.getActiveDetail(ctspId);
+        return ResponseEntity.ok(detail);
+    }
+
     @PostMapping
     public ResponseEntity<DotGiamGia> create(@RequestBody DotGiamGiaRequest request) {
         DotGiamGia dotGiamGia = new DotGiamGia();
@@ -35,7 +43,11 @@ public class DotGiamGiaController {
         dotGiamGia.setNgayKetThuc(request.getNgayKetThuc());
         dotGiamGia.setTrangThai(true);
 
-        DotGiamGia created = dotGiamGiaService.create(dotGiamGia, request.getSelectedProducts());
+        // Ưu tiên dùng chiTietSanPhamIds nếu có, fallback selectedProducts
+        var ids = request.getChiTietSanPhamIds() != null && !request.getChiTietSanPhamIds().isEmpty()
+                ? request.getChiTietSanPhamIds()
+                : request.getSelectedProducts();
+        DotGiamGia created = dotGiamGiaService.create(dotGiamGia, ids);
         return ResponseEntity.ok(created);
     }
 
@@ -52,13 +64,23 @@ public class DotGiamGiaController {
         dotGiamGia.setNgayKetThuc(request.getNgayKetThuc());
         dotGiamGia.setTrangThai(true);
 
-        DotGiamGia updated = dotGiamGiaService.update(dotGiamGia, request.getSelectedProducts());
+        var ids = request.getChiTietSanPhamIds() != null && !request.getChiTietSanPhamIds().isEmpty()
+                ? request.getChiTietSanPhamIds()
+                : request.getSelectedProducts();
+        DotGiamGia updated = dotGiamGiaService.update(dotGiamGia, ids);
         return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
         dotGiamGiaService.delete(id);
+        return ResponseEntity.ok().build();
+    }
+
+    // Endpoint khôi phục giá sau khi hết hạn giảm giá
+    @PostMapping("/{id}/restore")
+    public ResponseEntity<Void> restore(@PathVariable Integer id) {
+        dotGiamGiaService.restoreOriginalPrices(id);
         return ResponseEntity.ok().build();
     }
 }

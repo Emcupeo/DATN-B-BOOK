@@ -59,7 +59,22 @@
             </div>
           </div>
           <div class="flex space-x-4">
-            <button @click="addToCart" class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">Thêm vào giỏ hàng</button>
+            <button 
+              @click="addToCart" 
+              :disabled="boSach.soLuong === 0"
+              :class="[
+                'flex-1 px-6 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center',
+                boSach.soLuong > 0 
+                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700' 
+                  : 'bg-gradient-to-r from-gray-400 to-gray-500 text-white cursor-not-allowed'
+              ]"
+            >
+              <svg v-if="boSach.soLuong === 0" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+              {{ boSach.soLuong > 0 ? 'Thêm vào giỏ hàng' : 'Hết hàng' }}
+            </button>
             <button class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">♡ Yêu thích</button>
           </div>
         </div>
@@ -92,10 +107,12 @@
 import { ref, computed, onMounted } from 'vue'
 import BoSachService from '@/service/BoSachService'
 import { useRoute } from 'vue-router'
+import { useRealDataStore } from '../store/realDataStore'
 
 export default {
   name: 'BoSachDetail',
   setup() {
+    const store = useRealDataStore()
     const route = useRoute()
     const boSach = ref(null)
     const chiTietList = ref([])
@@ -164,6 +181,10 @@ export default {
     }
 
     const increaseQuantity = () => {
+      if (boSach.value?.soLuong === 0) {
+        alert('Bộ sách này đã hết hàng!')
+        return
+      }
       if (quantity.value < (boSach.value?.soLuong || 1)) {
         quantity.value++
       } else {
@@ -173,7 +194,40 @@ export default {
     const decreaseQuantity = () => { if (quantity.value > 1) quantity.value-- }
 
     const addToCart = () => {
+      if (boSach.value?.soLuong === 0) {
+        alert('Bộ sách này đã hết hàng!')
+        return
+      }
+      
+      if (quantity.value > boSach.value?.soLuong) {
+        alert(`Chỉ còn ${boSach.value?.soLuong} bộ sách trong kho!`)
+        return
+      }
+      
+      // Tạo object bộ sách để thêm vào giỏ hàng
+      const boSachForCart = {
+        id: boSach.value.id,
+        title: boSach.value.tenBoSach,
+        author: displayAuthors.value,
+        price: boSach.value.giaTien,
+        image: boSach.value.url,
+        description: boSach.value.moTa,
+        category: 'Bộ sách',
+        inStock: boSach.value.soLuong > 0,
+        soLuongTon: boSach.value.soLuong
+      }
+      
+      // Thêm vào giỏ hàng
+      for (let i = 0; i < quantity.value; i++) {
+        const success = store.addToCart(boSachForCart)
+        if (!success) {
+          alert('Không thể thêm bộ sách: vượt quá số lượng tồn kho!')
+          return
+        }
+      }
+      
       alert('Đã thêm vào giỏ hàng!')
+      quantity.value = 1
     }
 
     const pagedThumbs = computed(() => {

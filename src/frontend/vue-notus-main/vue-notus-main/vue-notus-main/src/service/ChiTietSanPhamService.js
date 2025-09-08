@@ -5,8 +5,18 @@ const chiTietSanPhamAPIBaseURL = "http://localhost:8080/api/chi-tiet-san-pham";
 
 class chiTietSanPhamService {
     async getAll() {
-        const response = await axios.get(`${chiTietSanPhamAPIBaseURL}/all`);
-        return response.data.map(item => new ChiTietSanPham(item));
+        try {
+            const response = await axios.get(`${chiTietSanPhamAPIBaseURL}/all`);
+            if (Array.isArray(response.data)) {
+                return response.data.map(item => new ChiTietSanPham(item));
+            } else {
+                console.warn('ChiTietSanPhamService.getAll(): response.data is not an array:', response.data);
+                return [];
+            }
+        } catch (error) {
+            console.error('Error fetching ChiTietSanPham:', error);
+            return [];
+        }
     }
     async getById(id) {
         const response = await axios.get(`${chiTietSanPhamAPIBaseURL}/${id}`);
@@ -52,10 +62,20 @@ class chiTietSanPhamService {
     }
 
     async search(keyword) {
-        const response = await axios.get(`${chiTietSanPhamAPIBaseURL}/search`, {
-            params: { keyword }
-        });
-        return response.data.map(item => new ChiTietSanPham(item));
+        try {
+            const response = await axios.get(`${chiTietSanPhamAPIBaseURL}/search`, {
+                params: { keyword }
+            });
+            if (Array.isArray(response.data)) {
+                return response.data.map(item => new ChiTietSanPham(item));
+            } else {
+                console.warn('ChiTietSanPhamService.search(): response.data is not an array:', response.data);
+                return [];
+            }
+        } catch (error) {
+            console.error('Error searching ChiTietSanPham:', error);
+            return [];
+        }
     }
 }
 

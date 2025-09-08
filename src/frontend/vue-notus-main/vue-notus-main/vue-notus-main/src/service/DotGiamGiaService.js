@@ -58,6 +58,15 @@ export default {
     }
   },
 
+  async getActiveDetail(ctspId) {
+    try {
+      const response = await axiosInstance.get(`/active-detail/${ctspId}`)
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Không thể lấy thông tin giảm giá!');
+    }
+  },
+
   async getAllProducts() {
     try {
       const response = await productAxiosInstance.get('/all');

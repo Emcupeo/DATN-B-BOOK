@@ -4,7 +4,7 @@ import org.example.datnbbook.model.ChiTietSanPham;
 import org.example.datnbbook.model.DotGiamGia;
 import org.example.datnbbook.model.DotGiamGiaChiTiet;
 import org.example.datnbbook.repository.ChiTietSanPhamRepository;
-//import org.example.datnbbook.repository.DotGiamGiaChiTietRepository;
+import org.example.datnbbook.repository.DotGiamGiaChiTietRepository;
 import org.example.datnbbook.repository.DotGiamGiaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -19,8 +19,8 @@ public class DotGiamGiaService {
     @Autowired
     private DotGiamGiaRepository repository;
 
-//    @Autowired
-//    private DotGiamGiaChiTietRepository dotGiamGiaChiTietRepository;
+    @Autowired
+    private DotGiamGiaChiTietRepository dotGiamGiaChiTietRepository;
 
     @Autowired
     private ChiTietSanPhamRepository chiTietSanPhamRepository;
@@ -30,6 +30,18 @@ public class DotGiamGiaService {
 
     public List<DotGiamGia> getAll() {
         return repository.findAllActive();
+    }
+
+    public org.example.datnbbook.dto.ActiveDiscountDetailDTO getActiveDetail(Integer ctspId) {
+        var d = dotGiamGiaChiTietRepository.findActiveByChiTietSanPhamId(ctspId);
+        if (d == null) return null;
+        return new org.example.datnbbook.dto.ActiveDiscountDetailDTO(
+                d.getIdChiTietSanPham() != null ? d.getIdChiTietSanPham().getId() : null,
+                d.getIdDotGiamGia() != null ? d.getIdDotGiamGia().getId() : null,
+                d.getGiaBanDau(),
+                d.getGiaSauGiam(),
+                d.getSoTienGiam()
+        );
     }
 
     @Transactional
@@ -60,16 +72,30 @@ public class DotGiamGiaService {
                 ChiTietSanPham chiTietSanPham = chiTietSanPhamRepository.findById(productId)
                         .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy chi tiết sản phẩm với ID: " + productId));
 
+                // Validate không trùng đợt giảm giá đang hoạt động
+                if (dotGiamGiaChiTietRepository.existsActiveByChiTietSanPhamId(productId)) {
+                    throw new IllegalArgumentException("Chi tiết sản phẩm ID " + productId + " đã có đợt giảm giá đang hoạt động");
+                }
+
                 DotGiamGiaChiTiet chiTiet = new DotGiamGiaChiTiet();
                 chiTiet.setIdDotGiamGia(savedDotGiamGia);
                 chiTiet.setIdChiTietSanPham(chiTietSanPham);
                 chiTiet.setSoPhanTramGiam(dotGiamGia.getSoPhanTramGiam());
-                chiTiet.setSoTienGiam(BigDecimal.ZERO); // Có thể tính toán nếu cần
-                chiTiet.setGiaSauGiam(chiTietSanPham.getGia().multiply(BigDecimal.valueOf(1).subtract(dotGiamGia.getSoPhanTramGiam().divide(BigDecimal.valueOf(100)))));
+                // Ghi nhận giá bán đầu
+                chiTiet.setGiaBanDau(chiTietSanPham.getGia());
+                // Tính giá sau giảm
+                BigDecimal giaSauGiam = calculateGiaSauGiam(chiTietSanPham.getGia(), dotGiamGia);
+                // Số tiền giảm
+                chiTiet.setSoTienGiam(chiTietSanPham.getGia().subtract(giaSauGiam));
+                chiTiet.setGiaSauGiam(giaSauGiam);
                 chiTiet.setTrangThai(true);
                 chiTiet.setDeleted(false);
 
-//                dotGiamGiaChiTietRepository.save(chiTiet);
+                // Lưu chi tiết đợt giảm giá
+                dotGiamGiaChiTietRepository.save(chiTiet);
+                // Cập nhật giá của chi tiết sản phẩm về giá sau giảm
+                chiTietSanPham.setGia(giaSauGiam);
+                chiTietSanPhamRepository.save(chiTietSanPham);
             }
         }
 
@@ -98,23 +124,30 @@ public class DotGiamGiaService {
 
         DotGiamGia updatedDotGiamGia = repository.save(existing);
 
-        // Xóa các chi tiết cũ và thêm mới
-//        dotGiamGiaChiTietRepository.deleteAll(existing.getDotGiamGiaChiTiets());
+        // TODO: Có thể cân nhắc xóa/điều chỉnh chi tiết cũ nếu nghiệp vụ yêu cầu
         if (selectedProductIds != null && !selectedProductIds.isEmpty()) {
             for (Integer productId : selectedProductIds) {
                 ChiTietSanPham chiTietSanPham = chiTietSanPhamRepository.findById(productId)
                         .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy chi tiết sản phẩm với ID: " + productId));
 
+                if (dotGiamGiaChiTietRepository.existsActiveByChiTietSanPhamId(productId)) {
+                    throw new IllegalArgumentException("Chi tiết sản phẩm ID " + productId + " đã có đợt giảm giá đang hoạt động");
+                }
+
                 DotGiamGiaChiTiet chiTiet = new DotGiamGiaChiTiet();
                 chiTiet.setIdDotGiamGia(updatedDotGiamGia);
                 chiTiet.setIdChiTietSanPham(chiTietSanPham);
                 chiTiet.setSoPhanTramGiam(updatedDotGiamGia.getSoPhanTramGiam());
-                chiTiet.setSoTienGiam(BigDecimal.ZERO);
-                chiTiet.setGiaSauGiam(chiTietSanPham.getGia().multiply(BigDecimal.valueOf(1).subtract(updatedDotGiamGia.getSoPhanTramGiam().divide(BigDecimal.valueOf(100)))));
+                chiTiet.setGiaBanDau(chiTietSanPham.getGia());
+                BigDecimal giaSauGiam = calculateGiaSauGiam(chiTietSanPham.getGia(), updatedDotGiamGia);
+                chiTiet.setSoTienGiam(chiTietSanPham.getGia().subtract(giaSauGiam));
+                chiTiet.setGiaSauGiam(giaSauGiam);
                 chiTiet.setTrangThai(true);
                 chiTiet.setDeleted(false);
 
-//                dotGiamGiaChiTietRepository.save(chiTiet);
+                dotGiamGiaChiTietRepository.save(chiTiet);
+                chiTietSanPham.setGia(giaSauGiam);
+                chiTietSanPhamRepository.save(chiTietSanPham);
             }
         }
 
@@ -150,5 +183,37 @@ public class DotGiamGiaService {
         if (dotGiamGia.getNgayBatDau().isAfter(dotGiamGia.getNgayKetThuc())) {
             throw new IllegalArgumentException("Ngày bắt đầu phải trước ngày kết thúc");
         }
+    }
+
+    private BigDecimal calculateGiaSauGiam(BigDecimal giaGoc, DotGiamGia dotGiamGia) {
+        if (dotGiamGia.getLoaiGiamGia() != null && dotGiamGia.getLoaiGiamGia().equals("Tiền mặt") && dotGiamGia.getGiaTriGiam() != null) {
+            BigDecimal result = giaGoc.subtract(dotGiamGia.getGiaTriGiam());
+            return result.compareTo(BigDecimal.ZERO) > 0 ? result : BigDecimal.ZERO;
+        }
+        if (dotGiamGia.getSoPhanTramGiam() != null) {
+            BigDecimal percent = dotGiamGia.getSoPhanTramGiam().divide(BigDecimal.valueOf(100));
+            BigDecimal result = giaGoc.multiply(BigDecimal.ONE.subtract(percent));
+            return result.compareTo(BigDecimal.ZERO) > 0 ? result : BigDecimal.ZERO;
+        }
+        return giaGoc;
+    }
+
+    // Khôi phục giá sau khi hết hạn giảm giá cho một đợt
+    @Transactional
+    public void restoreOriginalPrices(Integer dotGiamGiaId) {
+        DotGiamGia dot = repository.findById(dotGiamGiaId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đợt giảm giá với ID: " + dotGiamGiaId));
+        // Duyệt qua tất cả chi tiết, gắn lại giá_ban_dau vào CTSP
+        dot.getDotGiamGiaChiTiets().forEach(chiTiet -> {
+            ChiTietSanPham sp = chiTiet.getIdChiTietSanPham();
+            if (chiTiet.getGiaBanDau() != null) {
+                sp.setGia(chiTiet.getGiaBanDau());
+                chiTietSanPhamRepository.save(sp);
+            }
+            chiTiet.setTrangThai(false);
+            dotGiamGiaChiTietRepository.save(chiTiet);
+        });
+        dot.setTrangThai(false);
+        repository.save(dot);
     }
 }

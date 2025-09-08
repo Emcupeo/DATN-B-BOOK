@@ -81,27 +81,14 @@
               </button>
             </span>
             <span 
-              v-for="author in filters.authors" 
-              :key="author"
+              v-for="productType in filters.productTypes" 
+              :key="productType"
               class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
             >
-              {{ author }}
+              {{ productType }}
               <button 
-                @click="removeAuthor(author)"
+                @click="removeProductType(productType)"
                 class="ml-1 hover:text-green-600"
-              >
-                ×
-              </button>
-            </span>
-            <span 
-              v-for="publisher in filters.publishers" 
-              :key="publisher"
-              class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800"
-            >
-              {{ publisher }}
-              <button 
-                @click="removePublisher(publisher)"
-                class="ml-1 hover:text-purple-600"
               >
                 ×
               </button>
@@ -164,21 +151,24 @@
 
               <!-- Categories -->
               <div class="mb-6">
-                <h3 class="text-sm font-semibold text-gray-800 mb-3">Danh mục</h3>
+                <h3 class="text-sm font-semibold text-gray-800 mb-3">Danh mục ({{ categories.length }})</h3>
                 <div class="space-y-2">
+                  <div v-if="categories.length === 0" class="text-sm text-gray-500">
+                    Đang tải danh mục...
+                  </div>
                   <label 
                     v-for="category in categories" 
-                    :key="category"
+                    :key="category.id"
                     class="flex items-center cursor-pointer"
                   >
                     <input 
                       type="checkbox" 
-                      :value="category"
+                      :value="category.tenDanhMuc"
                       v-model="filters.categories"
                       class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
                     >
-                    <span class="ml-2 text-sm text-gray-700">{{ category }}</span>
-                    <span class="ml-auto text-xs text-gray-500">({{ getCategoryCount(category) }})</span>
+                    <span class="ml-2 text-sm text-gray-700">{{ category.tenDanhMuc }}</span>
+                    <span class="ml-auto text-xs text-gray-500">({{ getCategoryCount(category.tenDanhMuc) }})</span>
                   </label>
                 </div>
               </div>
@@ -228,67 +218,29 @@
                 </div>
               </div>
 
-              <!-- Authors -->
+              <!-- Product Type -->
               <div class="mb-6">
-                <h3 class="text-sm font-semibold text-gray-800 mb-3">Tác giả</h3>
-                <div class="space-y-2 max-h-32 overflow-y-auto">
-                  <label 
-                    v-for="author in authors" 
-                    :key="author"
-                    class="flex items-center cursor-pointer"
-                  >
-                    <input 
-                      type="checkbox" 
-                      :value="author"
-                      v-model="filters.authors"
-                      class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                    >
-                    <span class="ml-2 text-sm text-gray-700">{{ author }}</span>
-                  </label>
-                </div>
-              </div>
-
-              <!-- Publishers -->
-              <div class="mb-6">
-                <h3 class="text-sm font-semibold text-gray-800 mb-3">Nhà xuất bản</h3>
-                <div class="space-y-2 max-h-32 overflow-y-auto">
-                  <label 
-                    v-for="publisher in publishers" 
-                    :key="publisher"
-                    class="flex items-center cursor-pointer"
-                  >
-                    <input 
-                      type="checkbox" 
-                      :value="publisher"
-                      v-model="filters.publishers"
-                      class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                    >
-                    <span class="ml-2 text-sm text-gray-700">{{ publisher }}</span>
-                  </label>
-                </div>
-              </div>
-
-              <!-- Rating -->
-              <div class="mb-6">
-                <h3 class="text-sm font-semibold text-gray-800 mb-3">Đánh giá</h3>
+                <h3 class="text-sm font-semibold text-gray-800 mb-3">Loại sản phẩm</h3>
                 <div class="space-y-2">
-                  <label 
-                    v-for="rating in [5, 4, 3, 2, 1]" 
-                    :key="rating"
-                    class="flex items-center cursor-pointer"
-                  >
+                  <label class="flex items-center cursor-pointer">
                     <input 
                       type="checkbox" 
-                      :value="rating"
-                      v-model="filters.ratings"
+                      value="Sách lẻ"
+                      v-model="filters.productTypes"
                       class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
                     >
-                    <div class="flex items-center ml-2">
-                      <div class="flex text-yellow-400">
-                        <span v-for="star in 5" :key="star" class="text-sm" v-html="star <= rating ? '&#9733;' : '&#9734;'"></span>
-                      </div>
-                      <span class="ml-1 text-sm text-gray-700">& trở lên</span>
-                    </div>
+                    <span class="ml-2 text-sm text-gray-700">Sách lẻ</span>
+                    <span class="ml-auto text-xs text-gray-500">({{ getProductTypeCount('Sách lẻ') }})</span>
+                  </label>
+                  <label class="flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      value="Bộ sách"
+                      v-model="filters.productTypes"
+                      class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                    >
+                    <span class="ml-2 text-sm text-gray-700">Bộ sách</span>
+                    <span class="ml-auto text-xs text-gray-500">({{ getProductTypeCount('Bộ sách') }})</span>
                   </label>
                 </div>
               </div>
@@ -336,25 +288,7 @@
                 </div>
               </div>
 
-              <!-- Format -->
-              <div class="mb-6">
-                <h3 class="text-sm font-semibold text-gray-800 mb-3">Định dạng</h3>
-                <div class="space-y-2">
-                  <label 
-                    v-for="format in formats" 
-                    :key="format"
-                    class="flex items-center cursor-pointer"
-                  >
-                    <input 
-                      type="checkbox" 
-                      :value="format"
-                      v-model="filters.formats"
-                      class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                    >
-                    <span class="ml-2 text-sm text-gray-700">{{ format }}</span>
-                  </label>
-                </div>
-              </div>
+              
             </div>
           </div>
         </div>
@@ -513,7 +447,7 @@
 </template>
 
 <script>
-import { ref, reactive, computed, watch } from 'vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { useRealDataStore } from '../store/realDataStore'
 import BookCard from '../components/BookCard.vue'
 
@@ -537,9 +471,7 @@ export default {
       search: '',
       categories: [],
       priceRange: [0, 1000000],
-      authors: [],
-      publishers: [],
-      ratings: [],
+      productTypes: [],
       inStock: false,
       onSale: false,
       languages: [],
@@ -547,14 +479,23 @@ export default {
     })
 
     // Sample data for filters
-    const authors = ['Dale Carnegie', 'Yuval Noah Harari', 'James Clear', 'Adam Khoo', 'Paulo Coelho', 'Napoleon Hill', 'David J. Lieberman', 'Robert T. Kiyosaki', 'Stephen R. Covey', 'Jo Gang-soo', 'Charles Duhigg']
-    const publishers = ['NXB Trẻ', 'NXB Kim Đồng', 'NXB Văn Học', 'NXB Tổng Hợp', 'NXB Giáo Dục']
-    const languages = ['Tiếng Việt', 'Tiếng Anh', 'Tiếng Pháp', 'Tiếng Đức']
-    const formats = ['Bìa mềm', 'Bìa cứng', 'E-book', 'Audiobook']
+    const languages = computed(() => {
+      const languageSet = new Set()
+      books.value.forEach(book => {
+        if (book.language) {
+          languageSet.add(book.language)
+        }
+      })
+      return Array.from(languageSet).sort()
+    })
+    // const formats = ['Bìa mềm', 'Bìa cứng', 'E-book', 'Audiobook'] // Removed per requirement
 
     // Computed properties
     const books = computed(() => store.products.value)
-    const categories = computed(() => store.categories.value)
+    const categories = computed(() => {
+      console.log('Categories from store:', store.categories.value)
+      return store.categories.value
+    })
 
     const priceRange = computed(() => {
       const prices = books.value.map(book => book.price)
@@ -592,7 +533,16 @@ export default {
 
       // Category filter
       if (filters.categories.length > 0) {
-        result = result.filter(book => filters.categories.includes(book.category))
+        console.log('Filtering by categories:', filters.categories)
+        console.log('Books before category filter:', result.length)
+        result = result.filter(book => {
+          const matches = filters.categories.includes(book.category)
+          if (!matches) {
+            console.log(`Book "${book.title}" category "${book.category}" not in filters:`, filters.categories)
+          }
+          return matches
+        })
+        console.log('Books after category filter:', result.length)
       }
 
       // Price filter
@@ -600,20 +550,18 @@ export default {
         book.price >= filters.priceRange[0] && book.price <= filters.priceRange[1]
       )
 
-      // Author filter
-      if (filters.authors.length > 0) {
-        result = result.filter(book => filters.authors.includes(book.author))
-      }
-
-      // Publisher filter
-      if (filters.publishers.length > 0) {
-        result = result.filter(book => filters.publishers.includes(book.publisher || 'NXB Trẻ'))
-      }
-
-      // Rating filter
-      if (filters.ratings.length > 0) {
-        const minRating = Math.min(...filters.ratings)
-        result = result.filter(book => book.rating >= minRating)
+      // Product type filter
+      if (filters.productTypes.length > 0) {
+        result = result.filter(book => {
+          if (filters.productTypes.includes('Sách lẻ')) {
+            // Sách lẻ: tất cả sản phẩm KHÔNG phải bộ sách
+            return book.category !== 'Bộ sách'
+          } else if (filters.productTypes.includes('Bộ sách')) {
+            // Bộ sách: chỉ những sản phẩm có category là 'Bộ sách'
+            return book.category === 'Bộ sách'
+          }
+          return false
+        })
       }
 
       // Stock filter
@@ -631,10 +579,7 @@ export default {
         result = result.filter(book => filters.languages.includes(book.language || 'Tiếng Việt'))
       }
 
-      // Format filter
-      if (filters.formats.length > 0) {
-        result = result.filter(book => filters.formats.includes(book.format || 'Bìa mềm'))
-      }
+      // Removed format filter
 
       return result
     })
@@ -746,7 +691,7 @@ export default {
              filters.inStock || 
              filters.onSale || 
              filters.languages.length > 0 || 
-             filters.formats.length > 0 ||
+             false ||
              filters.priceRange[0] !== priceRange.value.min ||
              filters.priceRange[1] !== priceRange.value.max
     })
@@ -786,9 +731,7 @@ export default {
         active.push({ key: 'languages', label: `Ngôn ngữ: ${filters.languages.join(', ')}` })
       }
       
-      if (filters.formats.length > 0) {
-        active.push({ key: 'formats', label: `Định dạng: ${filters.formats.join(', ')}` })
-      }
+      // Removed active badge for formats
       
       return active
     })
@@ -805,17 +748,34 @@ export default {
       if (category === 'Tất cả') {
         return books.value.length
       }
-      return books.value.filter(book => book.category === category).length
+      const count = books.value.filter(book => book.category === category).length
+      console.log(`Category "${category}" has ${count} books`)
+      return count
+    }
+
+    const getProductTypeCount = (productType) => {
+      if (productType === 'Sách lẻ') {
+        // Đếm tất cả sản phẩm KHÔNG phải bộ sách
+        return books.value.filter(book => book.category !== 'Bộ sách').length
+      } else if (productType === 'Bộ sách') {
+        // Đếm chỉ những sản phẩm có category là 'Bộ sách'
+        return books.value.filter(book => book.category === 'Bộ sách').length
+      }
+      return 0
     }
 
     // Category bar methods
     const toggleCategory = (categoryName) => {
+      console.log('toggleCategory called with:', categoryName)
       const index = filters.categories.indexOf(categoryName)
       if (index > -1) {
         filters.categories.splice(index, 1)
+        console.log('Removed category:', categoryName)
       } else {
         filters.categories.push(categoryName)
+        console.log('Added category:', categoryName)
       }
+      console.log('Current filters.categories:', filters.categories)
       currentPage.value = 1
     }
 
@@ -831,18 +791,10 @@ export default {
       }
     }
 
-    const removeAuthor = (authorName) => {
-      const index = filters.authors.indexOf(authorName)
+    const removeProductType = (productType) => {
+      const index = filters.productTypes.indexOf(productType)
       if (index > -1) {
-        filters.authors.splice(index, 1)
-        currentPage.value = 1
-      }
-    }
-
-    const removePublisher = (publisherName) => {
-      const index = filters.publishers.indexOf(publisherName)
-      if (index > -1) {
-        filters.publishers.splice(index, 1)
+        filters.productTypes.splice(index, 1)
         currentPage.value = 1
       }
     }
@@ -851,13 +803,11 @@ export default {
       filters.search = ''
       filters.categories = []
       filters.priceRange = [priceRange.value.min, priceRange.value.max]
-      filters.authors = []
-      filters.publishers = []
-      filters.ratings = []
+      filters.productTypes = []
       filters.inStock = false
       filters.onSale = false
       filters.languages = []
-      filters.formats = []
+      // filters.formats = []
       currentPage.value = 1
       
       // Clear localStorage
@@ -873,14 +823,8 @@ export default {
         case 'categories':
           filters.categories = []
           break
-        case 'authors':
-          filters.authors = []
-          break
-        case 'publishers':
-          filters.publishers = []
-          break
-        case 'ratings':
-          filters.ratings = []
+        case 'productTypes':
+          filters.productTypes = []
           break
         case 'inStock':
           filters.inStock = false
@@ -892,7 +836,6 @@ export default {
           filters.languages = []
           break
         case 'formats':
-          filters.formats = []
           break
       }
       currentPage.value = 1
@@ -937,6 +880,20 @@ export default {
       const _ignored = e
     }
 
+    // Load data when component mounts
+    onMounted(async () => {
+      console.log('Products component mounted, loading data...')
+      try {
+        await store.loadProducts()
+        await store.loadCategories()
+        console.log('Data loaded successfully')
+        console.log('Products:', store.products.value.length)
+        console.log('Categories:', store.categories.value.length)
+      } catch (error) {
+        console.error('Error loading data:', error)
+      }
+    })
+
     return {
       // Data
       viewMode,
@@ -944,10 +901,8 @@ export default {
       currentPage,
       filters,
       showMobileFilters,
-      authors,
-      publishers,
       languages,
-      formats,
+      // formats,
       
       // Computed
       books,
@@ -965,6 +920,7 @@ export default {
       // Methods
       formatPrice,
       getCategoryCount,
+      getProductTypeCount,
       clearAllFilters,
       removeFilter,
       
@@ -972,8 +928,7 @@ export default {
       toggleCategory,
       isCategorySelected,
       removeCategory,
-      removeAuthor,
-      removePublisher
+      removeProductType
     }
   }
 }

@@ -32,13 +32,13 @@
           <h1 class="text-3xl font-bold text-gray-900 mt-2">{{ book.tenBoSach }}</h1>
           <p class="text-lg text-gray-600 mt-1">Tác giả: {{ book.author }}</p>
         </div>
-        <!-- Giá -->
+        <!-- Giá theo chi tiết được chọn -->
         <div class="space-y-2">
           <div class="flex items-center space-x-4">
-            <span class="text-3xl font-bold text-red-600">{{ formatPrice(book.price) }}</span>
-            <span v-if="book.originalPrice && book.originalPrice > book.price" class="text-lg text-gray-500 line-through">{{ formatPrice(book.originalPrice) }}</span>
-            <span v-if="book.originalPrice && book.originalPrice > book.price" class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-sm font-semibold">
-              -{{ Math.round(((book.originalPrice - book.price) / book.originalPrice) * 100) }}%
+            <span class="text-3xl font-bold text-red-600">{{ formatPrice(selectedPrice) }}</span>
+            <span v-if="selectedOriginalPrice && selectedOriginalPrice > selectedPrice" class="text-lg text-gray-500 line-through">{{ formatPrice(selectedOriginalPrice) }}</span>
+            <span v-if="selectedOriginalPrice && selectedOriginalPrice > selectedPrice" class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-sm font-semibold">
+              -{{ Math.round(((selectedOriginalPrice - selectedPrice) / selectedOriginalPrice) * 100) }}%
             </span>
             <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm font-semibold" v-if="totalInStock > 0">Còn hàng</span>
             <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-sm font-semibold" v-else>Hết hàng</span>
@@ -55,8 +55,16 @@
           <div v-if="book.weight"><span class="font-medium">Trọng lượng:</span> {{ book.weight }} gr</div>
           <div><span class="font-medium">Số lượng tồn:</span> {{ totalInStock }}</div>
         </div>
-        <!-- Số lượng và nút mua -->
+        <!-- Chọn chi tiết + Số lượng và nút mua -->
         <div class="space-y-4">
+          <div v-if="book.productDetailItems && book.productDetailItems.length" class="flex items-center space-x-2">
+            <label class="text-sm font-medium text-gray-700">Chọn phiên bản:</label>
+            <select v-model="selectedCtspId" @change="onSelectCtsp" class="border rounded px-2 py-1 text-sm">
+              <option v-for="ct in book.productDetailItems" :key="ct.id" :value="ct.id">
+                {{ ct.isbn || ('CTSP #' + ct.id) }} - {{ formatPrice(ct.gia) }}
+              </option>
+            </select>
+          </div>
           <div class="flex items-center space-x-4">
             <label class="text-sm font-medium text-gray-700">Số lượng:</label>
             <div class="flex items-center border border-gray-300 rounded-lg">
@@ -66,7 +74,22 @@
             </div>
           </div>
           <div class="flex space-x-4">
-            <button @click="addToCart" class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">Thêm vào giỏ hàng</button>
+            <button 
+              @click="addToCart" 
+              :disabled="totalInStock === 0"
+              :class="[
+                'flex-1 px-6 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center',
+                totalInStock > 0 
+                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700' 
+                  : 'bg-gradient-to-r from-gray-400 to-gray-500 text-white cursor-not-allowed'
+              ]"
+            >
+              <svg v-if="totalInStock === 0" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+              {{ totalInStock > 0 ? 'Thêm vào giỏ hàng' : 'Hết hàng' }}
+            </button>
             <button class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">♡ Yêu thích</button>
           </div>
         </div>
@@ -94,6 +117,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRealDataStore } from '../store/realDataStore'
 import { useRoute } from 'vue-router'
+import DotGiamGiaService from '@/service/DotGiamGiaService'
 
 export default {
   name: 'BookDetail',
@@ -101,6 +125,9 @@ export default {
     const store = useRealDataStore()
     const route = useRoute()
     const quantity = ref(1)
+    const selectedCtspId = ref(null)
+    const selectedPrice = ref(0)
+    const selectedOriginalPrice = ref(0)
     const mainImage = ref('')
     const allImages = ref([])
 
@@ -164,8 +191,22 @@ export default {
     }
 
     const addToCart = () => {
+      if (totalInStock.value === 0) {
+        alert('Sản phẩm này đã hết hàng!')
+        return
+      }
+      
+      if (quantity.value > totalInStock.value) {
+        alert(`Chỉ còn ${totalInStock.value} sản phẩm trong kho!`)
+        return
+      }
+      
       for (let i = 0; i < quantity.value; i++) {
-        store.addToCart(book.value)
+        const success = store.addToCart(book.value)
+        if (!success) {
+          alert('Không thể thêm sản phẩm: vượt quá số lượng tồn kho!')
+          return
+        }
       }
       quantity.value = 1
     }
@@ -177,7 +218,29 @@ export default {
       // Lấy danh sách ảnh con
       allImages.value = collectAllImages()
       mainImage.value = allImages.value[0] || ''
+      if (book.value && book.value.productDetailItems && book.value.productDetailItems.length) {
+        selectedCtspId.value = book.value.productDetailItems[0].id
+        await onSelectCtsp()
+      }
     })
+
+    const onSelectCtsp = async () => {
+      const ct = (book.value?.productDetailItems || []).find(x => x.id === selectedCtspId.value)
+      if (!ct) return
+      try {
+        const detail = await DotGiamGiaService.getActiveDetail(ct.id)
+        if (detail && detail.giaBanDau && detail.giaSauGiam) {
+          selectedOriginalPrice.value = Number(detail.giaBanDau)
+          selectedPrice.value = Number(detail.giaSauGiam)
+        } else {
+          selectedOriginalPrice.value = Number(ct.gia)
+          selectedPrice.value = Number(ct.gia)
+        }
+      } catch (e) {
+        selectedOriginalPrice.value = Number(ct.gia)
+        selectedPrice.value = Number(ct.gia)
+      }
+    }
 
     return {
       book,
@@ -190,7 +253,11 @@ export default {
       allImages,
       setMainImage,
       totalInStock,
-      formatIsbnShort
+      formatIsbnShort,
+      selectedCtspId,
+      onSelectCtsp,
+      selectedPrice,
+      selectedOriginalPrice
     }
   }
 }

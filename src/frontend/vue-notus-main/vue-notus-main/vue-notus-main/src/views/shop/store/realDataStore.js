@@ -1,5 +1,6 @@
 import { reactive, computed, watch } from 'vue'
 import ShopService from '../../../service/ShopService'
+import DotGiamGiaService from '../../../service/DotGiamGiaService'
 import BoSachService from '../../../service/BoSachService'
 
 // Store data
@@ -91,6 +92,36 @@ const getProductPrice = (productDetailItems) => {
   return prices.length > 0 ? Math.min(...prices) : 0
 }
 
+// Tính giá hiển thị và giá gốc (nếu đang giảm) dựa theo chi tiết sản phẩm
+const getMinAdjustedPrices = async (productDetailItems) => {
+  if (!productDetailItems || productDetailItems.length === 0) {
+    return { price: 0, originalPrice: 0 }
+  }
+  // Gọi song song để lấy giảm giá cho từng CTSP (nếu có)
+  const adjusted = await Promise.all(productDetailItems.map(async (it) => {
+    try {
+      const detail = await DotGiamGiaService.getActiveDetail(it.id)
+      if (detail && detail.giaBanDau && detail.giaSauGiam) {
+        return { effectivePrice: Number(detail.giaSauGiam), originalPrice: Number(detail.giaBanDau) }
+      }
+      return { effectivePrice: Number(it.gia) || 0, originalPrice: Number(it.gia) || 0 }
+    } catch (_) {
+      return { effectivePrice: Number(it.gia) || 0, originalPrice: Number(it.gia) || 0 }
+    }
+  }))
+  // Lấy mức giá hiển thị thấp nhất và giá gốc tương ứng (để gạch ngang)
+  let min = { effectivePrice: Infinity, originalPrice: 0 }
+  for (const x of adjusted) {
+    if (x.effectivePrice < min.effectivePrice) {
+      min = x
+    }
+  }
+  if (!isFinite(min.effectivePrice)) {
+    return { price: 0, originalPrice: 0 }
+  }
+  return { price: min.effectivePrice, originalPrice: min.originalPrice }
+}
+
 // Helper function to check if product is in stock
 const isProductInStock = (productDetailItems) => {
   if (!productDetailItems || productDetailItems.length === 0) {
@@ -118,6 +149,7 @@ const loadProducts = async () => {
     for (const product of products) {
       try {
         const productDetailItems = await ShopService.getProductDetailItems(product.id)
+        const { price: adjustedPrice, originalPrice } = await getMinAdjustedPrices(productDetailItems)
         // Lấy ngày tạo từ trường createdAt của sản phẩm
         let sortCreatedAt = 0;
         if (product.createdAt && !isNaN(new Date(product.createdAt).getTime())) {
@@ -127,7 +159,8 @@ const loadProducts = async () => {
           id: product.id,
           title: product.tenSanPham,
           author: processAuthorInfo(productDetailItems),
-          price: getProductPrice(productDetailItems),
+          price: adjustedPrice,
+          originalPrice,
           image: getProductImage(productDetailItems),
           description: product.moTa || 'Chưa có mô tả',
           category: product.danhMuc ? product.danhMuc.tenDanhMuc : 'Chưa phân loại',

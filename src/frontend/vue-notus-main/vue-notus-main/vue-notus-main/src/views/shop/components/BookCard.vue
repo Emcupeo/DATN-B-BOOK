@@ -112,9 +112,12 @@
       <div>
         <!-- Price + Stock -->
         <div class="flex items-center justify-between mb-4">
-          <div>
+          <div class="flex items-baseline space-x-2">
             <span class="text-xl font-bold text-red-600">
               {{ formatPrice(book.price) }}
+            </span>
+            <span v-if="book.originalPrice && book.originalPrice > book.price" class="text-sm text-gray-400 line-through">
+              {{ formatPrice(book.originalPrice) }}
             </span>
           </div>
           <div>
@@ -210,7 +213,15 @@ export default {
 
     const addToCart = () => {
       if (props.book.inStock) {
-        store.addToCart(props.book)
+        // Kiểm tra số lượng tồn kho
+        if (props.book.soLuongTon > 0) {
+          const success = store.addToCart(props.book)
+          if (!success) {
+            alert('Không thể thêm sản phẩm: vượt quá số lượng tồn kho!')
+          }
+        } else {
+          alert('Sản phẩm này đã hết hàng!')
+        }
       }
     }
 

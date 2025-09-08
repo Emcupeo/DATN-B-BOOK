@@ -26,10 +26,16 @@ class AnhSanPhamService {
             console.log("[DEBUG] Fetching images for idChiTietSanPham:", idChiTietSanPham);
             const response = await api.get(`/anh-san-pham/chi-tiet-san-pham/${idChiTietSanPham}`);
             console.log("[DEBUG] Fetched images:", response.data);
-            return response.data;
+            if (Array.isArray(response.data)) {
+                return response.data;
+            } else {
+                console.warn('AnhSanPhamService.getImagesByChiTietSanPhamId(): response.data is not an array:', response.data);
+                return [];
+            }
         } catch (error) {
             console.error("[ERROR] Error fetching images:", error.response || error);
-            throw new Error(error.response?.data?.message || 'Không tìm thấy ảnh');
+            // Return empty array instead of throwing error to prevent breaking the UI
+            return [];
         }
     }
 }
