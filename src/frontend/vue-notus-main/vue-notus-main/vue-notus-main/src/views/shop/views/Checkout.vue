@@ -1711,10 +1711,12 @@ export default {
         const customerUpdateData = {
           tenNguoiNhan: customerInfo.value.fullName,
           soDienThoaiNguoiNhan: customerInfo.value.phone,
+          emailNguoiNhan: customerInfo.value.email, // Thêm email vào customerUpdateData ban đầu
           diaChi: `${shippingAddress.value.address}, ${getWardName()}, ${getDistrictName()}, ${getProvinceName()}`
         }
         
         console.log('🛒 Initial customerUpdateData:', customerUpdateData)
+        console.log('📧 DEBUG: customerInfo.value.email:', customerInfo.value.email)
         console.log('🚨 DEBUG: Address components - city:', shippingAddress.value.city, 'district:', shippingAddress.value.district, 'ward:', shippingAddress.value.ward)
         console.log('🚨 DEBUG: selectedAddressIndex:', selectedAddressIndex.value, 'savedAddresses.length:', savedAddresses.value.length)
         if (selectedAddressIndex.value >= 0 && savedAddresses.value[selectedAddressIndex.value]) {
@@ -1735,7 +1737,7 @@ export default {
           // Sử dụng khách hàng đã chọn
           console.log('🛒 Using selected customer path')
           customerUpdateData.idKhachHang = selectedCustomer.value.id  // Sửa từ khachHangId thành idKhachHang
-          customerUpdateData.emailNguoiNhan = customerInfo.value.email
+          // emailNguoiNhan đã được set ở trên, không cần ghi đè
           console.log('🛒 Using selected customer:', selectedCustomer.value.id)
         } else if (isAuthenticated.value && userInfo.value) {
           console.log('🛒 Using authenticated user path')
@@ -1749,6 +1751,7 @@ export default {
           
           if (customerId) {
             customerUpdateData.idKhachHang = customerId  // Sửa từ khachHangId thành idKhachHang
+            // Ưu tiên email từ userInfo, nếu không có thì dùng email từ form
             customerUpdateData.emailNguoiNhan = userInfo.value.email || customerInfo.value.email
             console.log('🛒 Set idKhachHang for authenticated user:', customerId)
             console.log('🛒 Customer email:', customerUpdateData.emailNguoiNhan)
@@ -1768,7 +1771,7 @@ export default {
               shippingAddress.value
             )
             customerUpdateData.idKhachHang = newCustomer.id  // Sửa từ khachHangId thành idKhachHang
-            customerUpdateData.emailNguoiNhan = customerInfo.value.email
+            // emailNguoiNhan đã được set ở trên, không cần ghi đè
             selectedCustomer.value = newCustomer
             console.log('🛒 Created new customer with ID:', newCustomer.id)
           } catch (error) {
@@ -1964,6 +1967,7 @@ export default {
         const customerUpdateData = {
           tenNguoiNhan: tempOrderData.customerInfo.fullName || 'Khách lẻ',
           soDienThoaiNguoiNhan: tempOrderData.customerInfo.phone || '',
+          emailNguoiNhan: tempOrderData.customerInfo.email, // Thêm email vào customerUpdateData ban đầu
           diaChi: fullAddress
         }
 
@@ -1971,7 +1975,7 @@ export default {
         if (tempOrderData.selectedCustomer) {
           // Sử dụng khách hàng đã chọn
           customerUpdateData.idKhachHang = tempOrderData.selectedCustomer.id
-          customerUpdateData.emailNguoiNhan = tempOrderData.customerInfo.email
+          // emailNguoiNhan đã được set ở trên, không cần ghi đè
           console.log('🛒 VNPAY: Using selected customer:', tempOrderData.selectedCustomer.id)
         } else if (tempOrderData.userInfo) {
           // Sử dụng thông tin user từ tempOrderData - KHÔNG tạo khách hàng mới
@@ -1984,6 +1988,7 @@ export default {
           
           if (customerId) {
             customerUpdateData.idKhachHang = customerId
+            // Ưu tiên email từ userInfo, nếu không có thì dùng email từ form
             customerUpdateData.emailNguoiNhan = tempOrderData.userInfo.email || tempOrderData.customerInfo.email
             console.log('🛒 VNPAY: Set khachHangId for authenticated user:', customerId)
             console.log('🛒 VNPAY: Customer email:', customerUpdateData.emailNguoiNhan)
@@ -1999,7 +2004,7 @@ export default {
               tempOrderData.shippingAddress
             )
             customerUpdateData.idKhachHang = newCustomer.id
-            customerUpdateData.emailNguoiNhan = tempOrderData.customerInfo.email
+            // emailNguoiNhan đã được set ở trên, không cần ghi đè
             console.log('🛒 VNPAY: Created new customer:', newCustomer.id)
           } catch (error) {
             console.warn('Không thể tạo khách hàng mới:', error)

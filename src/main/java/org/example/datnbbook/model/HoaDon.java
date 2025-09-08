@@ -1,7 +1,5 @@
 package org.example.datnbbook.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
@@ -86,6 +84,9 @@ public class HoaDon {
 
     @Column(name = "so_dien_thoai_nguoi_nhan", length = 15)
     private String soDienThoaiNguoiNhan;
+
+    @Column(name = "email_nguoi_nhan", length = 100)
+    private String emailNguoiNhan;
 
     @Nationalized
     @Column(name = "ghi_chu", length = 100)
