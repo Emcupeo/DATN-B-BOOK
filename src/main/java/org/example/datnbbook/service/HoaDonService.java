@@ -66,6 +66,9 @@ public class HoaDonService {
     @Autowired
     private PhieuGiamGiaRepository phieuGiamGiaRepository;
 
+    @Autowired
+    private EmailService emailService;
+
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -404,18 +407,20 @@ public class HoaDonService {
         // Set trạng thái dựa trên loại hóa đơn và phương thức thanh toán
         String newTrangThai;
         if ("Tại quầy".equals(loaiHoaDon)) {
+            // Đơn hàng tại quầy - hoàn thành ngay
             newTrangThai = "Hoàn thành";
         } else if ("Online".equals(loaiHoaDon) && phuongThucThanhToanId == 1) {
-            // VNPAY (phuongThucThanhToanId = 1) - bắt đầu từ "Đã thanh toán"
+            // VNPAY (phuongThucThanhToanId = 1) - đã thanh toán nhưng chờ xác nhận
             newTrangThai = "Đã thanh toán";
         } else if ("Online".equals(loaiHoaDon) && phuongThucThanhToanId == 4) {
-            // COD (phuongThucThanhToanId = 4) - bắt đầu từ "Chờ xác nhận"
+            // COD (phuongThucThanhToanId = 4) - chờ thanh toán khi nhận hàng
             newTrangThai = "Chờ xác nhận";
         } else {
             // Mặc định
             newTrangThai = "Chờ xác nhận";
         }
         hoaDon.setTrangThai(newTrangThai);
+        System.out.println("DEBUG: Set newTrangThai: " + newTrangThai);
 
         // Đảm bảo hóa đơn được lưu với id_hinh_thuc_thanh_toan
         hoaDon.setHinhThucThanhToan(hinhThucThanhToan);
@@ -443,8 +448,8 @@ public class HoaDonService {
         lichSu.setCreatedAt(Instant.now());
         lichSuHoaDonRepository.save(lichSu);
 
-        // Trừ số lượng phiếu giảm giá khi đơn hàng thành công
-        if (phieuGiamGiaId != null && ("Hoàn thành".equals(newTrangThai) || "Đã thanh toán".equals(newTrangThai))) {
+        // Trừ số lượng phiếu giảm giá khi đơn hàng được tạo thành công
+        if (phieuGiamGiaId != null && ("Hoàn thành".equals(newTrangThai) || "Đã thanh toán".equals(newTrangThai) || "Chờ xác nhận".equals(newTrangThai))) {
             try {
                 PhieuGiamGia phieuGiamGia = phieuGiamGiaRepository.findById(phieuGiamGiaId).orElse(null);
                 if (phieuGiamGia != null && phieuGiamGia.getSoLuong() > 0) {
@@ -456,6 +461,15 @@ public class HoaDonService {
                 System.out.println("DEBUG: Error updating voucher quantity: " + e.getMessage());
                 // Không throw exception để không ảnh hưởng đến việc tạo đơn hàng
             }
+        }
+
+        // Gửi email xác nhận đơn hàng khi đặt hàng thành công
+        System.out.println("📧 DEBUG: Checking if should send email - newTrangThai: " + newTrangThai);
+        if ("Hoàn thành".equals(newTrangThai) || "Đã thanh toán".equals(newTrangThai) || "Chờ xác nhận".equals(newTrangThai)) {
+            System.out.println("📧 DEBUG: Order created successfully, sending confirmation email...");
+            sendOrderConfirmationEmail(updatedHoaDon);
+        } else {
+            System.out.println("📧 DEBUG: Order status is " + newTrangThai + ", not sending email");
         }
 
         return updatedHoaDon;
@@ -498,9 +512,9 @@ public class HoaDonService {
     }
 
     @Transactional
-    public HoaDon updateCustomerInfo(int id, Long idKhachHang, String tenNguoiNhan, String soDienThoaiNguoiNhan, String diaChiGiaoHang) {
+    public HoaDon updateCustomerInfo(int id, Long idKhachHang, String tenNguoiNhan, String soDienThoaiNguoiNhan, String diaChiGiaoHang, String emailNguoiNhan) {
         System.out.println("DEBUG: HoaDonService.updateCustomerInfo called");
-        System.out.println("DEBUG: id=" + id + ", idKhachHang=" + idKhachHang + ", tenNguoiNhan=" + tenNguoiNhan + ", soDienThoaiNguoiNhan=" + soDienThoaiNguoiNhan + ", diaChiGiaoHang=" + diaChiGiaoHang);
+        System.out.println("DEBUG: id=" + id + ", idKhachHang=" + idKhachHang + ", tenNguoiNhan=" + tenNguoiNhan + ", soDienThoaiNguoiNhan=" + soDienThoaiNguoiNhan + ", diaChiGiaoHang=" + diaChiGiaoHang + ", emailNguoiNhan=" + emailNguoiNhan);
         
         HoaDon hoaDon = hoaDonRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hóa đơn với ID: " + id));
@@ -520,11 +534,14 @@ public class HoaDonService {
         hoaDon.setTenNguoiNhan(tenNguoiNhan != null ? tenNguoiNhan : "Khách lẻ");
         hoaDon.setSoDienThoaiNguoiNhan(soDienThoaiNguoiNhan);
         hoaDon.setDiaChi(diaChiGiaoHang);
+        hoaDon.setEmailNguoiNhan(emailNguoiNhan);
         hoaDon.setUpdatedAt(Instant.now());
 
         System.out.println("DEBUG: Before save - diaChi: " + hoaDon.getDiaChi());
         HoaDon updatedHoaDon = hoaDonRepository.save(hoaDon);
         System.out.println("DEBUG: After save - diaChi: " + updatedHoaDon.getDiaChi());
+
+        // Không gửi email ở đây nữa - sẽ gửi sau khi thanh toán hoàn tất để có thông tin chính xác
 
         return updatedHoaDon;
     }
@@ -648,5 +665,106 @@ public class HoaDonService {
         }
         
         return null; // Không tìm thấy
+    }
+
+    // Gửi email xác nhận đơn hàng
+    private void sendOrderConfirmationEmail(HoaDon hoaDon) {
+        try {
+            System.out.println("📧 DEBUG: sendOrderConfirmationEmail called for order: " + hoaDon.getMaHoaDon());
+            System.out.println("📧 DEBUG: hoaDon.getKhachHang(): " + (hoaDon.getKhachHang() != null ? "exists" : "null"));
+            System.out.println("📧 DEBUG: hoaDon.getEmailNguoiNhan(): " + hoaDon.getEmailNguoiNhan());
+            
+            // Lấy email từ khách hàng đã đăng nhập hoặc từ thông tin người nhận
+            String customerEmail = null;
+            String customerName = hoaDon.getTenNguoiNhan();
+            
+            if (hoaDon.getKhachHang() != null && hoaDon.getKhachHang().getEmail() != null) {
+                // Khách hàng đã đăng nhập - lấy email từ tài khoản
+                customerEmail = hoaDon.getKhachHang().getEmail();
+                System.out.println("📧 DEBUG: Using customer email from account: " + customerEmail);
+            } else if (hoaDon.getEmailNguoiNhan() != null && !hoaDon.getEmailNguoiNhan().trim().isEmpty()) {
+                // Khách vãng lai - lấy email từ thông tin đơn hàng
+                customerEmail = hoaDon.getEmailNguoiNhan();
+                System.out.println("📧 DEBUG: Using guest customer email from order: " + customerEmail);
+            } else {
+                // Không có email
+                System.out.println("📧 DEBUG: No email available, skipping email notification");
+                return; // Không gửi email nếu không có email
+            }
+            
+            if (customerEmail == null || customerEmail.trim().isEmpty()) {
+                System.out.println("📧 DEBUG: No email available, skipping email notification");
+                return;
+            }
+            
+            // Format dữ liệu cho email
+            String orderCode = hoaDon.getMaHoaDon();
+            
+            // Sử dụng ngày tạo đơn hàng nếu chưa có ngày đặt hàng
+            String orderDate = "N/A";
+            if (hoaDon.getNgayDatHang() != null) {
+                orderDate = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").format(
+                    java.time.LocalDateTime.ofInstant(hoaDon.getNgayDatHang(), java.time.ZoneId.systemDefault())
+                );
+            } else if (hoaDon.getNgayTao() != null) {
+                orderDate = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").format(
+                    java.time.LocalDateTime.ofInstant(hoaDon.getNgayTao(), java.time.ZoneId.systemDefault())
+                );
+            }
+            
+            // Tính tổng tiền từ chi tiết đơn hàng nếu chưa có tongTien
+            String totalAmount = "N/A";
+            if (hoaDon.getTongTien() != null) {
+                totalAmount = String.format("%,.0f ₫", hoaDon.getTongTien().doubleValue());
+            } else if (hoaDon.getHoaDonChiTiets() != null && !hoaDon.getHoaDonChiTiets().isEmpty()) {
+                BigDecimal calculatedTotal = hoaDon.getHoaDonChiTiets().stream()
+                    .map(item -> item.getGiaSanPham() != null ? 
+                        item.getGiaSanPham().multiply(BigDecimal.valueOf(item.getSoLuong())) : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+                if (calculatedTotal.compareTo(BigDecimal.ZERO) > 0) {
+                    totalAmount = String.format("%,.0f ₫", calculatedTotal.doubleValue());
+                }
+            }
+            
+            // Xác định phương thức thanh toán
+            String paymentMethod = "Chưa thanh toán";
+            if (hoaDon.getHinhThucThanhToan() != null && 
+                hoaDon.getHinhThucThanhToan().getPhuongThucThanhToan() != null) {
+                String kieuThanhToan = hoaDon.getHinhThucThanhToan().getPhuongThucThanhToan().getKieuThanhToan();
+                // Hiển thị tên phương thức thanh toán thân thiện hơn
+                if ("Chuyển khoản".equals(kieuThanhToan)) {
+                    paymentMethod = "VNPAY (Chuyển khoản)";
+                } else if ("Tiền mặt".equals(kieuThanhToan)) {
+                    paymentMethod = "COD (Thanh toán khi nhận hàng)";
+                } else {
+                    paymentMethod = kieuThanhToan;
+                }
+            }
+            
+            String deliveryAddress = hoaDon.getDiaChi() != null ? hoaDon.getDiaChi() : "N/A";
+            String phoneNumber = hoaDon.getSoDienThoaiNguoiNhan() != null ? hoaDon.getSoDienThoaiNguoiNhan() : "N/A";
+            
+            System.out.println("📧 DEBUG: Sending order confirmation email to: " + customerEmail);
+            System.out.println("📧 DEBUG: Order details - Code: " + orderCode + ", Date: " + orderDate + ", Amount: " + totalAmount + ", Payment: " + paymentMethod);
+            
+            // Gửi email
+            emailService.sendOrderConfirmationEmail(
+                customerEmail,
+                customerName,
+                orderCode,
+                orderDate,
+                totalAmount,
+                paymentMethod,
+                deliveryAddress,
+                phoneNumber
+            );
+            
+            System.out.println("✅ DEBUG: Order confirmation email sent successfully to: " + customerEmail);
+            
+        } catch (Exception e) {
+            System.out.println("❌ DEBUG: Error sending order confirmation email: " + e.getMessage());
+            e.printStackTrace();
+            // Không throw exception để không ảnh hưởng đến việc tạo đơn hàng
+        }
     }
 }

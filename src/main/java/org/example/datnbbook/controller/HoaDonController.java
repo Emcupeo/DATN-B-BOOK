@@ -159,6 +159,7 @@ public class HoaDonController {
             Long idKhachHang = customerData.get("idKhachHang") != null ? Long.parseLong(customerData.get("idKhachHang").toString()) : null;
             String tenNguoiNhan = (String) customerData.get("tenNguoiNhan");
             String soDienThoaiNguoiNhan = (String) customerData.get("soDienThoaiNguoiNhan");
+            String emailNguoiNhan = (String) customerData.get("emailNguoiNhan");
             // Nhận cả diaChi và diaChiGiaoHang để tương thích ngược
             String diaChi = (String) customerData.get("diaChi");
             String diaChiGiaoHang = (String) customerData.get("diaChiGiaoHang");
@@ -168,11 +169,12 @@ public class HoaDonController {
             System.out.println("DEBUG: Parsed data - idKhachHang: " + idKhachHang);
             System.out.println("DEBUG: Parsed data - tenNguoiNhan: " + tenNguoiNhan);
             System.out.println("DEBUG: Parsed data - soDienThoaiNguoiNhan: " + soDienThoaiNguoiNhan);
+            System.out.println("DEBUG: Parsed data - emailNguoiNhan: " + emailNguoiNhan);
             System.out.println("DEBUG: Parsed data - diaChi: " + diaChi);
             System.out.println("DEBUG: Parsed data - diaChiGiaoHang: " + diaChiGiaoHang);
             System.out.println("DEBUG: Final diaChi to save: " + finalDiaChi);
 
-            HoaDon updatedHoaDon = hoaDonService.updateCustomerInfo(id, idKhachHang, tenNguoiNhan, soDienThoaiNguoiNhan, finalDiaChi);
+            HoaDon updatedHoaDon = hoaDonService.updateCustomerInfo(id, idKhachHang, tenNguoiNhan, soDienThoaiNguoiNhan, finalDiaChi, emailNguoiNhan);
             System.out.println("DEBUG: Order updated successfully, diaChi in DB: " + updatedHoaDon.getDiaChi());
             return new ResponseEntity<>(updatedHoaDon, HttpStatus.OK);
         } catch (IllegalArgumentException e) {
