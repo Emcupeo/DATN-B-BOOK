@@ -31,6 +31,13 @@ public class DotGiamGiaController {
         return ResponseEntity.ok(detail);
     }
 
+    // Lấy chi tiết giảm giá đang hoạt động cho một bộ sách
+    @GetMapping("/active-bosach-detail/{boSachId}")
+    public ResponseEntity<ActiveDiscountDetailDTO> getActiveBoSachDetail(@PathVariable Integer boSachId) {
+        var detail = dotGiamGiaService.getActiveBoSachDetail(boSachId);
+        return ResponseEntity.ok(detail);
+    }
+
     @PostMapping
     public ResponseEntity<DotGiamGia> create(@RequestBody DotGiamGiaRequest request) {
         DotGiamGia dotGiamGia = new DotGiamGia();
@@ -47,7 +54,11 @@ public class DotGiamGiaController {
         var ids = request.getChiTietSanPhamIds() != null && !request.getChiTietSanPhamIds().isEmpty()
                 ? request.getChiTietSanPhamIds()
                 : request.getSelectedProducts();
-        DotGiamGia created = dotGiamGiaService.create(dotGiamGia, ids);
+        
+        // Lấy danh sách bộ sách nếu có
+        var boSachIds = request.getBoSachIds();
+        
+        DotGiamGia created = dotGiamGiaService.create(dotGiamGia, ids, boSachIds);
         return ResponseEntity.ok(created);
     }
 
@@ -81,6 +92,20 @@ public class DotGiamGiaController {
     @PostMapping("/{id}/restore")
     public ResponseEntity<Void> restore(@PathVariable Integer id) {
         dotGiamGiaService.restoreOriginalPrices(id);
+        return ResponseEntity.ok().build();
+    }
+
+    // Apply all discounts (both products and book sets)
+    @PostMapping("/apply-all")
+    public ResponseEntity<Void> applyAllDiscounts() {
+        dotGiamGiaService.applyAllDiscounts();
+        return ResponseEntity.ok().build();
+    }
+
+    // Revert all expired discounts
+    @PostMapping("/revert-all")
+    public ResponseEntity<Void> revertAllExpiredDiscounts() {
+        dotGiamGiaService.revertAllExpiredDiscounts();
         return ResponseEntity.ok().build();
     }
 }

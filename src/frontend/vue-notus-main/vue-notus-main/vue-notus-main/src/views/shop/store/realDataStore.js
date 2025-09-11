@@ -229,6 +229,15 @@ const loadProducts = async () => {
         let author = 'Chưa có thông tin';
         if (tacGiaSet.size === 1) author = Array.from(tacGiaSet)[0];
         else if (tacGiaSet.size > 1) author = 'Nhiều tác giả';
+        // Lấy thông tin giảm giá cho bộ sách
+        let discountInfo = null;
+        try {
+          discountInfo = await DotGiamGiaService.getActiveBoSachDetail(boSach.id);
+        } catch (e) {
+          // Không có giảm giá hoặc lỗi
+          discountInfo = null;
+        }
+
         // Map bộ sách về object hiển thị
         let sortCreatedAt = 0;
         if (boSach.createdAt && !isNaN(new Date(boSach.createdAt).getTime())) {
@@ -237,11 +246,22 @@ const loadProducts = async () => {
           sortCreatedAt = 0;
         }
         console.log('[DEBUG] BoSach', boSach.id, 'createdAt:', boSach.createdAt, '-> sortCreatedAt:', sortCreatedAt);
+        
+        // Xác định giá hiển thị và giá gốc
+        let displayPrice = boSach.giaTien;
+        let originalPrice = null;
+        
+        if (discountInfo && discountInfo.giaBanDau && discountInfo.giaSauGiam) {
+          displayPrice = discountInfo.giaSauGiam;
+          originalPrice = discountInfo.giaBanDau;
+        }
+        
         processedProducts.push({
           id: boSach.id,
           title: boSach.tenBoSach,
           author,
-          price: boSach.giaTien,
+          price: displayPrice,
+          originalPrice: originalPrice,
           image: boSach.url || 'https://images.pexels.com/photos/159711/books-bookstore-book-reading-159711.jpeg?auto=compress&cs=tinysrgb&w=400',
           description: boSach.moTa || 'Chưa có mô tả',
           category: 'Bộ sách',
@@ -292,12 +312,23 @@ const loadCategories = async () => {
 }
 
 const addToCart = (product) => {
+  // Kiểm tra tồn kho
+  const stockQuantity = product.category === 'Bộ sách' ? product.stockQuantity : product.soLuongTon
+  if (stockQuantity <= 0) {
+    return false // Không thể thêm vào giỏ hàng
+  }
+  
   const existingItem = state.cart.find(item => item.id === product.id)
   if (existingItem) {
+    // Kiểm tra xem có vượt quá tồn kho không
+    if (existingItem.quantity >= stockQuantity) {
+      return false // Đã đạt giới hạn tồn kho
+    }
     existingItem.quantity++
   } else {
     state.cart.push({ ...product, quantity: 1 })
   }
+  return true // Thêm thành công
 }
 
 const removeFromCart = (productId) => {

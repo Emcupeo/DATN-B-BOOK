@@ -45,6 +45,21 @@ public class BoSachController {
         }
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<BoSachDTO> update(@PathVariable Integer id, @Valid @RequestBody BoSachDTO boSachDTO) {
+        logger.info("[INFO] Updating BoSach with id: {}", id);
+        try {
+            BoSach updatedBoSach = boSachService.update(id, boSachDTO);
+            BoSachDTO responseDTO = mapToDTO(updatedBoSach);
+            logger.debug("[DEBUG] Updated BoSach: {}", responseDTO);
+            return ResponseEntity.ok(responseDTO);
+        } catch (RuntimeException e) {
+            logger.error("[ERROR] Failed to update BoSach: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new BoSachDTO() {{ setTenBoSach("Error: " + e.getMessage()); }});
+        }
+    }
+
     private BoSachDTO mapToDTO(BoSach boSach) {
         BoSachDTO dto = new BoSachDTO();
         dto.setId(boSach.getId());

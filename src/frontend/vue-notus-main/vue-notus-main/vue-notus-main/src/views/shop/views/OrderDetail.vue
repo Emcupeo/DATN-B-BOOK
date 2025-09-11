@@ -69,8 +69,8 @@
                 <!-- Product Image -->
                 <div class="w-20 h-24 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                   <img 
-                    :src="getProductImage(item.chiTietSanPham)" 
-                    :alt="item.chiTietSanPham?.tenChiTietSanPham || 'Sản phẩm'"
+                    :src="getProductImage(item)" 
+                    :alt="getProductName(item)"
                     class="w-full h-full object-cover"
                     @error="handleImageError"
                   >
@@ -79,7 +79,7 @@
                 <!-- Product Info -->
                 <div class="flex-1 min-w-0">
                   <h3 class="font-medium text-gray-800 truncate">
-                    {{ item.chiTietSanPham?.tenChiTietSanPham || 'Sản phẩm không xác định' }}
+                    {{ getProductName(item) }}
                   </h3>
                   <div class="text-sm text-gray-600 space-y-1">
                     <p v-if="item.chiTietSanPham?.idTacGia?.tenTacGia">
@@ -248,16 +248,29 @@ export default {
       }
     }
 
-    const getProductImage = (chiTietSanPham) => {
-      if (!chiTietSanPham) {
-        return 'https://images.pexels.com/photos/159711/books-bookstore-book-reading-159711.jpeg?auto=compress&cs=tinysrgb&w=400'
+    const getProductName = (item) => {
+      if (item.boSach) {
+        return item.boSach.tenBoSach || 'Bộ sách không xác định'
+      } else if (item.chiTietSanPham) {
+        return item.chiTietSanPham.tenChiTietSanPham || 'Sản phẩm không xác định'
+      }
+      return 'Sản phẩm không xác định'
+    }
+
+    const getProductImage = (item) => {
+      // Ưu tiên ảnh từ bộ sách
+      if (item.boSach && item.boSach.url) {
+        return item.boSach.url
       }
       
-      // Lấy ảnh từ anhSanPhams
-      if (chiTietSanPham.anhSanPhams && chiTietSanPham.anhSanPhams.length > 0) {
-        const firstImage = chiTietSanPham.anhSanPhams[0]
-        if (firstImage && firstImage.url) {
-          return firstImage.url
+      // Fallback cho chi tiết sản phẩm
+      if (item.chiTietSanPham) {
+        // Lấy ảnh từ anhSanPhams
+        if (item.chiTietSanPham.anhSanPhams && item.chiTietSanPham.anhSanPhams.length > 0) {
+          const firstImage = item.chiTietSanPham.anhSanPhams[0]
+          if (firstImage && firstImage.url) {
+            return firstImage.url
+          }
         }
       }
       
@@ -389,6 +402,7 @@ export default {
       loading,
       error,
       loadOrder,
+      getProductName,
       getProductImage,
       handleImageError,
       formatDate,

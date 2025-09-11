@@ -28,6 +28,7 @@ import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -53,6 +54,12 @@ public class HoaDonService {
 
     @Autowired
     private HoaDonChiTietRepository hoaDonChiTietRepository;
+
+    @Autowired
+    private BoSachRepository boSachRepository;
+
+    @Autowired
+    private BoSachChiTietRepository boSachChiTietRepository;
 
     @Autowired
     private KhachHangRepository khachHangRepository;
@@ -92,7 +99,21 @@ public class HoaDonService {
     }
 
     public HoaDon getHoaDonById(int id) {
-        return hoaDonRepository.findById(id).orElse(null);
+        HoaDon hoaDon = hoaDonRepository.findById(id).orElse(null);
+        if (hoaDon != null) {
+            // Force load relationships
+            hoaDon.getHoaDonChiTiets().size(); // Force load hoaDonChiTiets
+            for (HoaDonChiTiet chiTiet : hoaDon.getHoaDonChiTiets()) {
+                // Force load chiTietSanPham và boSach
+                if (chiTiet.getChiTietSanPham() != null) {
+                    chiTiet.getChiTietSanPham().getTenChiTietSanPham();
+                }
+                if (chiTiet.getBoSach() != null) {
+                    chiTiet.getBoSach().getTenBoSach();
+                }
+            }
+        }
+        return hoaDon;
     }
 
     public String generateQRCodeImage(int id) throws WriterException, IOException {
@@ -347,8 +368,8 @@ public class HoaDonService {
         hinhThucThanhToan = new HinhThucThanhToan();
         hinhThucThanhToan.setCreatedAt(Instant.now());
         String timestamp = String.valueOf(System.currentTimeMillis());
-        String suffix = timestamp.substring(Math.max(0, timestamp.length() - 5)); // Giảm xuống 5 ký tự
-        String maHinhThucThanhToan = "HT" + suffix; // Giảm xuống 2 ký tự prefix
+        String suffix = timestamp.substring(Math.max(0, timestamp.length() - 6)); // Giảm xuống 6 ký tự để đảm bảo tổng độ dài <= 10
+        String maHinhThucThanhToan = "HT" + suffix; // Tổng độ dài: 2 + 6 = 8 ký tự
         hinhThucThanhToan.setMaHinhThucThanhToan(maHinhThucThanhToan);
         System.out.println("DEBUG: Set maHinhThucThanhToan: " + maHinhThucThanhToan);
 
@@ -389,9 +410,10 @@ public class HoaDonService {
         System.out.println("DEBUG: Setting hinhThucThanhToan to HoaDon: " + hinhThucThanhToan.getId());
         hoaDon.setHinhThucThanhToan(hinhThucThanhToan);
         // Set bidirectional relationship
-        if (hinhThucThanhToan.getHoaDons() != null) {
-            hinhThucThanhToan.getHoaDons().add(hoaDon);
+        if (hinhThucThanhToan.getHoaDons() == null) {
+            hinhThucThanhToan.setHoaDons(new LinkedHashSet<>());
         }
+        hinhThucThanhToan.getHoaDons().add(hoaDon);
         hoaDon.setGhiChu(ghiChu);
         hoaDon.setTongTien(thanhTien);
         hoaDon.setUpdatedAt(Instant.now());
@@ -423,10 +445,7 @@ public class HoaDonService {
         System.out.println("DEBUG: Set newTrangThai: " + newTrangThai);
 
         // Đảm bảo hóa đơn được lưu với id_hinh_thuc_thanh_toan
-        hoaDon.setHinhThucThanhToan(hinhThucThanhToan);
-        if (hinhThucThanhToan.getHoaDons() != null) {
-            hinhThucThanhToan.getHoaDons().add(hoaDon);
-        }
+        // (Đã set ở trên rồi, không cần set lại)
         HoaDon updatedHoaDon;
         try {
             updatedHoaDon = hoaDonRepository.saveAndFlush(hoaDon); // flush ngay lập tức
@@ -581,6 +600,66 @@ public class HoaDonService {
 
         chiTietSanPham.setSoLuongTon(chiTietSanPham.getSoLuongTon() - soLuong);
         chiTietSanPhamRepository.save(chiTietSanPham);
+
+        return hoaDonChiTietRepository.save(hoaDonChiTiet);
+    }
+
+    @Transactional
+    public HoaDonChiTiet addBoSachToOrder(int orderId, int boSachId, int soLuong, BigDecimal giaSanPham) {
+        System.out.println("DEBUG: addBoSachToOrder called with orderId=" + orderId + ", boSachId=" + boSachId + ", soLuong=" + soLuong + ", giaSanPham=" + giaSanPham);
+        
+        HoaDon hoaDon = hoaDonRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hóa đơn với ID: " + orderId));
+
+        System.out.println("DEBUG: HoaDon trangThai: " + hoaDon.getTrangThai() + ", maHoaDon: " + hoaDon.getMaHoaDon());
+
+        if (!"Chờ xác nhận".equals(hoaDon.getTrangThai()) && !"Tạo hóa đơn".equals(hoaDon.getTrangThai())) {
+            throw new IllegalStateException("Chỉ có thể thêm bộ sách vào hóa đơn ở trạng thái 'Chờ xác nhận' hoặc 'Tạo hóa đơn'. Hiện tại: " + hoaDon.getTrangThai());
+        }
+
+        BoSach boSach = boSachRepository.findById(boSachId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bộ sách với ID: " + boSachId));
+
+        System.out.println("DEBUG: Found BoSach: " + boSach.getTenBoSach() + ", deleted=" + boSach.getDeleted() + ", soLuong=" + boSach.getSoLuong() + ", id=" + boSach.getId());
+
+        if (boSach.getDeleted()) {
+            throw new IllegalArgumentException("Bộ sách đã bị xóa!");
+        }
+
+        if (boSach.getSoLuong() < soLuong) {
+            throw new IllegalArgumentException("Số lượng tồn kho bộ sách không đủ!");
+        }
+
+        HoaDonChiTiet hoaDonChiTiet = new HoaDonChiTiet();
+        hoaDonChiTiet.setHoaDon(hoaDon);
+        hoaDonChiTiet.setBoSach(boSach); // Set bộ sách thay vì chi tiết sản phẩm
+        hoaDonChiTiet.setSoLuong(soLuong);
+        hoaDonChiTiet.setGiaSanPham(giaSanPham);
+        hoaDonChiTiet.setThanhTien(giaSanPham.multiply(BigDecimal.valueOf(soLuong)));
+
+        // Trừ số lượng bộ sách
+        boSach.setSoLuong(boSach.getSoLuong() - soLuong);
+        boSachRepository.save(boSach);
+
+        // Trừ số lượng chi tiết sản phẩm trong bộ sách
+        List<BoSachChiTiet> boSachChiTiets = boSachChiTietRepository.findByIdBoSachId(boSachId);
+        for (BoSachChiTiet boSachChiTiet : boSachChiTiets) {
+            ChiTietSanPham chiTietSanPham = boSachChiTiet.getIdChiTietSanPham();
+            int soLuongCanTru = boSachChiTiet.getSoLuong() * soLuong; // Số lượng trong bộ sách * số lượng bộ sách mua
+            
+            if (chiTietSanPham.getSoLuongTon() < soLuongCanTru) {
+                throw new IllegalArgumentException(
+                    String.format("Không đủ số lượng tồn kho cho chi tiết sản phẩm '%s'. Cần: %d, Có: %d", 
+                        chiTietSanPham.getTenChiTietSanPham(), soLuongCanTru, chiTietSanPham.getSoLuongTon())
+                );
+            }
+            
+            chiTietSanPham.setSoLuongTon(chiTietSanPham.getSoLuongTon() - soLuongCanTru);
+            chiTietSanPhamRepository.save(chiTietSanPham);
+            
+            System.out.println(String.format("DEBUG: Trừ %d sản phẩm '%s' (cần %d, còn %d)", 
+                soLuongCanTru, chiTietSanPham.getTenChiTietSanPham(), soLuongCanTru, chiTietSanPham.getSoLuongTon()));
+        }
 
         return hoaDonChiTietRepository.save(hoaDonChiTiet);
     }

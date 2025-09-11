@@ -3,6 +3,7 @@ package org.example.datnbbook.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.example.datnbbook.dto.ChiTietSanPhamDTO;
+import org.example.datnbbook.dto.ErrorResponse;
 import org.example.datnbbook.model.AnhSanPham;
 import org.example.datnbbook.model.ChatLieu;
 import org.example.datnbbook.model.ChiTietSanPham;
@@ -131,9 +132,15 @@ public class ChiTietSanPhamController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
-        chiTietSanPhamService.delete(id);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<?> delete(@PathVariable Integer id) {
+        try {
+            chiTietSanPhamService.delete(id);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new ErrorResponse("Lỗi server: " + e.getMessage()));
+        }
     }
 
     @GetMapping("/search")

@@ -146,6 +146,29 @@
               </div>
             </div>
 
+            <!-- Discount Type Info -->
+            <div v-if="discountTypeInfo.type !== 'none'" class="mt-4 p-3 rounded-lg border" :class="[discountTypeInfo.bgColor, discountTypeInfo.borderColor]">
+              <div class="flex items-center">
+                <svg class="w-5 h-5 mr-2" :class="discountTypeInfo.color" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span class="font-medium" :class="discountTypeInfo.color">
+                  Loại đợt giảm giá: {{ discountTypeInfo.text }}
+                </span>
+              </div>
+              <div class="mt-2 text-sm text-gray-600">
+                <span v-if="discountTypeInfo.type === 'mixed'">
+                  Đợt giảm giá này sẽ áp dụng cho cả sản phẩm và bộ sách đã chọn.
+                </span>
+                <span v-else-if="discountTypeInfo.type === 'products'">
+                  Đợt giảm giá này sẽ áp dụng cho các sản phẩm đã chọn.
+                </span>
+                <span v-else-if="discountTypeInfo.type === 'booksets'">
+                  Đợt giảm giá này sẽ áp dụng cho các bộ sách đã chọn.
+                </span>
+              </div>
+            </div>
+
             <div class="flex justify-end mt-4 space-x-2">
               <button
                 type="submit"
@@ -173,9 +196,38 @@
           </form>
         </div>
 
-        <!-- Product Selection (Right Column) -->
+        <!-- Product/Book Set Selection (Right Column) -->
         <div class="w-full md:w-1/2 p-4">
-          <div>
+          <!-- Tab Navigation -->
+          <div class="mb-4">
+            <div class="flex border-b border-gray-200">
+              <button
+                @click="activeTab = 'products'"
+                :class="[
+                  'px-4 py-2 text-sm font-medium border-b-2 transition-colors duration-200',
+                  activeTab === 'products' 
+                    ? 'border-blue-500 text-blue-600' 
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                ]"
+              >
+                Sản Phẩm
+              </button>
+              <button
+                @click="activeTab = 'booksets'"
+                :class="[
+                  'px-4 py-2 text-sm font-medium border-b-2 transition-colors duration-200',
+                  activeTab === 'booksets' 
+                    ? 'border-blue-500 text-blue-600' 
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                ]"
+              >
+                Bộ Sách
+              </button>
+            </div>
+          </div>
+
+          <!-- Products Tab -->
+          <div v-if="activeTab === 'products'">
             <div class="flex justify-between items-center mb-4">
               <h3 class="text-lg font-semibold text-gray-800">Sản Phẩm</h3>
               <input
@@ -219,10 +271,9 @@
                   <td class="px-4 py-2 text-gray-700">
                     <input
                       type="checkbox"
-                      v-model="formData.selectedProducts"
-                      :value="product.id"
+                      :checked="formData.selectedProducts.includes(product.id)"
                       class="mr-2"
-                      @click.stop="toggleProductSelection(product.id)"
+                      @change="toggleProductSelection(product.id)"
                     />
                   </td>
                   <td class="px-4 py-2 text-gray-700" @click="addProductToSelected(product)">
@@ -269,7 +320,7 @@
             </div>
 
             <!-- Selected Products (Show ChiTietSanPham) -->
-            <div v-if="filteredChiTietSanPhams.length > 0" class="mt-6">
+            <div v-if="filteredChiTietSanPhams && filteredChiTietSanPhams.length > 0" class="mt-6">
               <h3 class="text-lg font-semibold text-gray-800 mb-4">Sản Phẩm Chi Tiết</h3>
               <table class="min-w-full bg-white border border-gray-200">
                 <thead>
@@ -527,6 +578,118 @@
               </table>
             </div>
           </div>
+
+          <!-- Book Sets Tab -->
+          <div v-if="activeTab === 'booksets'">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold text-gray-800">Bộ Sách</h3>
+              <input
+                v-model="bookSetSearchTerm"
+                type="text"
+                class="p-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all duration-200 w-1/2"
+                placeholder="Tìm kiếm theo tên bộ sách..."
+              />
+            </div>
+            <table class="min-w-full bg-white border border-gray-200">
+              <thead>
+                <tr class="bg-gray-100 text-gray-700 text-left">
+                  <th class="px-4 py-2 text-sm font-semibold border-b"></th>
+                  <th class="px-4 py-2 text-sm font-semibold border-b">STT</th>
+                  <th class="px-4 py-2 text-sm font-semibold border-b">Mã bộ sách</th>
+                  <th class="px-4 py-2 text-sm font-semibold border-b">Tên bộ sách</th>
+                  <th class="px-4 py-2 text-sm font-semibold border-b">Giá tiền</th>
+                  <th class="px-4 py-2 text-sm font-semibold border-b">Số lượng</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(bookSet, index) in paginatedBookSets" :key="bookSet.id" class="hover:bg-gray-50 cursor-pointer">
+                  <td class="px-4 py-2">
+                    <input
+                      type="checkbox"
+                      :checked="formData.selectedBoSachs && formData.selectedBoSachs.includes(bookSet.id)"
+                      class="mr-2"
+                      @change="toggleBookSetSelection(bookSet.id)"
+                    />
+                  </td>
+                  <td class="px-4 py-2 text-gray-700" @click="toggleBookSetSelection(bookSet.id)">
+                    {{ (currentBookSetPage - 1) * bookSetsPerPage + index + 1 }}
+                  </td>
+                  <td class="px-4 py-2 text-gray-700" @click="toggleBookSetSelection(bookSet.id)">
+                    {{ bookSet.maBoSach }}
+                  </td>
+                  <td class="px-4 py-2 text-gray-700" @click="toggleBookSetSelection(bookSet.id)">
+                    {{ bookSet.tenBoSach }}
+                  </td>
+                  <td class="px-4 py-2 text-gray-700" @click="toggleBookSetSelection(bookSet.id)">
+                    {{ bookSet.giaTien ? bookSet.giaTien.toLocaleString('vi-VN') + ' VNĐ' : '0 VNĐ' }}
+                  </td>
+                  <td class="px-4 py-2 text-gray-700" @click="toggleBookSetSelection(bookSet.id)">
+                    {{ bookSet.soLuong || 0 }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="mt-4 flex justify-between items-center">
+              <div class="flex space-x-2">
+                <button
+                  v-if="!isUpdate"
+                  @click="selectAllBookSets"
+                  class="bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600 transition-all duration-200 text-sm"
+                >
+                  Chọn tất cả
+                </button>
+                <button
+                  v-if="!isUpdate"
+                  @click="deselectAllBookSets"
+                  class="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 transition-all duration-200 text-sm"
+                >
+                  Bỏ chọn tất cả
+                </button>
+              </div>
+              <div class="flex items-center space-x-2">
+                <button
+                  @click="prevBookSetPage"
+                  :disabled="currentBookSetPage === 1"
+                  class="bg-blue-500 text-white px-2 py-1 rounded-md hover:bg-blue-700 transition-all duration-200 disabled:bg-gray-300 disabled:text-gray-500"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                  </svg>
+                </button>
+                <span class="text-sm text-gray-700">{{ currentBookSetPage }} / {{ totalBookSetPages }}</span>
+                <button
+                  @click="nextBookSetPage"
+                  :disabled="currentBookSetPage === totalBookSetPages"
+                  class="bg-blue-500 text-white px-2 py-1 rounded-md hover:bg-blue-700 transition-all duration-200 disabled:bg-gray-300 disabled:text-gray-500"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Selected Book Sets Summary -->
+            <div v-if="formData.selectedBoSachs && Array.isArray(formData.selectedBoSachs) && formData.selectedBoSachs.length > 0" class="mt-6">
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">Bộ Sách Đã Chọn ({{ formData.selectedBoSachs ? formData.selectedBoSachs.length : 0 }})</h3>
+              <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="space-y-2">
+                  <div v-for="bookSetId in formData.selectedBoSachs" :key="bookSetId" class="flex justify-between items-center">
+                    <span class="text-sm text-gray-700">
+                      {{ getBookSetById(bookSetId)?.tenBoSach || 'Đang tải...' }}
+                    </span>
+                    <button
+                      @click="removeBookSetFromSelected(bookSetId)"
+                      class="text-red-500 hover:text-red-700 text-sm"
+                    >
+                      Xóa
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -696,6 +859,34 @@
         </div>
       </div>
     </div>
+
+    <!-- Confirm Modal -->
+    <div
+      v-if="showConfirmModalFlag"
+      class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50"
+    >
+      <div class="bg-white rounded-lg p-6 w-full max-w-md">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-semibold text-gray-800">Xác nhận</h3>
+          <button @click="closeConfirmModal" class="text-gray-500 hover:text-gray-700 text-xl">×</button>
+        </div>
+        <p class="text-gray-700 mb-6">{{ confirmMessage }}</p>
+        <div class="flex justify-end space-x-3">
+          <button
+            @click="closeConfirmModal"
+            class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-all duration-200"
+          >
+            Hủy
+          </button>
+          <button
+            @click="confirmAction"
+            class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-all duration-200"
+          >
+            Xác nhận
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -732,6 +923,7 @@ export default {
         ngayKetThuc: '',
         trangThai: 'Chưa bắt đầu',
         selectedProducts: [],
+        selectedBoSachs: [],
       },
       errorMessage: '',
       loading: false,
@@ -743,6 +935,12 @@ export default {
       productSearchTerm: '',
       currentProductPage: 1,
       productsPerPage: 5,
+      // Book Sets data
+      bookSets: [],
+      bookSetSearchTerm: '',
+      currentBookSetPage: 1,
+      bookSetsPerPage: 5,
+      activeTab: 'products', // 'products' or 'booksets'
       showChiTietModal: false,
       selectedChiTiet: null,
       filters: {
@@ -807,25 +1005,27 @@ export default {
       });
     },
     totalPages() {
-      return Math.ceil(this.filteredDiscounts.length / this.itemsPerPage);
+      return Math.ceil((this.filteredDiscounts || []).length / this.itemsPerPage);
     },
     paginatedDiscounts() {
       const start = (this.currentPage - 1) * this.itemsPerPage;
-      return this.filteredDiscounts.slice(start, start + this.itemsPerPage);
+      return (this.filteredDiscounts || []).slice(start, start + this.itemsPerPage);
     },
     filteredProducts() {
+      if (!this.products || !Array.isArray(this.products)) return [];
       return this.products.filter((product) => {
         return product.tenSanPham.toLowerCase().includes(this.productSearchTerm.toLowerCase());
       });
     },
     totalProductPages() {
-      return Math.ceil(this.filteredProducts.length / this.productsPerPage) || 1;
+      return Math.ceil((this.filteredProducts || []).length / this.productsPerPage) || 1;
     },
     paginatedProducts() {
       const start = (this.currentProductPage - 1) * this.productsPerPage;
-      return this.filteredProducts.slice(start, start + this.productsPerPage);
+      return (this.filteredProducts || []).slice(start, start + this.productsPerPage);
     },
     filteredChiTietSanPhams() {
+      if (!this.selectedChiTietSanPhams || !Array.isArray(this.selectedChiTietSanPhams)) return [];
       return this.selectedChiTietSanPhams.filter((chiTiet, index) => {
         const matchesFilters =
           (!this.filters.stt || (index + 1).toString() === this.filters.stt.toString()) &&
@@ -843,6 +1043,64 @@ export default {
     uniqueNhaXuatBan() {
       const nhaXuatBans = this.selectedChiTietSanPhams.map(chiTiet => chiTiet.idNhaXuatBan?.tenNhaXuatBan).filter(Boolean);
       return [...new Set(nhaXuatBans)];
+    },
+    // Book Sets computed properties
+    filteredBookSets() {
+      if (!this.bookSets || !Array.isArray(this.bookSets)) return [];
+      if (!this.bookSetSearchTerm) {
+        return this.bookSets;
+      }
+      const searchLower = this.bookSetSearchTerm.toLowerCase();
+      return this.bookSets.filter(bookSet => 
+        bookSet.tenBoSach.toLowerCase().includes(searchLower) ||
+        bookSet.maBoSach.toLowerCase().includes(searchLower)
+      );
+    },
+    totalBookSetPages() {
+      return Math.ceil((this.filteredBookSets || []).length / this.bookSetsPerPage);
+    },
+    paginatedBookSets() {
+      const start = (this.currentBookSetPage - 1) * this.bookSetsPerPage;
+      return (this.filteredBookSets || []).slice(start, start + this.bookSetsPerPage);
+    },
+    // Discount type info
+    discountTypeInfo() {
+      const hasProducts = this.selectedChiTietSanPhams && Array.isArray(this.selectedChiTietSanPhams) && this.selectedChiTietSanPhams.length > 0;
+      const hasBookSets = this.formData && this.formData.selectedBoSachs && Array.isArray(this.formData.selectedBoSachs) && this.formData.selectedBoSachs.length > 0;
+      
+      if (hasProducts && hasBookSets) {
+        return {
+          type: 'mixed',
+          text: 'Hỗn hợp (Sản phẩm + Bộ sách)',
+          color: 'text-purple-600',
+          bgColor: 'bg-purple-50',
+          borderColor: 'border-purple-200'
+        };
+      } else if (hasProducts) {
+        return {
+          type: 'products',
+          text: 'Sản phẩm',
+          color: 'text-blue-600',
+          bgColor: 'bg-blue-50',
+          borderColor: 'border-blue-200'
+        };
+      } else if (hasBookSets) {
+        return {
+          type: 'booksets',
+          text: 'Bộ sách',
+          color: 'text-green-600',
+          bgColor: 'bg-green-50',
+          borderColor: 'border-green-200'
+        };
+      } else {
+        return {
+          type: 'none',
+          text: 'Chưa chọn',
+          color: 'text-gray-500',
+          bgColor: 'bg-gray-50',
+          borderColor: 'border-gray-200'
+        };
+      }
     },
   },
   methods: {
@@ -1127,11 +1385,16 @@ export default {
         selectedProducts: discount.dotGiamGiaChiTiets
           ? [...new Set(discount.dotGiamGiaChiTiets.map(item => item.idChiTietSanPham?.idSanPham?.id).filter(id => id))]
           : [],
+        selectedBoSachs: discount.dotGiamGiaBoSachChiTiets
+          ? [...new Set(discount.dotGiamGiaBoSachChiTiets.map(item => item.idBoSach?.id).filter(id => id))]
+          : [],
       };
       this.selectedChiTietSanPhamIds = [];
       this.updateSelectedChiTietSanPhams();
       this.showForm = false;
       this.currentProductPage = 1;
+      this.currentBookSetPage = 1;
+      this.activeTab = 'products';
       this.filters = {
         maChiTietSanPham: '',
         tenChiTietSanPham: '',
@@ -1161,8 +1424,10 @@ export default {
       this.selectedChiTietSanPhams = [];
       this.selectedChiTietSanPhamIds = [];
       this.formData.selectedProducts = [];
+      this.formData.selectedBoSachs = [];
       this.products = [];
       this.currentProductPage = 1;
+      this.currentBookSetPage = 1;
       this.filters = {
         maChiTietSanPham: '',
         tenChiTietSanPham: '',
@@ -1208,8 +1473,8 @@ export default {
         this.errorMessage = 'Số tiền tối đa phải lớn hơn 0!';
         return false;
       }
-      if (!this.isUpdate && this.selectedChiTietSanPhams.length === 0) {
-        this.errorMessage = 'Vui lòng chọn ít nhất một chi tiết sản phẩm!';
+      if (!this.isUpdate && this.selectedChiTietSanPhams.length === 0 && this.formData.selectedBoSachs.length === 0) {
+        this.errorMessage = 'Vui lòng chọn ít nhất một chi tiết sản phẩm hoặc một bộ sách!';
         return false;
       }
       return true;
@@ -1253,6 +1518,7 @@ export default {
           ngayBatDau: new Date(this.formData.ngayBatDau).toISOString(),
           ngayKetThuc: new Date(this.formData.ngayKetThuc).toISOString(),
           chiTietSanPhamIds: chiTietSanPhamIds,
+          boSachIds: this.formData.selectedBoSachs,
         };
 
         try {
@@ -1346,10 +1612,82 @@ export default {
     nextProductPage() {
       if (this.currentProductPage < this.totalProductPages) this.currentProductPage++;
     },
+    // Book Sets methods
+    async fetchBookSets() {
+      try {
+        const bookSets = await DotGiamGiaService.getAllBoSach();
+        this.bookSets = bookSets;
+      } catch (error) {
+        console.error('Lỗi khi lấy danh sách bộ sách:', error);
+        this.errorMessage = 'Không thể tải danh sách bộ sách';
+      }
+    },
+    toggleBookSetSelection(bookSetId) {
+      if (!this.formData.selectedBoSachs) {
+        this.formData.selectedBoSachs = [];
+      }
+      const index = this.formData.selectedBoSachs.indexOf(bookSetId);
+      if (index === -1) {
+        this.formData.selectedBoSachs.push(bookSetId);
+      } else {
+        this.formData.selectedBoSachs.splice(index, 1);
+      }
+    },
+    addBookSetToSelected(bookSet) {
+      if (!this.formData.selectedBoSachs) {
+        this.formData.selectedBoSachs = [];
+      }
+      if (!this.formData.selectedBoSachs.includes(bookSet.id)) {
+        this.formData.selectedBoSachs.push(bookSet.id);
+      }
+    },
+    removeBookSetFromSelected(bookSetId) {
+      if (!this.formData.selectedBoSachs) {
+        this.formData.selectedBoSachs = [];
+        return;
+      }
+      const index = this.formData.selectedBoSachs.indexOf(bookSetId);
+      if (index > -1) {
+        this.formData.selectedBoSachs.splice(index, 1);
+      }
+    },
+    getBookSetById(bookSetId) {
+      return this.bookSets.find(bs => bs.id === bookSetId);
+    },
+    prevBookSetPage() {
+      if (this.currentBookSetPage > 1) {
+        this.currentBookSetPage--;
+      }
+    },
+    nextBookSetPage() {
+      if (this.currentBookSetPage < this.totalBookSetPages) {
+        this.currentBookSetPage++;
+      }
+    },
+    selectAllBookSets() {
+      if (!this.formData.selectedBoSachs) {
+        this.formData.selectedBoSachs = [];
+      }
+      this.formData.selectedBoSachs = this.bookSets.map(bookSet => bookSet.id);
+    },
+    deselectAllBookSets() {
+      this.formData.selectedBoSachs = [];
+    },
+  },
+  watch: {
+    'formData.loaiGiamGia'(newVal) {
+      // Reset values when switching discount type
+      if (newVal === 'Phần trăm') {
+        this.formData.giaTriGiam = 0;
+      } else if (newVal === 'Tiền mặt') {
+        this.formData.soPhanTramGiam = 0;
+      }
+    }
   },
   mounted() {
     this.fetchDiscounts();
     this.fetchProducts();
+    this.fetchBookSets();
   },
 };
 </script>

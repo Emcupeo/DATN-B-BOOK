@@ -48,6 +48,12 @@ class HoaDonService {
         });
     }
 
+    addBoSachToOrder(hoaDonId, productData) {
+        return axios.post(`${API_URL_ListHoaDon}/${hoaDonId}/add-bosach`, productData, {
+            headers: { "Content-Type": "application/json" }
+        });
+    }
+
     updatePayment(id, paymentData) {
         return axios.put(`${API_URL_ListHoaDon}/${id}/cap-nhat-thanh-toan`, paymentData, {
             headers: { "Content-Type": "application/json" }

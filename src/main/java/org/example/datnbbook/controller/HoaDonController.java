@@ -134,18 +134,26 @@ public class HoaDonController {
     @PutMapping("/hoa-don/{id}/cap-nhat-thanh-toan")
     public ResponseEntity<HoaDon> updatePayment(@PathVariable int id, @RequestBody Map<String, Object> request) {
         try {
-            BigDecimal tienMat = new BigDecimal(request.get("tienMat").toString());
-            BigDecimal chuyenKhoan = new BigDecimal(request.get("chuyenKhoan").toString());
-            Integer phuongThucThanhToanId = Integer.valueOf(request.get("phuongThucThanhToanId").toString());
+            System.out.println("DEBUG: updatePayment called with id=" + id + ", request=" + request);
+            
+            BigDecimal tienMat = request.get("tienMat") != null ? new BigDecimal(request.get("tienMat").toString()) : BigDecimal.ZERO;
+            BigDecimal chuyenKhoan = request.get("chuyenKhoan") != null ? new BigDecimal(request.get("chuyenKhoan").toString()) : BigDecimal.ZERO;
+            Integer phuongThucThanhToanId = request.get("phuongThucThanhToanId") != null ? Integer.valueOf(request.get("phuongThucThanhToanId").toString()) : 1;
             String ghiChu = request.get("ghiChu") != null ? request.get("ghiChu").toString() : "";
-            String loaiHoaDon = request.get("loaiHoaDon").toString();
-            BigDecimal tienKhachDua = new BigDecimal(request.get("tienKhachDua").toString());
+            String loaiHoaDon = request.get("loaiHoaDon") != null ? request.get("loaiHoaDon").toString() : "Tại quầy";
+            BigDecimal tienKhachDua = request.get("tienKhachDua") != null ? new BigDecimal(request.get("tienKhachDua").toString()) : BigDecimal.ZERO;
             Long phieuGiamGiaId = request.get("phieuGiamGiaId") != null ? 
                 Long.valueOf(request.get("phieuGiamGiaId").toString()) : null;
+            
+            System.out.println("DEBUG: Parsed values - tienMat=" + tienMat + ", chuyenKhoan=" + chuyenKhoan + 
+                             ", phuongThucThanhToanId=" + phuongThucThanhToanId + ", ghiChu=" + ghiChu + 
+                             ", loaiHoaDon=" + loaiHoaDon + ", tienKhachDua=" + tienKhachDua + ", phieuGiamGiaId=" + phieuGiamGiaId);
             
             HoaDon updatedHoaDon = hoaDonService.updatePayment(id, tienMat, chuyenKhoan, phuongThucThanhToanId, ghiChu, loaiHoaDon, tienKhachDua, phieuGiamGiaId);
             return ResponseEntity.ok(updatedHoaDon);
         } catch (Exception e) {
+            System.out.println("DEBUG: updatePayment error: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.badRequest().build();
         }
     }
@@ -229,6 +237,26 @@ public class HoaDonController {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             System.out.println("DEBUG: addProductToOrder unexpected error: " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PostMapping("/hoa-don/{id}/add-bosach")
+    public ResponseEntity<HoaDonChiTiet> addBoSachToOrder(@PathVariable int id, @RequestBody Map<String, Object> productData) {
+        try {
+            System.out.println("DEBUG: addBoSachToOrder called with id=" + id + ", productData=" + productData);
+            int boSachId = Integer.parseInt(productData.get("boSachId").toString());
+            int soLuong = Integer.parseInt(productData.get("soLuong").toString());
+            BigDecimal giaSanPham = new BigDecimal(productData.get("giaSanPham").toString());
+            HoaDonChiTiet hoaDonChiTiet = hoaDonService.addBoSachToOrder(id, boSachId, soLuong, giaSanPham);
+            return new ResponseEntity<>(hoaDonChiTiet, HttpStatus.OK);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            System.out.println("DEBUG: addBoSachToOrder error: " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            System.out.println("DEBUG: addBoSachToOrder unexpected error: " + e.getMessage());
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }

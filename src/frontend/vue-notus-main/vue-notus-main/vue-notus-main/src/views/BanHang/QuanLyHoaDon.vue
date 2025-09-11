@@ -257,13 +257,13 @@
           <div v-if="order.hoaDonChiTiets.length">
             <div v-for="item in order.hoaDonChiTiets" :key="item.id" class="grid grid-cols-6 gap-4 items-center border-b py-4">
               <div class="flex justify-center">
-                <img :src="item.chiTietSanPham?.anhSanPhams?.[0]?.url || 'default-image.jpg'" alt="Sản phẩm" class="w-16 h-16 object-cover rounded-md">
+                <img :src="getProductImage(item)" alt="Sản phẩm" class="w-16 h-16 object-cover rounded-md">
               </div>
               <div>
-                <p class="font-medium">{{ item.chiTietSanPham?.tenChiTietSanPham || 'Không xác định' }}</p>
-                <p class="text-gray-500">Mã: {{ item.maHoaDonChiTiet }}</p>
+                <p class="font-medium">{{ getProductName(item) }}</p>
+                <p class="text-gray-500">Mã: {{ getProductCode(item) }}</p>
                 <p class="text-red-500">{{ formatCurrency(item.giaSanPham) }}</p>
-                <p class="text-gray-500">Tác giả: {{ item.chiTietSanPham?.idTacGia?.tenTacGia || 'Không có' }}</p>
+                <p class="text-gray-500">Tác giả: {{ getProductAuthor(item) }}</p>
               </div>
               <div class="flex justify-center">
                 <p>x{{ item.soLuong }}</p>
@@ -691,6 +691,47 @@ export default {
       } finally {
         this.loading = false;
       }
+    },
+
+    getProductName(item) {
+      if (item.boSach) {
+        return item.boSach.tenBoSach || 'Bộ sách không xác định'
+      } else if (item.chiTietSanPham) {
+        return item.chiTietSanPham.tenChiTietSanPham || 'Sản phẩm không xác định'
+      }
+      return 'Sản phẩm không xác định'
+    },
+
+    getProductCode(item) {
+      if (item.boSach) {
+        return item.boSach.maBoSach || 'Mã không xác định'
+      } else if (item.chiTietSanPham) {
+        return item.chiTietSanPham.maChiTietSanPham || 'Mã không xác định'
+      }
+      return 'Mã không xác định'
+    },
+
+    getProductAuthor(item) {
+      if (item.boSach) {
+        return 'Bộ sách'
+      } else if (item.chiTietSanPham?.idTacGia?.tenTacGia) {
+        return item.chiTietSanPham.idTacGia.tenTacGia
+      }
+      return 'Không có'
+    },
+
+    getProductImage(item) {
+      // Ưu tiên ảnh từ bộ sách
+      if (item.boSach && item.boSach.url) {
+        return item.boSach.url
+      }
+      
+      // Fallback cho chi tiết sản phẩm
+      if (item.chiTietSanPham?.anhSanPhams?.[0]?.url) {
+        return item.chiTietSanPham.anhSanPhams[0].url
+      }
+      
+      return 'default-image.jpg'
     },
     async loadProvinces() {
       try {
@@ -1180,6 +1221,7 @@ export default {
           chuyenKhoan: this.paymentMethod === "2" ? this.thanhTien : 0,
           tienKhachDua: this.paymentMethod === "1" ? this.tienKhachDua : 0,
           ghiChu: this.paymentNote,
+          loaiHoaDon: this.order.loaiHoaDon || "Tại quầy",
         };
         console.log("Gửi dữ liệu thanh toán:", paymentData);
         const response = await HoaDonService.updatePayment(orderId, paymentData);

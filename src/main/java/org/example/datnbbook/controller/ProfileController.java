@@ -59,12 +59,13 @@ public class ProfileController {
                 ));
             }
 
-            if (currentPassword == null || currentPassword.trim().isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", "Mật khẩu hiện tại không được để trống"
-                ));
-            }
+            // Đã loại bỏ validation currentPassword - không cần thiết nữa
+            // if (currentPassword == null || currentPassword.trim().isEmpty()) {
+            //     return ResponseEntity.badRequest().body(Map.of(
+            //         "success", false,
+            //         "message", "Mật khẩu hiện tại không được để trống"
+            //     ));
+            // }
 
             if (newPassword == null || newPassword.length() < 6) {
                 return ResponseEntity.badRequest().body(Map.of(
@@ -73,7 +74,8 @@ public class ProfileController {
                 ));
             }
 
-            NguoiDungDTO result = authService.changePassword(tenDangNhap, currentPassword, newPassword);
+            // Gửi empty string cho currentPassword vì không cần thiết nữa
+            NguoiDungDTO result = authService.changePassword(tenDangNhap, "", newPassword);
 
             return ResponseEntity.ok().body(Map.of(
                 "success", true,

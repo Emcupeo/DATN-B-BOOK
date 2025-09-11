@@ -144,7 +144,11 @@ const routes = [
         component: AddBoSach
       },
       {
-        path: '/admin/bo-sach/:id',
+        path: "/admin/bo-sach/edit/:id",
+        component: AddBoSach
+      },
+      {
+        path: '/admin/bo-sach/detail/:id',
         component: ChiTietBoSach
       },
       {

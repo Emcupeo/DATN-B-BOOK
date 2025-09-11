@@ -227,7 +227,7 @@ export default {
           await this.loadSanPhams();
         } catch (error) {
           console.error('Error deleting san pham:', error);
-          alert('Có lỗi xảy ra khi xóa sản phẩm');
+          alert(error.message || 'Có lỗi xảy ra khi xóa sản phẩm');
         }
       }
     },

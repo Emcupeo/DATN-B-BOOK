@@ -82,7 +82,13 @@ const routes = [
         component: () => import("../views/QuanLySach/AddBoSach.vue"),
       },
       {
-        path: "bo-sach/:id",
+        path: "bo-sach/edit/:id",
+        name: "EditBoSach",
+        component: () => import("../views/QuanLySach/AddBoSach.vue"),
+        props: true,
+      },
+      {
+        path: "bo-sach/detail/:id",
         name: "ChiTietBoSach",
         component: () => import("../views/QuanLySach/ChiTietBoSach.vue"),
       },

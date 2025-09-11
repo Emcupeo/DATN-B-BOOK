@@ -33,6 +33,16 @@ class BoSachService {
         }
     }
 
+    async update(id, boSach) {
+        try {
+            const response = await api.put(`/bo-sach/${id}`, boSach);
+            return new BoSach(response.data);
+        } catch (error) {
+            console.error(`Lỗi khi cập nhật bộ sách ${id}:`, error.response || error);
+            throw error;
+        }
+    }
+
     async delete(id) {
         try {
             await api.delete(`/bo-sach/${id}`);

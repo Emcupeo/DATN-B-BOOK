@@ -3,6 +3,7 @@ package org.example.datnbbook.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.datnbbook.dto.SanPhamDTO;
 import org.example.datnbbook.dto.SanPhamRequest;
+import org.example.datnbbook.dto.ErrorResponse;
 import org.example.datnbbook.model.*;
 import org.example.datnbbook.repository.ChiTietSanPhamAnhRepository;
 import org.example.datnbbook.repository.ChiTietSanPhamRepository;
@@ -17,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
 
 @CrossOrigin(origins = {"http://localhost:3000"})
 @RestController
@@ -74,11 +76,19 @@ public class SanPhamController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+    public ResponseEntity<?> delete(@PathVariable Integer id) {
         logger.info("[INFO] Deleting SanPham with id: {}", id);
-        sanPhamService.delete(id);
-        logger.debug("[DEBUG] Deleted SanPham with id: {}", id);
-        return ResponseEntity.ok().build();
+        try {
+            sanPhamService.delete(id);
+            logger.debug("[DEBUG] Deleted SanPham with id: {}", id);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            logger.error("[ERROR] Failed to delete SanPham: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+        } catch (Exception e) {
+            logger.error("[ERROR] Server error when deleting SanPham: {}", e.getMessage());
+            return ResponseEntity.status(500).body(new ErrorResponse("Lỗi server: " + e.getMessage()));
+        }
     }
 
     @GetMapping("/search")

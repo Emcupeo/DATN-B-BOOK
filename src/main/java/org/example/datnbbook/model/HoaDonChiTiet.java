@@ -28,9 +28,14 @@ public class HoaDonChiTiet {
     private HoaDon hoaDon;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_chi_tiet_san_pham", nullable = false)
+    @JoinColumn(name = "id_chi_tiet_san_pham", nullable = true)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "hoaDonChiTiets"})
     private ChiTietSanPham chiTietSanPham;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_bo_sach", nullable = true)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "hoaDonChiTiets"})
+    private BoSach boSach;
 
     @Column(name = "ma_hoa_don_chi_tiet", length = 10, nullable = false, insertable = false, updatable = false)
     private String maHoaDonChiTiet;
@@ -61,4 +66,24 @@ public class HoaDonChiTiet {
     @ColumnDefault("0")
     @Column(name = "deleted")
     private Boolean deleted;
+
+    // Method để lấy tên sản phẩm (bộ sách hoặc chi tiết sản phẩm)
+    public String getTenSanPham() {
+        if (boSach != null) {
+            return boSach.getTenBoSach();
+        } else if (chiTietSanPham != null) {
+            return chiTietSanPham.getTenChiTietSanPham();
+        }
+        return "Sản phẩm không xác định";
+    }
+
+    // Method để lấy mã sản phẩm
+    public String getMaSanPham() {
+        if (boSach != null) {
+            return boSach.getMaBoSach();
+        } else if (chiTietSanPham != null) {
+            return chiTietSanPham.getMaChiTietSanPham();
+        }
+        return "Mã không xác định";
+    }
 }

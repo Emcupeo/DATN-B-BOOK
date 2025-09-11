@@ -14,6 +14,7 @@ import org.example.datnbbook.model.TacGia;
 import org.example.datnbbook.model.TheLoai;
 import org.example.datnbbook.repository.ChatLieuRepository;
 import org.example.datnbbook.repository.ChiTietSanPhamRepository;
+import org.example.datnbbook.repository.BoSachChiTietRepository;
 import org.example.datnbbook.repository.DanhMucRepository;
 import org.example.datnbbook.repository.LoaiBiaRepository;
 import org.example.datnbbook.repository.NgonNguRepository;
@@ -57,6 +58,8 @@ public class SanPhamService {
     private NgonNguRepository ngonNguRepository;
     @Autowired
     private DanhMucRepository danhMucRepository;
+    @Autowired
+    private BoSachChiTietRepository boSachChiTietRepository;
 
     public List<SanPham> getAll() {
         List<SanPham> sanPhams = sanPhamRepository.findAll().stream()
@@ -120,8 +123,28 @@ public class SanPhamService {
         SanPham sanPham = sanPhamRepository.findById(id)
                 .filter(sp -> !sp.getDeleted())
                 .orElseThrow(() -> new RuntimeException("Sản phẩm không tồn tại với id: " + id));
+        // Soft delete sản phẩm
         sanPham.setDeleted(true);
         sanPhamRepository.save(sanPham);
+
+        // Kiểm tra toàn bộ chi tiết. Nếu có CTSP thuộc bộ sách active => chặn và thông báo tên bộ đầu tiên
+        List<ChiTietSanPham> ctList = chiTietSanPhamRepository.findByIdSanPham_Id(id)
+                .stream().filter(ct -> !ct.getDeleted()).collect(java.util.stream.Collectors.toList());
+        for (ChiTietSanPham ct : ctList) {
+            if (boSachChiTietRepository.existsActiveByChiTietSanPhamId(ct.getId())) {
+                var names = boSachChiTietRepository.findActiveBoSachNamesByChiTietSanPhamId(ct.getId());
+                String name = (names != null && !names.isEmpty()) ? names.get(0) : "";
+                String suffix = name.isEmpty() ? "" : " (" + name + ")";
+                throw new IllegalArgumentException("Sản phẩm này đang nằm trong bộ sách" + suffix + ". Vui lòng gỡ khỏi bộ sách trước khi xóa.");
+            }
+        }
+
+        // Nếu pass validate -> soft delete tất cả CTSP con
+        for (ChiTietSanPham ct : ctList) {
+            ct.setDeleted(true);
+            ct.setUpdatedAt(Instant.now());
+            chiTietSanPhamRepository.save(ct);
+        }
     }
 
     public List<SanPham> search(String keyword) {

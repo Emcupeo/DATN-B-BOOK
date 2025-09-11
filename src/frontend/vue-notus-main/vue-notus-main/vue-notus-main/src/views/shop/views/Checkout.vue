@@ -1549,24 +1549,51 @@ export default {
           let chiTietSanPhamId = item.id // Fallback
           
           if (item.category === 'Bộ sách') {
-            // Xử lý riêng cho bộ sách - lấy chiTietSanPhamId từ BoSachChiTiet
+            // Xử lý riêng cho bộ sách - sử dụng endpoint riêng
+            console.log('🔍 Processing BoSach item:', item)
             try {
               const BoSachService = (await import('@/service/BoSachService')).default
-              const chiTietList = await BoSachService.getBoSachChiTietByBoSachId(item.id)
-              if (chiTietList && chiTietList.length > 0) {
-                // Lấy chi tiết sản phẩm đầu tiên có tồn kho > 0
-                const availableItem = chiTietList.find(chiTiet => 
-                  chiTiet.idChiTietSanPham && chiTiet.idChiTietSanPham.soLuongTon > 0
-                )
-                if (availableItem && availableItem.idChiTietSanPham) {
-                  chiTietSanPhamId = availableItem.idChiTietSanPham.id
-                  hasValidItems = true
-                } else {
-                  // Nếu không có chi tiết nào có tồn kho, bỏ qua item này
-                  console.warn('⚠️ Bỏ qua item:', item.title, '- không có tồn kho')
-                  alert(`Sản phẩm "${item.title}" đã hết hàng và sẽ được bỏ qua khỏi đơn hàng.`)
-                  continue
+              console.log('🔍 Calling BoSachService.getById with id:', item.id)
+              const boSach = await BoSachService.getById(item.id)
+              console.log('🔍 BoSach response:', boSach)
+              console.log('🔍 BoSach soLuong:', boSach?.soLuong, 'Item quantity:', item.quantity)
+              if (boSach && boSach.soLuong >= item.quantity) {
+                // Sử dụng endpoint riêng cho bộ sách
+                const productPayload = {
+                  boSachId: item.id,
+                  soLuong: item.quantity,
+                  giaSanPham: item.price
                 }
+                
+                console.log('🛒 Adding BoSach to order:', productPayload)
+                try {
+                  await hoaDonService.addBoSachToOrder(hoaDonId, productPayload)
+                  console.log('✅ addBoSachToOrder thành công cho item:', item.title)
+                  hasValidItems = true
+                  continue // Bỏ qua logic xử lý chiTietSanPhamId
+                } catch (error) {
+                  console.error('❌ addBoSachToOrder lỗi cho item:', item.title)
+                  console.error('Payload:', productPayload)
+                  console.error('Error:', error.response?.data || error.message)
+                  
+                  // Nếu có lỗi, hủy hóa đơn và dừng toàn bộ quá trình
+                  try {
+                    await hoaDonService.huyDon(hoaDonId)
+                    console.log('✅ Đã hủy hóa đơn do lỗi thêm bộ sách')
+                  } catch (cancelError) {
+                    console.error('❌ Lỗi khi hủy hóa đơn:', cancelError)
+                  }
+                  
+                  // Reset các biến
+                  orderCode.value = ''
+                  createdHoaDonId.value = null
+                  
+                  throw new Error(`Không thể thêm bộ sách "${item.title}" vào đơn hàng. Lỗi: ${error.response?.data?.message || error.message}`)
+                }
+              } else {
+                console.warn('⚠️ Bỏ qua bộ sách:', item.title, '- không đủ số lượng')
+                alert(`Bộ sách "${item.title}" không đủ số lượng và sẽ được bỏ qua khỏi đơn hàng.`)
+                continue
               }
             } catch (error) {
               console.error('Lỗi khi lấy chi tiết bộ sách:', error)
@@ -1889,37 +1916,44 @@ export default {
         // 2. Thêm sản phẩm vào hóa đơn
         let hasValidItems = false
         for (const item of tempOrderData.cartItems) {
-          let chiTietSanPhamId = item.id
           if (item.category === 'Bộ sách') {
+            // Xử lý bộ sách với endpoint riêng
             try {
               const BoSachService = (await import('@/service/BoSachService')).default
-              const chiTietList = await BoSachService.getBoSachChiTietByBoSachId(item.id)
-              if (chiTietList && chiTietList.length > 0) {
-                const availableItem = chiTietList.find(chiTiet => chiTiet.idChiTietSanPham && chiTiet.idChiTietSanPham.soLuongTon > 0)
-                if (availableItem && availableItem.idChiTietSanPham) {
-                  chiTietSanPhamId = availableItem.idChiTietSanPham.id
-                  hasValidItems = true
-                } else {
-                  continue
-                }
+              const boSach = await BoSachService.getById(item.id)
+              if (boSach && boSach.soLuong >= item.quantity) {
+                await hoaDonService.addBoSachToOrder(hoaDonId, {
+                  boSachId: item.id,
+                  soLuong: item.quantity,
+                  giaSanPham: item.price
+                })
+                hasValidItems = true
               }
-            } catch (_) { continue }
+            } catch (_) { 
+              // bỏ qua item lỗi
+            }
           } else {
+            // Xử lý sản phẩm thường
+            let chiTietSanPhamId = item.id
             if (item.productDetailItems && item.productDetailItems.length > 0) {
               const availableItem = item.productDetailItems.find(detail => detail.soLuongTon > 0)
-              if (availableItem) { chiTietSanPhamId = availableItem.id; hasValidItems = true }
-              else { continue }
+              if (availableItem) { 
+                chiTietSanPhamId = availableItem.id
+                hasValidItems = true 
+              } else { 
+                continue 
+              }
             }
-          }
-          try {
-            await hoaDonService.addProductToOrder(hoaDonId, {
-              chiTietSanPhamId,
-              soLuong: item.quantity,
-              giaSanPham: item.price
-            })
-            hasValidItems = true
-          } catch (_) {
-            // bỏ qua item lỗi
+            try {
+              await hoaDonService.addProductToOrder(hoaDonId, {
+                chiTietSanPhamId,
+                soLuong: item.quantity,
+                giaSanPham: item.price
+              })
+              hasValidItems = true
+            } catch (_) {
+              // bỏ qua item lỗi
+            }
           }
         }
         if (!hasValidItems) {

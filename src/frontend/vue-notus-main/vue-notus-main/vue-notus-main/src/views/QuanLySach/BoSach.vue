@@ -253,7 +253,7 @@ export default {
 
     viewDetails(id) {
       console.log("[INFO] Navigating to chi tiết bộ sách with id:", id);
-      this.$router.push(`/admin/bo-sach/${id}`);
+      this.$router.push(`/admin/bo-sach/detail/${id}`);
     },
   },
   created() {

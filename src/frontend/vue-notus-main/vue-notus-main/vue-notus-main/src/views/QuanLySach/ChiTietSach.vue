@@ -1160,7 +1160,7 @@ export default {
           await this.loadChiTietSanPham();
         } catch (error) {
           console.error("[ERROR] Error deleting chi tiet san pham:", error);
-          alert("Có lỗi xảy ra khi xóa chi tiết sách");
+          alert(error.message || "Có lỗi xảy ra khi xóa chi tiết sách");
         }
       }
     },

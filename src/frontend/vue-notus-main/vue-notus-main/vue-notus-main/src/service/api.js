@@ -7,13 +7,14 @@ const api = axios.create({
     }
 });
 
-// Add a request interceptor
+// Add a request interceptor - Đã vô hiệu hóa token check
 api.interceptors.request.use(
     config => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            config.headers['Authorization'] = `Bearer ${token}`;
-        }
+        // Đã vô hiệu hóa: không gửi token
+        // const token = localStorage.getItem('token');
+        // if (token) {
+        //     config.headers['Authorization'] = `Bearer ${token}`;
+        // }
         return config;
     },
     error => {
@@ -21,17 +22,17 @@ api.interceptors.request.use(
     }
 );
 
-// Add a response interceptor
+// Add a response interceptor - Đã vô hiệu hóa authentication redirect
 api.interceptors.response.use(
     response => response,
     error => {
         if (error.response) {
-            // Handle specific error cases
+            // Handle specific error cases - Đã vô hiệu hóa authentication redirect
             switch (error.response.status) {
                 case 401:
-                    // Unauthorized - redirect to login
-                    localStorage.removeItem('token');
-                    window.location.href = '/auth/login';
+                    // Unauthorized - đã vô hiệu hóa redirect
+                    // localStorage.removeItem('token');
+                    // window.location.href = '/auth/login';
                     break;
                 case 403:
                     // Forbidden

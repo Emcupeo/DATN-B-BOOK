@@ -16,6 +16,7 @@ import org.example.datnbbook.model.SanPham;
 import org.example.datnbbook.model.TacGia;
 import org.example.datnbbook.model.TheLoai;
 import org.example.datnbbook.repository.ChatLieuRepository;
+import org.example.datnbbook.repository.BoSachChiTietRepository;
 import org.example.datnbbook.repository.ChiTietSanPhamAnhRepository;
 import org.example.datnbbook.repository.ChiTietSanPhamRepository;
 import org.example.datnbbook.repository.LoaiBiaRepository;
@@ -54,6 +55,7 @@ public class ChiTietSanPhamService {
     private final TheLoaiService theLoaiService;
     private final AnhSanPhamService anhSanPhamService;
     private final ChiTietSanPhamAnhRepository chiTietSanPhamAnhRepository;
+    private final BoSachChiTietRepository boSachChiTietRepository;
 
     private ModelMapper modelMapper;
 
@@ -152,6 +154,13 @@ public class ChiTietSanPhamService {
     public void delete(Integer id) {
         ChiTietSanPham entity = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy chi tiết sản phẩm với id: " + id));
+        // Validate: chặn xóa nếu CTSP đang thuộc bộ sách active
+        if (boSachChiTietRepository.existsActiveByChiTietSanPhamId(id)) {
+            var names = boSachChiTietRepository.findActiveBoSachNamesByChiTietSanPhamId(id);
+            String name = (names != null && !names.isEmpty()) ? names.get(0) : "";
+            String suffix = name.isEmpty() ? "" : " (" + name + ")";
+            throw new IllegalArgumentException("Sản phẩm này đang nằm trong bộ sách" + suffix + ". Vui lòng gỡ khỏi bộ sách trước khi xóa.");
+        }
         entity.setDeleted(true);
         entity.setUpdatedAt(Instant.now());
         repository.save(entity);

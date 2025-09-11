@@ -31,7 +31,7 @@
                   type="number"
                   min="0"
                   step="1000"
-                  :placeholder="placeholderGiaTien()"
+                  :placeholder="isEdit && editBoSachData ? 'Giá hiện có: ' + editBoSachData.giaTien.toLocaleString('vi-VN') + ' VNĐ' : placeholderGiaTien()"
                   class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3"
                   required
               />
@@ -73,6 +73,12 @@
           <label class="block mb-3 text-sm font-medium text-gray-700">
             Chọn chi tiết sách áp dụng
           </label>
+          <div v-if="isEdit && form.chiTietSanPhams.length > 0" class="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p class="text-blue-700 text-sm">
+              <i class="fas fa-info-circle mr-1"></i>
+              Đã chọn sẵn {{ form.chiTietSanPhams.length }} chi tiết sản phẩm từ bộ sách hiện có
+            </p>
+          </div>
           <div class="mb-4">
             <input
                 v-model="searchQuery"
@@ -88,7 +94,7 @@
                 <th class="px-6 py-3">
                   <input
                       type="checkbox"
-                      v-model="selectAll"
+                      :checked="selectAll"
                       @change="toggleSelectAll"
                       class="w-5 h-5 text-blue-600 bg-white border-gray-300 focus:ring-blue-500"
                   />
@@ -110,11 +116,10 @@
                 <td class="px-6 py-3">
                   <input
                       type="checkbox"
-                      v-model="selectedChiTietSanPhams"
-                      :value="item"
+                      :checked="isItemSelected(item)"
                       @click.stop
+                      @change="toggleChiTietSelection(item)"
                       class="w-5 h-5 text-blue-600 bg-white border-gray-300 focus:ring-blue-500"
-                      @change="updateSelectedChiTietSanPhams"
                   />
                 </td>
                 <td class="px-6 py-3">{{ item.maChiTietSanPham }}</td>
@@ -243,6 +248,13 @@
           </div>
         <div class="flex flex-col items-center md:mx-0 md:w-[320px] w-full">
           <h3 class="text-sm font-medium text-gray-700 mb-2">Chọn ảnh</h3>
+          <div v-if="isEdit && editBoSachData && editBoSachData.url" class="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg w-full">
+            <p class="text-green-700 text-sm mb-2">
+              <i class="fas fa-image mr-1"></i>
+              Ảnh hiện có:
+            </p>
+            <img :src="editBoSachData.url" alt="Ảnh hiện có" class="w-full h-32 object-cover rounded-lg">
+          </div>
           <div class="image-upload-container w-full">
             <label for="imageInput" class="upload-box">
               <div v-if="imagePreview" class="image-preview">
@@ -309,6 +321,7 @@ export default {
       currentPage: 0,
       itemsPerPage: 6,
       isEdit: false,
+      editBoSachData: null,
       uploading: false,
       imageFile: null,
       imagePreview: '',
@@ -344,6 +357,13 @@ export default {
   },
   async created() {
     await this.loadChiTietSanPhams();
+    
+    // Check if this is edit mode
+    const id = this.$route.params.id;
+    if (id) {
+      this.isEdit = true;
+      await this.loadBoSachForEdit();
+    }
   },
   watch: {
     form: {
@@ -358,7 +378,9 @@ export default {
       this.currentPage = 0;
     },
     selectedChiTietSanPhams() {
-      this.selectAll = this.selectedChiTietSanPhams.length === this.paginatedChiTietSanPhams.length;
+      // Check if all items in current page are selected
+      this.selectAll = this.paginatedChiTietSanPhams.length > 0 && 
+                      this.paginatedChiTietSanPhams.every(item => this.isItemSelected(item));
     },
   },
   methods: {
@@ -372,6 +394,9 @@ export default {
         console.error('Lỗi khi tải danh sách chi tiết sách:', error);
         alert('Không thể tải danh sách chi tiết sách.');
       }
+    },
+    isItemSelected(item) {
+      return this.selectedChiTietSanPhams.some(selected => selected.id === item.id);
     },
     toggleChiTietSelection(item) {
       const index = this.selectedChiTietSanPhams.findIndex(i => i.id === item.id);
@@ -392,10 +417,22 @@ export default {
           : 'Nhập giá tiền';
     },
     toggleSelectAll() {
+      this.selectAll = !this.selectAll;
       if (this.selectAll) {
-        this.selectedChiTietSanPhams = [...this.paginatedChiTietSanPhams];
+        // Add all items from current page that are not already selected
+        this.paginatedChiTietSanPhams.forEach(item => {
+          if (!this.isItemSelected(item)) {
+            this.selectedChiTietSanPhams.push(item);
+          }
+        });
       } else {
-        this.selectedChiTietSanPhams = [];
+        // Remove all items from current page
+        this.paginatedChiTietSanPhams.forEach(item => {
+          const index = this.selectedChiTietSanPhams.findIndex(selected => selected.id === item.id);
+          if (index !== -1) {
+            this.selectedChiTietSanPhams.splice(index, 1);
+          }
+        });
       }
       this.updateSelectedChiTietSanPhams();
     },
@@ -502,6 +539,9 @@ export default {
           const result = await ImageKitService.uploadImage(this.imageFile, this.imageFile.name);
           if (result.success) imageUrl = result.url;
           else throw new Error(result.error || 'Lỗi upload ảnh');
+        } else if (this.isEdit && this.editBoSachData && this.editBoSachData.url) {
+          // Nếu đang edit và không có ảnh mới, sử dụng ảnh hiện có
+          imageUrl = this.editBoSachData.url;
         }
       } catch (e) {
         this.uploading = false;
@@ -522,7 +562,15 @@ export default {
           })),
         };
         console.log('Payload gửi đi:', JSON.stringify(payload, null, 2));
-        await BoSachService.create(payload);
+        
+        if (this.isEdit) {
+          await BoSachService.update(this.$route.params.id, payload);
+          alert('Cập nhật bộ sách thành công!');
+        } else {
+          await BoSachService.create(payload);
+          alert('Thêm bộ sách thành công!');
+        }
+        
         await this.router.push('/admin/bo-sach');
       } catch (error) {
         console.error('Lỗi khi thêm bộ sách:', {
@@ -544,6 +592,76 @@ export default {
     },
     nextPage() {
       if (this.currentPage < this.totalPages - 1) this.currentPage++;
+    },
+    async loadBoSachForEdit() {
+      try {
+        const id = this.$route.params.id;
+        console.log('[INFO] Loading BoSach for edit with id:', id);
+        this.editBoSachData = await BoSachService.getById(id);
+        
+        // Populate form with existing data
+        this.form.tenBoSach = this.editBoSachData.tenBoSach;
+        this.form.giaTien = this.editBoSachData.giaTien;
+        this.form.moTa = this.editBoSachData.moTa;
+        this.form.soLuong = this.editBoSachData.soLuong;
+        
+        // Set current image as preview if exists
+        if (this.editBoSachData.url) {
+          this.imagePreview = this.editBoSachData.url;
+        }
+        
+        // Load chi tiết sản phẩm từ API riêng
+        console.log('[INFO] Loading chi tiết sản phẩm for BoSach id:', id);
+        const chiTietList = await BoSachService.getBoSachChiTietByBoSachId(id);
+        console.log('[DEBUG] Loaded chi tiết list:', chiTietList);
+        
+        if (chiTietList && chiTietList.length > 0) {
+          this.form.chiTietSanPhams = chiTietList.map(ctsp => ({
+            id: ctsp.idChiTietSanPham.id,
+            maChiTietSanPham: ctsp.idChiTietSanPham.maChiTietSanPham,
+            tenChiTietSanPham: ctsp.idChiTietSanPham.tenChiTietSanPham,
+            gia: ctsp.idChiTietSanPham.gia,
+            soLuongTon: ctsp.idChiTietSanPham.soLuongTon,
+            soLuong: ctsp.soLuong,
+            idNgonNgu: ctsp.idChiTietSanPham.idNgonNgu
+          }));
+          
+          // Clear existing selections first
+          this.selectedChiTietSanPhams = [];
+          
+          // Mark as selected in the main list and update their quantities
+          this.chiTietSanPhams.forEach(item => {
+            const existingItem = this.form.chiTietSanPhams.find(ctsp => ctsp.id === item.id);
+            if (existingItem) {
+              // Update the item in the main list with the existing quantity
+              item.soLuong = existingItem.soLuong;
+              // Create a copy of the item to avoid reference issues
+              const selectedItem = {
+                ...item,
+                soLuong: existingItem.soLuong
+              };
+              // Add to selected list
+              this.selectedChiTietSanPhams.push(selectedItem);
+            }
+          });
+          
+          // Update selectAll checkbox state after a short delay to ensure DOM is updated
+          this.$nextTick(() => {
+            this.selectAll = this.selectedChiTietSanPhams.length === this.paginatedChiTietSanPhams.length;
+          });
+        }
+        
+        console.log('[DEBUG] Loaded BoSach data:', this.editBoSachData);
+        console.log('[DEBUG] Form data:', this.form);
+        console.log('[DEBUG] Selected chi tiết sản phẩm:', this.selectedChiTietSanPhams);
+        console.log('[DEBUG] Current giá tiền:', this.form.giaTien);
+        console.log('[DEBUG] SelectAll state:', this.selectAll);
+        console.log('[DEBUG] Total chi tiết sản phẩm available:', this.chiTietSanPhams.length);
+      } catch (error) {
+        console.error('[ERROR] Error loading BoSach for edit:', error);
+        alert('Không thể tải dữ liệu bộ sách để chỉnh sửa.');
+        this.router.push('/admin/bo-sach');
+      }
     },
   },
 };

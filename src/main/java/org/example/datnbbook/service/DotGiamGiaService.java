@@ -1,11 +1,16 @@
 package org.example.datnbbook.service;
 
+import org.example.datnbbook.dto.ActiveDiscountDetailDTO;
+import org.example.datnbbook.model.BoSach;
 import org.example.datnbbook.model.ChiTietSanPham;
 import org.example.datnbbook.model.DotGiamGia;
 import org.example.datnbbook.model.DotGiamGiaChiTiet;
+import org.example.datnbbook.repository.BoSachRepository;
 import org.example.datnbbook.repository.ChiTietSanPhamRepository;
 import org.example.datnbbook.repository.DotGiamGiaChiTietRepository;
 import org.example.datnbbook.repository.DotGiamGiaRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -16,6 +21,7 @@ import java.util.List;
 
 @Service
 public class DotGiamGiaService {
+    private static final Logger logger = LoggerFactory.getLogger(DotGiamGiaService.class);
     @Autowired
     private DotGiamGiaRepository repository;
 
@@ -27,6 +33,12 @@ public class DotGiamGiaService {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private BoSachRepository boSachRepository;
+
+    @Autowired
+    private DotGiamGiaBoSachChiTietService dotGiamGiaBoSachChiTietService;
 
     public List<DotGiamGia> getAll() {
         return repository.findAllActive();
@@ -45,7 +57,7 @@ public class DotGiamGiaService {
     }
 
     @Transactional
-    public DotGiamGia create(DotGiamGia dotGiamGia, List<Integer> selectedProductIds) {
+    public DotGiamGia create(DotGiamGia dotGiamGia, List<Integer> selectedProductIds, List<Integer> selectedBoSachIds) {
         // Sinh ma_dot_giam_gia nếu null hoặc không hợp lệ
         if (dotGiamGia.getMaDotGiamGia() == null || dotGiamGia.getMaDotGiamGia().trim().isEmpty() || dotGiamGia.getMaDotGiamGia().equals("null")) {
             String nextMaDotGiamGia;
@@ -99,7 +111,43 @@ public class DotGiamGiaService {
             }
         }
 
+        // Lưu các bộ sách được chọn vào dot_giam_gia_bo_sach_chi_tiet
+        if (selectedBoSachIds != null && !selectedBoSachIds.isEmpty()) {
+            for (Integer boSachId : selectedBoSachIds) {
+                // Validate không trùng đợt giảm giá đang hoạt động
+                if (dotGiamGiaBoSachChiTietService.existsActiveDiscountForBoSach(boSachId)) {
+                    BoSach boSach = boSachRepository.findById(boSachId)
+                            .filter(bs -> !bs.getDeleted())
+                            .orElse(null);
+                    String boSachName = boSach != null ? boSach.getTenBoSach() : "ID " + boSachId;
+                    throw new IllegalArgumentException("Bộ sách \"" + boSachName + "\" đã có đợt giảm giá đang hoạt động");
+                }
+
+                // Tạo DTO cho bộ sách
+                org.example.datnbbook.dto.DotGiamGiaBoSachChiTietDTO dto = new org.example.datnbbook.dto.DotGiamGiaBoSachChiTietDTO();
+                dto.setIdBoSach(boSachId);
+                dto.setIdDotGiamGia(savedDotGiamGia.getId());
+                dto.setSoPhanTramGiam(dotGiamGia.getSoPhanTramGiam());
+                dto.setSoTienGiam(dotGiamGia.getGiaTriGiam());
+                dto.setTrangThai(true);
+
+                // Tạo chi tiết đợt giảm giá cho bộ sách
+                dotGiamGiaBoSachChiTietService.create(dto);
+                
+                // Áp dụng giá giảm ngay lập tức vào bo_sach nếu đợt giảm giá đang hoạt động
+                if (savedDotGiamGia.getTrangThai() && isDiscountActive(savedDotGiamGia)) {
+                    applyDiscountToBoSach(boSachId, dotGiamGia);
+                }
+            }
+        }
+
         return savedDotGiamGia;
+    }
+
+    // Overload method để tương thích với code cũ
+    @Transactional
+    public DotGiamGia create(DotGiamGia dotGiamGia, List<Integer> selectedProductIds) {
+        return create(dotGiamGia, selectedProductIds, null);
     }
 
     @Transactional
@@ -203,7 +251,8 @@ public class DotGiamGiaService {
     public void restoreOriginalPrices(Integer dotGiamGiaId) {
         DotGiamGia dot = repository.findById(dotGiamGiaId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đợt giảm giá với ID: " + dotGiamGiaId));
-        // Duyệt qua tất cả chi tiết, gắn lại giá_ban_dau vào CTSP
+        
+        // Duyệt qua tất cả chi tiết sản phẩm, gắn lại giá_ban_dau vào CTSP
         dot.getDotGiamGiaChiTiets().forEach(chiTiet -> {
             ChiTietSanPham sp = chiTiet.getIdChiTietSanPham();
             if (chiTiet.getGiaBanDau() != null) {
@@ -213,7 +262,68 @@ public class DotGiamGiaService {
             chiTiet.setTrangThai(false);
             dotGiamGiaChiTietRepository.save(chiTiet);
         });
+        
+        // Revert discounts for BoSach
+        dotGiamGiaBoSachChiTietService.revertDiscounts();
+        
         dot.setTrangThai(false);
         repository.save(dot);
+    }
+
+    // Apply discounts for both products and book sets
+    @Transactional
+    public void applyAllDiscounts() {
+        // Apply discounts for products (if method exists)
+        // applyDiscounts(); // Comment out until method is implemented
+        
+        // Apply discounts for book sets
+        dotGiamGiaBoSachChiTietService.applyDiscounts();
+    }
+
+    // Revert all expired discounts
+    @Transactional
+    public void revertAllExpiredDiscounts() {
+        // Revert expired product discounts (if method exists)
+        // revertExpiredDiscounts(); // Comment out until method is implemented
+        
+        // Revert expired book set discounts
+        dotGiamGiaBoSachChiTietService.revertDiscounts();
+    }
+
+    // Helper method to check if discount is currently active
+    private boolean isDiscountActive(DotGiamGia dotGiamGia) {
+        java.time.Instant now = java.time.Instant.now();
+        return dotGiamGia.getNgayBatDau() != null && 
+               dotGiamGia.getNgayKetThuc() != null &&
+               dotGiamGia.getNgayBatDau().isBefore(now) && 
+               dotGiamGia.getNgayKetThuc().isAfter(now);
+    }
+
+    // Helper method to apply discount to BoSach immediately
+    @Transactional
+    public void applyDiscountToBoSach(Integer boSachId, DotGiamGia dotGiamGia) {
+        try {
+            BoSach boSach = boSachRepository.findById(boSachId)
+                    .filter(bs -> !bs.getDeleted())
+                    .orElseThrow(() -> new RuntimeException("Bộ sách không tồn tại với id: " + boSachId));
+
+            // Calculate discounted price
+            BigDecimal giaSauGiam = calculateGiaSauGiam(boSach.getGiaTien(), dotGiamGia);
+            
+            // Apply discount to BoSach
+            boSach.setGiaTien(giaSauGiam);
+            boSach.setUpdatedAt(java.time.Instant.now());
+            boSachRepository.save(boSach);
+            
+            logger.info("[INFO] Applied discount to BoSach {}: {} -> {}", 
+                       boSachId, boSach.getGiaTien(), giaSauGiam);
+        } catch (Exception e) {
+            logger.error("[ERROR] Failed to apply discount to BoSach {}: {}", boSachId, e.getMessage());
+        }
+    }
+
+    // Get active discount detail for BoSach
+    public ActiveDiscountDetailDTO getActiveBoSachDetail(Integer boSachId) {
+        return dotGiamGiaBoSachChiTietService.getActiveDiscountByBoSachId(boSachId);
     }
 }

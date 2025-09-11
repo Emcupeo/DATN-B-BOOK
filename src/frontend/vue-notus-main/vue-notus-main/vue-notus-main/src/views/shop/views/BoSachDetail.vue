@@ -32,7 +32,11 @@
         <!-- Giá và ưu đãi -->
         <div class="space-y-2">
           <div class="flex items-center space-x-4">
-            <span class="text-3xl font-bold text-red-600">{{ formatPrice(boSach.giaTien || 0) }}</span>
+            <span class="text-3xl font-bold text-red-600">{{ formatPrice(discountInfo ? discountInfo.giaSauGiam : (boSach.giaTien || 0)) }}</span>
+            <span v-if="discountInfo && discountInfo.giaBanDau && discountInfo.giaBanDau > discountInfo.giaSauGiam" class="text-lg text-gray-500 line-through">{{ formatPrice(discountInfo.giaBanDau) }}</span>
+            <span v-if="discountInfo && discountInfo.giaBanDau && discountInfo.giaBanDau > discountInfo.giaSauGiam" class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-sm font-semibold">
+              -{{ Math.round(((discountInfo.giaBanDau - discountInfo.giaSauGiam) / discountInfo.giaBanDau) * 100) }}%
+            </span>
             <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm font-semibold" v-if="boSach.soLuong > 0">Còn hàng</span>
             <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-sm font-semibold" v-else>Hết hàng</span>
           </div>
@@ -106,6 +110,7 @@
 <script>
 import { ref, computed, onMounted } from 'vue'
 import BoSachService from '@/service/BoSachService'
+import DotGiamGiaService from '@/service/DotGiamGiaService'
 import { useRoute } from 'vue-router'
 import { useRealDataStore } from '../store/realDataStore'
 
@@ -121,6 +126,7 @@ export default {
     const allImages = ref([])
     const thumbPage = ref(0)
     const THUMBS_PER_PAGE = 4
+    const discountInfo = ref(null)
 
     // Thông tin chi tiết tổng hợp
     const displayAuthors = computed(() => {
@@ -251,6 +257,15 @@ export default {
       boSach.value = allBoSach.find(bs => String(bs.id) === id)
       if (boSach.value) {
         chiTietList.value = await BoSachService.getBoSachChiTietByBoSachId(boSach.value.id)
+        
+        // Lấy thông tin giảm giá cho bộ sách
+        try {
+          discountInfo.value = await DotGiamGiaService.getActiveBoSachDetail(boSach.value.id)
+        } catch (error) {
+          console.log('No active discount for this book set:', error.message)
+          discountInfo.value = null
+        }
+        
         // Ảnh bộ sách + tất cả ảnh chi tiết sách
         const images = [boSach.value.url]
         chiTietList.value.forEach(ct => {
@@ -288,7 +303,8 @@ export default {
       displayCovers,
       displayMaterials,
       totalWeight,
-      formatIsbnShort
+      formatIsbnShort,
+      discountInfo
     }
   }
 }

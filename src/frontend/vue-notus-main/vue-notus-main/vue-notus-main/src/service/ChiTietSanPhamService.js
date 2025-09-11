@@ -58,7 +58,13 @@ class chiTietSanPhamService {
     }
 
     async delete(id) {
-        await axios.delete(`${chiTietSanPhamAPIBaseURL}/${id}`);
+        try {
+            await axios.delete(`${chiTietSanPhamAPIBaseURL}/${id}`);
+            console.log("[INFO] Deleted ChiTietSanPham with id:", id);
+        } catch (error) {
+            console.error("[ERROR] Error deleting ChiTietSanPham:", error.response || error);
+            throw new Error(error.response?.data?.message || 'Xóa chi tiết sản phẩm thất bại');
+        }
     }
 
     async search(keyword) {

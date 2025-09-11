@@ -3,6 +3,7 @@ import axios from 'axios';
 const API_URL = 'http://localhost:8080/api/discounts';
 const PRODUCT_API_URL = 'http://localhost:8080/api/chi-tiet-san-pham';
 const SAN_PHAM_API_URL = 'http://localhost:8080/api/san-pham';
+const BO_SACH_API_URL = 'http://localhost:8080/api/bo-sach';
 
 const axiosInstance = axios.create({
   baseURL: API_URL,
@@ -18,6 +19,12 @@ const productAxiosInstance = axios.create({
 
 const sanPhamAxiosInstance = axios.create({
   baseURL: SAN_PHAM_API_URL,
+  timeout: 10000,
+  headers: { 'Content-Type': 'application/json' },
+});
+
+const boSachAxiosInstance = axios.create({
+  baseURL: BO_SACH_API_URL,
   timeout: 10000,
   headers: { 'Content-Type': 'application/json' },
 });
@@ -67,6 +74,15 @@ export default {
     }
   },
 
+  async getActiveBoSachDetail(boSachId) {
+    try {
+      const response = await axiosInstance.get(`/active-bosach-detail/${boSachId}`)
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Không thể lấy thông tin giảm giá bộ sách!');
+    }
+  },
+
   async getAllProducts() {
     try {
       const response = await productAxiosInstance.get('/all');
@@ -100,6 +116,15 @@ export default {
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Không thể lấy chi tiết sản phẩm theo sản phẩm!');
+    }
+  },
+
+  async getAllBoSach() {
+    try {
+      const response = await boSachAxiosInstance.get('');
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Không thể lấy danh sách bộ sách!');
     }
   },
 };

@@ -34,14 +34,47 @@ public class BoSachService {
 
     public List<BoSach> getAll() {
         logger.info("[INFO] Fetching all BoSach");
-        return boSachRepository.findAllByDeletedFalseOrderByIdDesc();
+        List<BoSach> list = boSachRepository.findAllByDeletedFalseOrderByIdDesc();
+        // Tính số lượng khả dụng = min soLuongTon của các CTSP thuộc bộ
+        for (BoSach bs : list) {
+            try {
+                List<BoSachChiTiet> ctList = boSachChiTietRepository.findByIdBoSachId(bs.getId());
+                Integer minAvail = null;
+                for (BoSachChiTiet ct : ctList) {
+                    Integer qtyEach = ct.getSoLuong() != null && ct.getSoLuong() > 0 ? ct.getSoLuong() : 1; // số lượng cần cho 1 bộ
+                    Integer stock = (ct.getIdChiTietSanPham() != null && ct.getIdChiTietSanPham().getSoLuongTon() != null)
+                            ? ct.getIdChiTietSanPham().getSoLuongTon() : 0;
+                    int avail = stock / qtyEach;
+                    minAvail = (minAvail == null) ? avail : Math.min(minAvail, avail);
+                }
+                bs.setSoLuong(minAvail != null ? minAvail : 0);
+            } catch (Exception e) {
+                bs.setSoLuong(0);
+            }
+        }
+        return list;
     }
 
     public BoSach getById(Integer id) {
         logger.info("[INFO] Fetching BoSach with id: {}", id);
-        return boSachRepository.findById(id)
-                .filter(bs -> !bs.getDeleted())
+        BoSach bs = boSachRepository.findById(id)
+                .filter(entity -> !entity.getDeleted())
                 .orElseThrow(() -> new RuntimeException("Bộ sách không tồn tại với id: " + id));
+        try {
+            List<BoSachChiTiet> ctList = boSachChiTietRepository.findByIdBoSachId(bs.getId());
+            Integer minAvail = null;
+            for (BoSachChiTiet ct : ctList) {
+                Integer qtyEach = ct.getSoLuong() != null && ct.getSoLuong() > 0 ? ct.getSoLuong() : 1;
+                Integer stock = (ct.getIdChiTietSanPham() != null && ct.getIdChiTietSanPham().getSoLuongTon() != null)
+                        ? ct.getIdChiTietSanPham().getSoLuongTon() : 0;
+                int avail = stock / qtyEach;
+                minAvail = (minAvail == null) ? avail : Math.min(minAvail, avail);
+            }
+            bs.setSoLuong(minAvail != null ? minAvail : 0);
+        } catch (Exception e) {
+            bs.setSoLuong(0);
+        }
+        return bs;
     }
 
     @Transactional
@@ -78,6 +111,64 @@ public class BoSachService {
                 id.setIdBoSach(savedBoSach.getId());
                 id.setIdChiTietSanPham(chiTietDTO.getIdChiTietSanPham());
                 boSachChiTiet.setId(id);
+
+                boSachChiTiet.setIdBoSach(savedBoSach);
+                ChiTietSanPham chiTietSanPham = chiTietSanPhamRepository.findById(chiTietDTO.getIdChiTietSanPham())
+                        .orElseThrow(() -> new RuntimeException("ChiTietSanPham không tồn tại với id: " + chiTietDTO.getIdChiTietSanPham()));
+                boSachChiTiet.setIdChiTietSanPham(chiTietSanPham);
+
+                boSachChiTiet.setSoLuong(chiTietDTO.getSoLuong());
+                boSachChiTiet.setDeleted(false);
+                boSachChiTiet.setCreatedBy("Admin");
+                boSachChiTiet.setUpdatedBy("Admin");
+                boSachChiTiet.setCreatedAt(now);
+                boSachChiTiet.setUpdatedAt(now);
+
+                boSachChiTietRepository.save(boSachChiTiet);
+            }
+        } else {
+            throw new RuntimeException("Danh sách BoSachChiTiet không được để trống");
+        }
+
+        return savedBoSach;
+    }
+
+    public BoSach update(Integer id, BoSachDTO dto) {
+        logger.info("[INFO] Updating BoSach with id: {}", id);
+        BoSach existingBoSach = boSachRepository.findById(id)
+                .filter(bs -> !bs.getDeleted())
+                .orElseThrow(() -> new RuntimeException("Bộ sách không tồn tại với id: " + id));
+
+        // Update basic fields
+        existingBoSach.setTenBoSach(dto.getTenBoSach());
+        existingBoSach.setGiaTien(BigDecimal.valueOf(dto.getGiaTien()));
+        existingBoSach.setMoTa(dto.getMoTa());
+        existingBoSach.setSoLuong(dto.getSoLuong());
+        if (dto.getUrl() != null && !dto.getUrl().isEmpty()) {
+            existingBoSach.setUrl(dto.getUrl());
+        }
+        existingBoSach.setUpdatedAt(Instant.now());
+
+        BoSach savedBoSach = boSachRepository.save(existingBoSach);
+
+        // Delete existing BoSachChiTiet entries
+        List<BoSachChiTiet> existingChiTietList = boSachChiTietRepository.findByIdBoSachId(id);
+        for (BoSachChiTiet existingChiTiet : existingChiTietList) {
+            existingChiTiet.setDeleted(true);
+            existingChiTiet.setUpdatedAt(Instant.now());
+            boSachChiTietRepository.save(existingChiTiet);
+        }
+
+        // Create new BoSachChiTiet entries
+        List<BoSachDTO.BoSachChiTietDTO> chiTietList = dto.getBoSachChiTiets();
+        if (chiTietList != null && !chiTietList.isEmpty()) {
+            Instant now = Instant.now();
+            for (BoSachDTO.BoSachChiTietDTO chiTietDTO : chiTietList) {
+                BoSachChiTiet boSachChiTiet = new BoSachChiTiet();
+                BoSachChiTietId boSachChiTietId = new BoSachChiTietId();
+                boSachChiTietId.setIdBoSach(savedBoSach.getId());
+                boSachChiTietId.setIdChiTietSanPham(chiTietDTO.getIdChiTietSanPham());
+                boSachChiTiet.setId(boSachChiTietId);
 
                 boSachChiTiet.setIdBoSach(savedBoSach);
                 ChiTietSanPham chiTietSanPham = chiTietSanPhamRepository.findById(chiTietDTO.getIdChiTietSanPham())

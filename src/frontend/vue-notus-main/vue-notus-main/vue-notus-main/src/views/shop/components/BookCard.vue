@@ -213,8 +213,9 @@ export default {
 
     const addToCart = () => {
       if (props.book.inStock) {
-        // Kiểm tra số lượng tồn kho
-        if (props.book.soLuongTon > 0) {
+        // Kiểm tra số lượng tồn kho - xử lý cả sản phẩm thường và bộ sách
+        const stockQuantity = props.book.category === 'Bộ sách' ? props.book.stockQuantity : props.book.soLuongTon
+        if (stockQuantity > 0) {
           const success = store.addToCart(props.book)
           if (!success) {
             alert('Không thể thêm sản phẩm: vượt quá số lượng tồn kho!')
