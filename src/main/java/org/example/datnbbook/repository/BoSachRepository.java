@@ -21,4 +21,8 @@ public interface BoSachRepository extends JpaRepository<BoSach, Integer> {
 
 
     List<BoSach> findAllByDeletedFalseOrderByIdDesc();
+
+    // Lấy bộ sách mới nhất
+    @Query("SELECT b FROM BoSach b WHERE b.deleted = false ORDER BY b.createdAt DESC")
+    List<BoSach> findTop5ByOrderByCreatedAtDesc();
 }

@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
 @RestController
@@ -119,6 +120,25 @@ public class BoSachController {
         } catch (RuntimeException e) {
             logger.error("[ERROR] Failed to fetch BoSachChiTiet: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+    }
+
+    @PutMapping("/{id}/update-stock")
+    public ResponseEntity<BoSachDTO> updateStock(@PathVariable Integer id, @RequestBody Map<String, Object> request) {
+        logger.info("[INFO] Updating stock for BoSach with id: {}", id);
+        try {
+            Integer soLuong = (Integer) request.get("soLuong");
+            if (soLuong == null) {
+                return ResponseEntity.badRequest().build();
+            }
+            
+            BoSach updatedBoSach = boSachService.updateStock(id, soLuong);
+            BoSachDTO responseDTO = mapToDTO(updatedBoSach);
+            logger.debug("[DEBUG] Updated BoSach stock: {}", responseDTO);
+            return ResponseEntity.ok(responseDTO);
+        } catch (RuntimeException e) {
+            logger.error("[ERROR] Failed to update BoSach stock: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 

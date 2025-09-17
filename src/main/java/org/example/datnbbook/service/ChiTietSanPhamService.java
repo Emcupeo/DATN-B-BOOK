@@ -293,4 +293,14 @@ public class ChiTietSanPhamService {
 //    private ChiTietSanPham toEntity(ChiTietSanPhamDTO dto) {
 //        return modelMapper.map(dto, ChiTietSanPham.class);
 //    }
+
+    public ChiTietSanPham updateStock(Integer id, Integer soLuongTon) {
+        ChiTietSanPham existing = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy chi tiết sản phẩm với ID: " + id));
+
+        existing.setSoLuongTon(soLuongTon);
+        existing.setUpdatedAt(Instant.now());
+
+        return repository.save(existing);
+    }
 }

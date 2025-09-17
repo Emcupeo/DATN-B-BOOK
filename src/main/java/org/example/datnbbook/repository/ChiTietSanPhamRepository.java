@@ -35,4 +35,8 @@ public interface ChiTietSanPhamRepository extends JpaRepository<ChiTietSanPham, 
     Optional<ChiTietSanPham> findByIdSanPhamIdAndIdLoaiBiaId(Integer idSanPham, Integer idLoaiBia);
     List<ChiTietSanPham> findAllByIdSanPhamIdAndIdLoaiBiaId(Integer idSanPham, Integer idLoaiBia);
 
+    // Lấy sách mới nhất
+    @Query("SELECT c FROM ChiTietSanPham c WHERE c.deleted = false ORDER BY c.createdAt DESC")
+    List<ChiTietSanPham> findTop5ByOrderByCreatedAtDesc();
+
 }

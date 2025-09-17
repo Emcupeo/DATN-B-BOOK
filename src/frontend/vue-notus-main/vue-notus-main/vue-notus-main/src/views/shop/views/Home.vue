@@ -62,109 +62,129 @@
       </div>
     </section>
 
-    <!-- Categories Section -->
-    <section class="py-16 bg-gray-50">
-      <div class="container mx-auto px-4">
-        <div class="text-center mb-12">
-          <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Danh mục sách nổi bật</h2>
-          <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-            Khám phá các danh mục sách đa dạng, từ văn học kinh điển đến kiến thức hiện đại
-          </p>
-        </div>
-        
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-          <button
-            @click="selectedCategory = null"
-            :class="[
-              'group p-6 rounded-2xl transition-all duration-300 transform hover:-translate-y-2',
-              selectedCategory === null
-                ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-xl'
-                : 'bg-white text-gray-700 hover:shadow-lg border border-gray-200'
-            ]"
-          >
-            <div class="text-3xl mb-3">📚</div>
-            <div class="font-semibold text-sm">Tất cả</div>
-            <div class="text-xs opacity-70 mt-1">{{ products.length }} sách</div>
-          </button>
-          
-          <button
-            v-for="category in categories"
-            :key="category.id"
-            @click="selectedCategory = category.id"
-            :class="[
-              'group p-6 rounded-2xl transition-all duration-300 transform hover:-translate-y-2',
-              selectedCategory === category.id
-                ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-xl'
-                : 'bg-white text-gray-700 hover:shadow-lg border border-gray-200'
-            ]"
-          >
-            <div class="text-3xl mb-3">{{ getCategoryIcon(category.tenDanhMuc) }}</div>
-            <div class="font-semibold text-sm">{{ category.tenDanhMuc }}</div>
-            <div class="text-xs opacity-70 mt-1">{{ getCategoryCount(category.id) }} sách</div>
-          </button>
-        </div>
-      </div>
-    </section>
 
-    <!-- Featured Books Section -->
+    <!-- Sách mới nhất Section -->
     <section class="py-16">
       <div class="container mx-auto px-4">
         <div class="flex justify-between items-center mb-12">
           <div>
-            <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
-              {{ selectedCategory === null ? 'Sách nổi bật' : getSelectedCategoryName() }}
-            </h2>
-            <p class="text-gray-600">Khám phá những cuốn sách được yêu thích nhất</p>
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Sách mới nhất</h2>
+            <p class="text-gray-600">Những cuốn sách vừa được thêm vào thư viện</p>
           </div>
-          <div class="flex items-center space-x-4">
-            <span class="text-gray-600">{{ filteredProducts.length }} sản phẩm</span>
-            <div class="flex space-x-2">
-              <button class="p-2 rounded-lg border border-gray-200 hover:bg-gray-50">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                </svg>
-              </button>
-              <button class="p-2 rounded-lg border border-gray-200 hover:bg-gray-50">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
-                </svg>
-              </button>
-            </div>
-          </div>
+          <router-link 
+            to="/products?sort=newest"
+            class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-full font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+          >
+            Xem thêm
+          </router-link>
         </div>
         
         <!-- Loading State -->
-        <div v-if="loading" class="text-center py-12">
+        <div v-if="loadingNewBooks" class="text-center py-12">
           <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           <p class="mt-4 text-gray-600">Đang tải dữ liệu...</p>
         </div>
 
         <!-- Error State -->
-        <div v-else-if="error" class="text-center py-12">
+        <div v-else-if="errorNewBooks" class="text-center py-12">
           <div class="text-red-600 text-lg mb-4">⚠️</div>
-          <p class="text-gray-600">{{ error }}</p>
-          <button @click="loadData" class="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+          <p class="text-gray-600">{{ errorNewBooks }}</p>
+          <button @click="loadNewBooks" class="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
             Thử lại
           </button>
         </div>
 
-        <!-- Products Grid -->
-        <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        <!-- New Books Grid -->
+        <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
           <BookCard
-            v-for="product in filteredProducts"
+            v-for="book in newBooks"
+            :key="book.id"
+            :book="book"
+          />
+        </div>
+      </div>
+    </section>
+
+    <!-- Sản phẩm bán chạy nhất Section -->
+    <section class="py-16 bg-gray-50">
+      <div class="container mx-auto px-4">
+        <div class="flex justify-between items-center mb-12">
+          <div>
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Sản phẩm bán chạy nhất</h2>
+            <p class="text-gray-600">Những sản phẩm được yêu thích nhất bao gồm sách lẻ và bộ sách</p>
+          </div>
+          <router-link 
+            to="/products?sort=bestselling"
+            class="bg-gradient-to-r from-green-600 to-teal-600 text-white px-6 py-3 rounded-full font-semibold hover:from-green-700 hover:to-teal-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+          >
+            Xem thêm
+          </router-link>
+        </div>
+        
+        <!-- Loading State -->
+        <div v-if="loadingBestsellers" class="text-center py-12">
+          <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+          <p class="mt-4 text-gray-600">Đang tải dữ liệu...</p>
+        </div>
+
+        <!-- Error State -->
+        <div v-else-if="errorBestsellers" class="text-center py-12">
+          <div class="text-red-600 text-lg mb-4">⚠️</div>
+          <p class="text-gray-600">{{ errorBestsellers }}</p>
+          <button @click="loadBestsellers" class="mt-4 bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700">
+            Thử lại
+          </button>
+        </div>
+
+        <!-- Bestsellers Grid -->
+        <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+          <BookCard
+            v-for="product in bestsellers"
             :key="product.id"
             :book="product"
           />
         </div>
-        
-        <!-- Load More Button -->
-        <div class="text-center mt-12">
+      </div>
+    </section>
+
+    <!-- Bộ sách mới nhất Section -->
+    <section class="py-16">
+      <div class="container mx-auto px-4">
+        <div class="flex justify-between items-center mb-12">
+          <div>
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Bộ sách mới nhất</h2>
+            <p class="text-gray-600">Những bộ sách vừa được thêm vào thư viện</p>
+          </div>
           <router-link 
-            to="/products"
-            class="inline-block bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-full font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+            to="/products?type=bookset&sort=newest"
+            class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-full font-semibold hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-lg hover:shadow-xl"
           >
-            Xem tất cả sản phẩm
+            Xem thêm
           </router-link>
+        </div>
+        
+        <!-- Loading State -->
+        <div v-if="loadingNewBookSets" class="text-center py-12">
+          <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+          <p class="mt-4 text-gray-600">Đang tải dữ liệu...</p>
+        </div>
+
+        <!-- Error State -->
+        <div v-else-if="errorNewBookSets" class="text-center py-12">
+          <div class="text-red-600 text-lg mb-4">⚠️</div>
+          <p class="text-gray-600">{{ errorNewBookSets }}</p>
+          <button @click="loadNewBookSets" class="mt-4 bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700">
+            Thử lại
+          </button>
+        </div>
+
+        <!-- New Book Sets Grid -->
+        <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+          <BookCard
+            v-for="bookSet in newBookSets"
+            :key="bookSet.id"
+            :book="bookSet"
+          />
         </div>
       </div>
     </section>
@@ -226,9 +246,10 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRealDataStore } from '../store/realDataStore'
 import BookCard from '../components/BookCard.vue'
+import ThongKeService from '../../../service/ThongKeService.js'
 
 export default {
   name: 'Home',
@@ -237,94 +258,112 @@ export default {
   },
   setup() {
     const store = useRealDataStore()
-    const selectedCategory = ref(null)
 
     const products = computed(() => store.products.value)
-    const categories = computed(() => store.categories.value)
     const loading = computed(() => store.loading.value)
     const error = computed(() => store.error.value)
 
-    const filteredProducts = ref([])
+    // Data cho các section mới
+    const newBooks = ref([])
+    const bestsellers = ref([])
+    const newBookSets = ref([])
+    
+    // Loading states cho các section mới
+    const loadingNewBooks = ref(false)
+    const loadingBestsellers = ref(false)
+    const loadingNewBookSets = ref(false)
+    
+    // Error states cho các section mới
+    const errorNewBooks = ref(null)
+    const errorBestsellers = ref(null)
+    const errorNewBookSets = ref(null)
 
-    const loadFilteredProducts = async () => {
-      if (selectedCategory.value === null) {
-        filteredProducts.value = products.value
-      } else {
-        try {
-          filteredProducts.value = await store.getProductsByCategory(selectedCategory.value)
-        } catch (error) {
-          console.error('Error loading filtered products:', error)
-          filteredProducts.value = []
-        }
+
+    // Load sách mới nhất
+    const loadNewBooks = async () => {
+      loadingNewBooks.value = true
+      errorNewBooks.value = null
+      try {
+        const data = await ThongKeService.getSachMoiNhat(5)
+        newBooks.value = data
+      } catch (error) {
+        console.error('Error loading new books:', error)
+        errorNewBooks.value = 'Không thể tải sách mới nhất'
+      } finally {
+        loadingNewBooks.value = false
       }
     }
 
-    watch(selectedCategory, () => {
-      loadFilteredProducts()
-    })
-
-    watch(products, () => {
-      loadFilteredProducts()
-    })
-
-    const getCategoryIcon = (categoryName) => {
-      const icons = {
-        'Văn học': '📖',
-        'Kinh tế': '💰',
-        'Khoa học': '🔬',
-        'Thiếu nhi': '🧸',
-        'Ngoại ngữ': '🌍',
-        'Kỹ năng sống': '💡',
-        'Lịch sử': '📜',
-        'Phát triển bản thân': '🚀',
-        'Giáo dục': '🎓',
-        'Kinh doanh': '💼',
-        'Công nghệ': '💻',
-        'Y học': '🏥',
-        'Nghệ thuật': '🎨',
-        'Thể thao': '⚽',
-        'Du lịch': '✈️'
+    // Load sản phẩm bán chạy (cả sách lẻ và bộ sách)
+    const loadBestsellers = async () => {
+      loadingBestsellers.value = true
+      errorBestsellers.value = null
+      try {
+        // Load cả sách lẻ và bộ sách bán chạy
+        const [sachBanChay, boSachBanChay] = await Promise.all([
+          ThongKeService.getSachBanChay(3), // 3 sách lẻ
+          ThongKeService.getBoSachBanChay(2) // 2 bộ sách
+        ])
+        
+        // Gộp lại và sắp xếp theo thứ tự
+        const allBestsellers = [...sachBanChay, ...boSachBanChay]
+        bestsellers.value = allBestsellers
+      } catch (error) {
+        console.error('Error loading bestsellers:', error)
+        errorBestsellers.value = 'Không thể tải sản phẩm bán chạy'
+      } finally {
+        loadingBestsellers.value = false
       }
-      return icons[categoryName] || '📚'
     }
 
-    const getCategoryCount = (categoryId) => {
-      if (categoryId === null) {
-        return products.value.length
+    // Load bộ sách mới nhất
+    const loadNewBookSets = async () => {
+      loadingNewBookSets.value = true
+      errorNewBookSets.value = null
+      try {
+        const data = await ThongKeService.getBoSachMoiNhat(5)
+        newBookSets.value = data
+      } catch (error) {
+        console.error('Error loading new book sets:', error)
+        errorNewBookSets.value = 'Không thể tải bộ sách mới nhất'
+      } finally {
+        loadingNewBookSets.value = false
       }
-      return products.value.filter(product => product.categoryId === categoryId).length
     }
 
-    const getSelectedCategoryName = () => {
-      if (selectedCategory.value === null) return 'Tất cả'
-      const category = categories.value.find(cat => cat.id === selectedCategory.value)
-      return category ? category.tenDanhMuc : 'Tất cả'
-    }
 
     const loadData = async () => {
-      await Promise.all([
-        store.loadProducts(),
-        store.loadCategories()
-      ])
+      await store.loadProducts()
     }
 
     onMounted(async () => {
       await loadData()
-      await loadFilteredProducts()
+      
+      // Load các section mới
+      await Promise.all([
+        loadNewBooks(),
+        loadBestsellers(),
+        loadNewBookSets()
+      ])
     })
 
     return {
-      selectedCategory,
       products,
-      categories,
       loading,
       error,
-      filteredProducts,
-      getCategoryIcon,
-      getCategoryCount,
-      getSelectedCategoryName,
+      newBooks,
+      bestsellers,
+      newBookSets,
+      loadingNewBooks,
+      loadingBestsellers,
+      loadingNewBookSets,
+      errorNewBooks,
+      errorBestsellers,
+      errorNewBookSets,
       loadData,
-      loadFilteredProducts
+      loadNewBooks,
+      loadBestsellers,
+      loadNewBookSets
     }
   }
 }

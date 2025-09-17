@@ -4,7 +4,11 @@ import lombok.RequiredArgsConstructor;
 //import org.example.datnbbook.dto.DotGiamGiaRequest;
 import org.example.datnbbook.dto.DotGiamGiaRequest;
 import org.example.datnbbook.model.DotGiamGia;
+import org.example.datnbbook.model.DotGiamGiaBoSachChiTiet;
+import org.example.datnbbook.model.DotGiamGiaChiTiet;
 import org.example.datnbbook.service.DotGiamGiaService;
+import org.example.datnbbook.service.PhieuGiamGiaService;
+import org.example.datnbbook.model.PhieuGiamGia;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.example.datnbbook.dto.ActiveDiscountDetailDTO;
@@ -18,10 +22,48 @@ import java.util.List;
 public class DotGiamGiaController {
 
     private final DotGiamGiaService dotGiamGiaService;
+    private final PhieuGiamGiaService phieuGiamGiaService;
 
     @GetMapping
     public ResponseEntity<List<DotGiamGia>> getAll() {
         return ResponseEntity.ok(dotGiamGiaService.getAll());
+    }
+
+    // Lấy danh sách voucher công khai khả dụng cho POS
+    @GetMapping("/available-for-pos")
+    public ResponseEntity<List<PhieuGiamGia>> getAvailableVouchersForPos(@RequestParam(required = false) Double totalAmount) {
+        return ResponseEntity.ok(phieuGiamGiaService.getPublicVouchers(totalAmount));
+    }
+
+    // Lấy voucher cá nhân của khách hàng
+    @GetMapping("/personal-vouchers/{customerId}")
+    public ResponseEntity<List<PhieuGiamGia>> getPersonalVouchersForCustomer(@PathVariable Long customerId, @RequestParam(required = false) Double totalAmount) {
+        return ResponseEntity.ok(phieuGiamGiaService.getPersonalVouchersForCustomer(customerId, totalAmount));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<DotGiamGia> getById(@PathVariable Integer id) {
+        return dotGiamGiaService.getById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    // Trừ số lượng voucher sau thanh toán
+    @PutMapping("/{id}/deduct-quantity")
+    public ResponseEntity<DotGiamGia> deductVoucherQuantity(@PathVariable Integer id) {
+        return ResponseEntity.ok(dotGiamGiaService.deductVoucherQuantity(id));
+    }
+
+    @GetMapping("/{id}/products")
+    public ResponseEntity<List<DotGiamGiaChiTiet>> getDiscountProducts(@PathVariable Integer id) {
+        List<DotGiamGiaChiTiet> products = dotGiamGiaService.getDiscountProducts(id);
+        return ResponseEntity.ok(products);
+    }
+
+    @GetMapping("/{id}/book-sets")
+    public ResponseEntity<List<DotGiamGiaBoSachChiTiet>> getDiscountBookSets(@PathVariable Integer id) {
+        List<DotGiamGiaBoSachChiTiet> bookSets = dotGiamGiaService.getDiscountBookSets(id);
+        return ResponseEntity.ok(bookSets);
     }
 
     // Lấy chi tiết giảm giá đang hoạt động cho một CTSP
@@ -107,5 +149,12 @@ public class DotGiamGiaController {
     public ResponseEntity<Void> revertAllExpiredDiscounts() {
         dotGiamGiaService.revertAllExpiredDiscounts();
         return ResponseEntity.ok().build();
+    }
+    
+    // Trừ số lượng voucher sau thanh toán
+    @PutMapping("/deduct-voucher/{id}")
+    public ResponseEntity<PhieuGiamGia> deductVoucherQuantity(@PathVariable Long id) {
+        PhieuGiamGia updatedVoucher = phieuGiamGiaService.deductVoucherQuantity(id);
+        return ResponseEntity.ok(updatedVoucher);
     }
 }

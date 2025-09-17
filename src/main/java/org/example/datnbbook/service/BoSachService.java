@@ -242,4 +242,16 @@ public class BoSachService {
         chiTiet.setUpdatedAt(LocalDateTime.now().atZone(ZoneId.of("Asia/Ho_Chi_Minh")).toInstant());
         boSachChiTietRepository.save(chiTiet);
     }
+
+    public BoSach updateStock(Integer id, Integer soLuong) {
+        logger.info("[INFO] Updating stock for BoSach with id: {}, new stock: {}", id, soLuong);
+        BoSach existingBoSach = boSachRepository.findById(id)
+                .filter(bs -> !bs.getDeleted())
+                .orElseThrow(() -> new RuntimeException("Bộ sách không tồn tại với id: " + id));
+
+        existingBoSach.setSoLuong(soLuong);
+        existingBoSach.setUpdatedAt(Instant.now());
+
+        return boSachRepository.save(existingBoSach);
+    }
 }

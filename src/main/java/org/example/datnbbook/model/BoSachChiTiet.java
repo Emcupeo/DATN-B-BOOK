@@ -1,5 +1,6 @@
 package org.example.datnbbook.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
@@ -22,6 +23,7 @@ import java.time.Instant;
 @Setter
 @Entity
 @Table(name = "bo_sach_chi_tiet")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class BoSachChiTiet {
     @EmbeddedId
     private BoSachChiTietId id;

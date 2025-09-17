@@ -131,6 +131,21 @@ public class ChiTietSanPhamController {
         return ResponseEntity.ok(updated);
     }
 
+    @PutMapping("/{id}/update-stock")
+    public ResponseEntity<ChiTietSanPham> updateStock(@PathVariable Integer id, @RequestBody java.util.Map<String, Object> request) {
+        try {
+            Integer soLuongTon = (Integer) request.get("soLuongTon");
+            if (soLuongTon == null) {
+                return ResponseEntity.badRequest().build();
+            }
+            
+            ChiTietSanPham updated = chiTietSanPhamService.updateStock(id, soLuongTon);
+            return ResponseEntity.ok(updated);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);
+        }
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable Integer id) {
         try {

@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -276,5 +277,78 @@ public class PhieuGiamGiaService {
 
     public Optional<PhieuGiamGia> getById(Long id) {
         return phieuGiamGiaRepository.findById(id);
+    }
+    
+    // Lấy voucher công khai
+    public List<PhieuGiamGia> getPublicVouchers(Double totalAmount) {
+        LocalDateTime now = LocalDateTime.now();
+        List<PhieuGiamGia> publicVouchers = phieuGiamGiaRepository.findPublicVouchers(now);
+        
+        return publicVouchers.stream()
+                .filter(voucher -> {
+                    // Kiểm tra giá trị đơn hàng tối thiểu
+                    if (totalAmount != null && voucher.getGiaTriDonHangToiThieu() != null) {
+                        if (totalAmount < voucher.getGiaTriDonHangToiThieu().doubleValue()) {
+                            return false;
+                        }
+                    }
+                    
+                    // Kiểm tra số lượng còn lại
+                    if (voucher.getSoLuong() != null && voucher.getSoLuong() <= 0) {
+                        return false;
+                    }
+                    
+                    return true;
+                })
+                .collect(Collectors.toList());
+    }
+    
+    // Lấy voucher cá nhân của khách hàng
+    public List<PhieuGiamGia> getPersonalVouchersForCustomer(Long customerId, Double totalAmount) {
+        List<PhieuGiamGia> personalVouchers = phieuGiamGiaRepository.findPersonalVouchersByCustomerId(customerId);
+        
+        return personalVouchers.stream()
+                .filter(voucher -> {
+                    // Kiểm tra voucher có đang hoạt động không
+                    if (!voucher.getTrangThai()) {
+                        return false;
+                    }
+                    
+                    // Kiểm tra thời gian
+                    LocalDateTime now = LocalDateTime.now();
+                    if (voucher.getNgayBatDau().isAfter(now) || voucher.getNgayKetThuc().isBefore(now)) {
+                        return false;
+                    }
+                    
+                    // Kiểm tra giá trị đơn hàng tối thiểu
+                    if (totalAmount != null && voucher.getGiaTriDonHangToiThieu() != null) {
+                        if (totalAmount < voucher.getGiaTriDonHangToiThieu().doubleValue()) {
+                            return false;
+                        }
+                    }
+                    
+                    // Kiểm tra số lượng còn lại
+                    if (voucher.getSoLuong() != null && voucher.getSoLuong() <= 0) {
+                        return false;
+                    }
+                    
+                    return true;
+                })
+                .collect(Collectors.toList());
+    }
+    
+    // Trừ số lượng voucher sau thanh toán
+    @Transactional
+    public PhieuGiamGia deductVoucherQuantity(Long voucherId) {
+        PhieuGiamGia voucher = phieuGiamGiaRepository.findById(voucherId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy voucher với ID: " + voucherId));
+        
+        if (voucher.getSoLuong() != null && voucher.getSoLuong() > 0) {
+            voucher.setSoLuong(voucher.getSoLuong() - 1);
+            voucher.setUpdatedAt(LocalDateTime.now());
+            return phieuGiamGiaRepository.save(voucher);
+        } else {
+            throw new RuntimeException("Voucher đã hết số lượng hoặc không có số lượng");
+        }
     }
 }

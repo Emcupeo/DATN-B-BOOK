@@ -48,4 +48,22 @@ public interface PhieuGiamGiaRepository extends JpaRepository<PhieuGiamGia, Long
     String getNextSequenceValue();
 
     boolean existsByMaPhieuGiamGia(String maPhieuGiamGia);
+    
+    // Lấy voucher công khai (loaiApDung = 'PUBLIC')
+    @Query("SELECT pgg FROM PhieuGiamGia pgg " +
+            "WHERE pgg.deleted = false " +
+            "AND pgg.trangThai = true " +
+            "AND pgg.loaiApDung = 'PUBLIC' " +
+            "AND pgg.ngayBatDau <= :now " +
+            "AND pgg.ngayKetThuc >= :now")
+    java.util.List<PhieuGiamGia> findPublicVouchers(@Param("now") java.time.LocalDateTime now);
+    
+    // Lấy voucher cá nhân của khách hàng (loaiApDung = 'CUSTOMER')
+    @Query("SELECT DISTINCT pgg FROM PhieuGiamGia pgg " +
+            "JOIN pgg.phieuGiamGiaKhachHangs pggkh " +
+            "WHERE pggkh.khachHang.id = :customerId " +
+            "AND pggkh.deleted = false " +
+            "AND pgg.deleted = false " +
+            "AND pgg.loaiApDung = 'CUSTOMER'")
+    java.util.List<PhieuGiamGia> findPersonalVouchersByCustomerId(@Param("customerId") Long customerId);
 }

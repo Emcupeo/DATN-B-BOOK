@@ -284,6 +284,11 @@ public class HoaDonService {
 
         String trangThaiCu = hoaDon.getTrangThai();
 
+        // Nếu hủy hóa đơn, khôi phục số lượng
+        if ("Đã hủy".equals(trangThaiMoi)) {
+            restoreQuantitiesOnCancel(hoaDon);
+        }
+
         hoaDon.setTrangThai(trangThaiMoi);
         hoaDonRepository.save(hoaDon);
 
@@ -296,6 +301,12 @@ public class HoaDonService {
 
         return hoaDon;
     }
+    
+    // Alias method cho frontend
+    @Transactional
+    public HoaDon updateTrangThaiHoaDon(int id, String trangThaiMoi) {
+        return updateTrangThai(id, trangThaiMoi);
+    }
 
     @Transactional
     public HoaDon huyDon(int id) {
@@ -303,6 +314,10 @@ public class HoaDonService {
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hóa đơn với ID: " + id));
 
         String trangThaiCu = hoaDon.getTrangThai();
+        
+        // Khôi phục số lượng sản phẩm/bộ sách trước khi hủy
+        restoreQuantitiesOnCancel(hoaDon);
+        
         hoaDon.setTrangThai("Đã hủy");
         hoaDon.setDeleted(true);
         hoaDonRepository.save(hoaDon);
@@ -316,6 +331,47 @@ public class HoaDonService {
 
         return hoaDon;
     }
+    
+    // Method khôi phục số lượng khi hủy hóa đơn
+    @Transactional
+    private void restoreQuantitiesOnCancel(HoaDon hoaDon) {
+        try {
+            // Force load hoaDonChiTiets
+            hoaDon.getHoaDonChiTiets().size();
+            
+            for (HoaDonChiTiet chiTiet : hoaDon.getHoaDonChiTiets()) {
+                if (chiTiet.getChiTietSanPham() != null) {
+                    // Khôi phục số lượng cho sản phẩm lẻ
+                    ChiTietSanPham chiTietSanPham = chiTiet.getChiTietSanPham();
+                    chiTietSanPham.setSoLuongTon(chiTietSanPham.getSoLuongTon() + chiTiet.getSoLuong());
+                    chiTietSanPhamRepository.save(chiTietSanPham);
+                    System.out.println("DEBUG: Restored " + chiTiet.getSoLuong() + " units for product: " + chiTietSanPham.getTenChiTietSanPham());
+                }
+                
+                if (chiTiet.getBoSach() != null) {
+                    // Khôi phục số lượng cho bộ sách
+                    BoSach boSach = chiTiet.getBoSach();
+                    boSach.setSoLuong(boSach.getSoLuong() + chiTiet.getSoLuong());
+                    boSachRepository.save(boSach);
+                    System.out.println("DEBUG: Restored " + chiTiet.getSoLuong() + " units for book set: " + boSach.getTenBoSach());
+                    
+                    // Khôi phục số lượng cho các sản phẩm trong bộ sách
+                    List<BoSachChiTiet> boSachChiTiets = boSachChiTietRepository.findByIdBoSachId(boSach.getId());
+                    for (BoSachChiTiet boSachChiTiet : boSachChiTiets) {
+                        ChiTietSanPham chiTietSanPham = boSachChiTiet.getIdChiTietSanPham();
+                        int soLuongCanKhoiPhuc = boSachChiTiet.getSoLuong() * chiTiet.getSoLuong();
+                        chiTietSanPham.setSoLuongTon(chiTietSanPham.getSoLuongTon() + soLuongCanKhoiPhuc);
+                        chiTietSanPhamRepository.save(chiTietSanPham);
+                        System.out.println("DEBUG: Restored " + soLuongCanKhoiPhuc + " units for product in book set: " + chiTietSanPham.getTenChiTietSanPham());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("ERROR: Failed to restore quantities on cancel: " + e.getMessage());
+            e.printStackTrace();
+            // Không throw exception để không ảnh hưởng đến việc hủy hóa đơn
+        }
+    }
 
     @Transactional
     public HoaDon updatePayment(int id, BigDecimal tienMat, BigDecimal chuyenKhoan, Integer phuongThucThanhToanId, String ghiChu, String loaiHoaDon, BigDecimal tienKhachDua, Long phieuGiamGiaId) {
@@ -326,33 +382,36 @@ public class HoaDonService {
         
         System.out.println("DEBUG: Found HoaDon: " + hoaDon.getMaHoaDon() + ", trangThai=" + hoaDon.getTrangThai() + ", tongTien=" + hoaDon.getTongTien());
 
-        // Sử dụng tongTien đã được set từ frontend, nếu chưa có thì tính lại
-        BigDecimal thanhTien;
-        if (hoaDon.getTongTien() != null) {
-            thanhTien = hoaDon.getTongTien();
-            System.out.println("DEBUG: Using existing tongTien: " + thanhTien);
-        } else {
-            System.out.println("DEBUG: Calculating tongTien from HoaDonChiTiet...");
-            // Tính tổng tiền từ HoaDonChiTiet
-            Set<HoaDonChiTiet> hoaDonChiTiets = hoaDon.getHoaDonChiTiets();
-            System.out.println("DEBUG: Found " + (hoaDonChiTiets != null ? hoaDonChiTiets.size() : 0) + " HoaDonChiTiet items");
-            
-            BigDecimal tongTienHoaDonChiTiet = hoaDonChiTiets != null ? hoaDonChiTiets.stream()
-                    .map(HoaDonChiTiet::getThanhTien)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add) : BigDecimal.ZERO;
-            System.out.println("DEBUG: tongTienHoaDonChiTiet: " + tongTienHoaDonChiTiet);
-            
-            // Tính phí ship
-            BigDecimal phiShip = hoaDon.getPhiShip() != null ? hoaDon.getPhiShip() : BigDecimal.ZERO;
-            System.out.println("DEBUG: phiShip: " + phiShip);
-            
-            thanhTien = tongTienHoaDonChiTiet.add(phiShip);
-            System.out.println("DEBUG: Calculated thanhTien: " + thanhTien);
-        }
+        // Sử dụng tongTien từ frontend (tienMat + chuyenKhoan) thay vì tính từ HoaDonChiTiet
+        BigDecimal thanhTien = tienMat.add(chuyenKhoan);
+        System.out.println("DEBUG: Using tongTien from frontend: " + thanhTien);
 
+        // Áp dụng voucher nếu có
+        BigDecimal tienGiamGia = BigDecimal.ZERO;
+        if (phieuGiamGiaId != null) {
+            try {
+                PhieuGiamGia phieuGiamGia = phieuGiamGiaRepository.findById(phieuGiamGiaId).orElse(null);
+                if (phieuGiamGia != null) {
+                    if (phieuGiamGia.getGiaTriGiam() != null) {
+                        tienGiamGia = phieuGiamGia.getGiaTriGiam();
+                    } else if (phieuGiamGia.getSoPhanTramGiam() != null) {
+                        tienGiamGia = thanhTien.multiply(phieuGiamGia.getSoPhanTramGiam()).divide(new BigDecimal("100"));
+                    }
+                    thanhTien = thanhTien.subtract(tienGiamGia);
+                    System.out.println("DEBUG: Applied voucher, tienGiamGia: " + tienGiamGia + ", thanhTien after discount: " + thanhTien);
+                }
+            } catch (Exception e) {
+                System.out.println("DEBUG: Error applying voucher: " + e.getMessage());
+            }
+        }
+        
         BigDecimal tongTienThanhToan = tienMat.add(chuyenKhoan);
-        if (tongTienThanhToan.compareTo(thanhTien) != 0) {
-            throw new IllegalArgumentException("Tổng tiền thanh toán không khớp với tổng hóa đơn! Expected: " + thanhTien + ", Got: " + tongTienThanhToan);
+        // So sánh với tongTienHang (chưa trừ voucher) vì frontend gửi tongTienHang
+        BigDecimal tongTienHang = thanhTien.add(tienGiamGia); // thanhTien + tienGiamGia = tongTienHang
+        System.out.println("DEBUG: tongTienHang (Expected): " + tongTienHang);
+        System.out.println("DEBUG: tongTienThanhToan (Got): " + tongTienThanhToan);
+        if (tongTienThanhToan.compareTo(tongTienHang) != 0) {
+            throw new IllegalArgumentException("Tổng tiền thanh toán không khớp với tổng hóa đơn! Expected: " + tongTienHang + ", Got: " + tongTienThanhToan);
         }
 
         if ("Tại quầy".equals(loaiHoaDon) && tienMat.compareTo(BigDecimal.ZERO) > 0) {
@@ -697,16 +756,38 @@ public class HoaDonService {
         HoaDon hoaDon = hoaDonRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hóa đơn với ID: " + orderId));
 
-        if (!"Tạo hóa đơn".equals(hoaDon.getTrangThai())) {
-            throw new IllegalStateException("Chỉ có thể xóa sản phẩm ở trạng thái 'Tạo hóa đơn'");
+        if (!"Tạo hóa đơn".equals(hoaDon.getTrangThai()) && !"Chờ xác nhận".equals(hoaDon.getTrangThai())) {
+            throw new IllegalStateException("Chỉ có thể xóa sản phẩm ở trạng thái 'Tạo hóa đơn' hoặc 'Chờ xác nhận'");
         }
 
         HoaDonChiTiet hoaDonChiTiet = hoaDonChiTietRepository.findById(chiTietId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy chi tiết hóa đơn với ID: " + chiTietId));
 
-        ChiTietSanPham chiTietSanPham = hoaDonChiTiet.getChiTietSanPham();
-        chiTietSanPham.setSoLuongTon(chiTietSanPham.getSoLuongTon() + hoaDonChiTiet.getSoLuong());
-        chiTietSanPhamRepository.save(chiTietSanPham);
+        // Khôi phục số lượng cho sản phẩm lẻ
+        if (hoaDonChiTiet.getChiTietSanPham() != null) {
+            ChiTietSanPham chiTietSanPham = hoaDonChiTiet.getChiTietSanPham();
+            chiTietSanPham.setSoLuongTon(chiTietSanPham.getSoLuongTon() + hoaDonChiTiet.getSoLuong());
+            chiTietSanPhamRepository.save(chiTietSanPham);
+            System.out.println("DEBUG: Restored " + hoaDonChiTiet.getSoLuong() + " units for product: " + chiTietSanPham.getTenChiTietSanPham());
+        }
+        
+        // Khôi phục số lượng cho bộ sách
+        if (hoaDonChiTiet.getBoSach() != null) {
+            BoSach boSach = hoaDonChiTiet.getBoSach();
+            boSach.setSoLuong(boSach.getSoLuong() + hoaDonChiTiet.getSoLuong());
+            boSachRepository.save(boSach);
+            System.out.println("DEBUG: Restored " + hoaDonChiTiet.getSoLuong() + " units for book set: " + boSach.getTenBoSach());
+            
+            // Khôi phục số lượng cho các sản phẩm trong bộ sách
+            List<BoSachChiTiet> boSachChiTiets = boSachChiTietRepository.findByIdBoSachId(boSach.getId());
+            for (BoSachChiTiet boSachChiTiet : boSachChiTiets) {
+                ChiTietSanPham chiTietSanPham = boSachChiTiet.getIdChiTietSanPham();
+                int soLuongCanKhoiPhuc = boSachChiTiet.getSoLuong() * hoaDonChiTiet.getSoLuong();
+                chiTietSanPham.setSoLuongTon(chiTietSanPham.getSoLuongTon() + soLuongCanKhoiPhuc);
+                chiTietSanPhamRepository.save(chiTietSanPham);
+                System.out.println("DEBUG: Restored " + soLuongCanKhoiPhuc + " units for product in book set: " + chiTietSanPham.getTenChiTietSanPham());
+            }
+        }
 
         hoaDonChiTietRepository.delete(hoaDonChiTiet);
     }
@@ -845,5 +926,69 @@ public class HoaDonService {
             e.printStackTrace();
             // Không throw exception để không ảnh hưởng đến việc tạo đơn hàng
         }
+    }
+
+    @Transactional
+    public HoaDon updateProductQuantity(int hoaDonId, Integer chiTietSanPhamId, Integer soLuong) {
+        HoaDon hoaDon = hoaDonRepository.findById(hoaDonId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hóa đơn với ID: " + hoaDonId));
+        
+        // Kiểm tra hóa đơn có thể chỉnh sửa không
+        if (hoaDon.getDeleted() || !hoaDon.getTrangThai().equals("Tạo hóa đơn") && !hoaDon.getTrangThai().equals("Chờ xác nhận")) {
+            throw new IllegalArgumentException("Không thể chỉnh sửa hóa đơn đã hủy hoặc đã hoàn thành");
+        }
+        
+        // Tìm HoaDonChiTiet cần cập nhật
+        HoaDonChiTiet hoaDonChiTiet = hoaDon.getHoaDonChiTiets().stream()
+                .filter(hct -> hct.getChiTietSanPham() != null && hct.getChiTietSanPham().getId().equals(chiTietSanPhamId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy chi tiết sản phẩm trong hóa đơn"));
+        
+        System.out.println("DEBUG: updateProductQuantity - Before update: soLuong=" + hoaDonChiTiet.getSoLuong() + ", thanhTien=" + hoaDonChiTiet.getThanhTien());
+        
+        // Cập nhật số lượng
+        hoaDonChiTiet.setSoLuong(soLuong);
+        
+        // Cập nhật thành tiền
+        BigDecimal giaSanPham = hoaDonChiTiet.getChiTietSanPham().getGia();
+        hoaDonChiTiet.setThanhTien(giaSanPham.multiply(new BigDecimal(soLuong)));
+        
+        System.out.println("DEBUG: updateProductQuantity - After update: soLuong=" + hoaDonChiTiet.getSoLuong() + ", thanhTien=" + hoaDonChiTiet.getThanhTien());
+        
+        return hoaDonRepository.save(hoaDon);
+    }
+
+    @Transactional
+    public HoaDon updateBoSachQuantity(int hoaDonId, Integer boSachId, Integer soLuong) {
+        System.out.println("DEBUG: updateBoSachQuantity called with hoaDonId=" + hoaDonId + ", boSachId=" + boSachId + ", soLuong=" + soLuong);
+        
+        HoaDon hoaDon = hoaDonRepository.findById(hoaDonId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hóa đơn với ID: " + hoaDonId));
+        
+        // Kiểm tra hóa đơn có thể chỉnh sửa không
+        if (hoaDon.getDeleted() || !hoaDon.getTrangThai().equals("Tạo hóa đơn") && !hoaDon.getTrangThai().equals("Chờ xác nhận")) {
+            throw new IllegalArgumentException("Không thể chỉnh sửa hóa đơn đã hủy hoặc đã hoàn thành");
+        }
+        
+        System.out.println("DEBUG: Found HoaDon: " + hoaDon.getMaHoaDon() + ", HoaDonChiTiets size: " + hoaDon.getHoaDonChiTiets().size());
+        
+        // Tìm HoaDonChiTiet cần cập nhật
+        HoaDonChiTiet hoaDonChiTiet = hoaDon.getHoaDonChiTiets().stream()
+                .filter(hct -> hct.getBoSach() != null && hct.getBoSach().getId().equals(boSachId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bộ sách trong hóa đơn"));
+        
+        System.out.println("DEBUG: Found HoaDonChiTiet for boSachId=" + boSachId + ", current soLuong=" + hoaDonChiTiet.getSoLuong());
+        
+        // Cập nhật số lượng
+        hoaDonChiTiet.setSoLuong(soLuong);
+        
+        // Cập nhật thành tiền
+        BigDecimal giaBoSach = hoaDonChiTiet.getBoSach().getGiaTien();
+        hoaDonChiTiet.setThanhTien(giaBoSach.multiply(new BigDecimal(soLuong)));
+        
+        System.out.println("DEBUG: Updated soLuong=" + soLuong + ", thanhTien=" + hoaDonChiTiet.getThanhTien());
+        
+        return hoaDonRepository.save(hoaDon);
     }
 }

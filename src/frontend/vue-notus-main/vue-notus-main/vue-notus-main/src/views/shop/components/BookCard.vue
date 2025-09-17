@@ -116,8 +116,11 @@
             <span class="text-xl font-bold text-red-600">
               {{ formatPrice(book.price) }}
             </span>
-            <span v-if="book.originalPrice && book.originalPrice > book.price" class="text-sm text-gray-400 line-through">
+            <span v-if="book.hasDiscount && book.originalPrice && book.originalPrice > book.price" class="text-sm text-gray-400 line-through">
               {{ formatPrice(book.originalPrice) }}
+            </span>
+            <span v-if="book.hasDiscount && book.discountPercentage" class="ml-2 bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs font-semibold">
+              -{{ Math.round(book.discountPercentage) }}%
             </span>
           </div>
           <div>

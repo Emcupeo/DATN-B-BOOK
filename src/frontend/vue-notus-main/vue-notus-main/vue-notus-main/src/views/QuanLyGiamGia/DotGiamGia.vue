@@ -892,6 +892,7 @@
 
 <script>
 import DotGiamGiaService from '@/service/DotGiamGiaService';
+import ChiTietSanPhamService from '@/service/ChiTietSanPhamService';
 import * as XLSX from 'xlsx';
 
 export default {
@@ -1120,6 +1121,22 @@ export default {
       this.loading = true;
       try {
         const discounts = await DotGiamGiaService.getListDiscounts();
+        console.log('DEBUG: Raw discounts response:', discounts);
+        console.log('DEBUG: Type of discounts:', typeof discounts);
+        console.log('DEBUG: Is array:', Array.isArray(discounts));
+        console.log('DEBUG: Constructor:', discounts?.constructor?.name);
+        console.log('DEBUG: Length:', discounts?.length);
+        console.log('DEBUG: String representation:', JSON.stringify(discounts).substring(0, 200) + '...');
+        
+        // Defensive check: ensure discounts is an array
+        if (!Array.isArray(discounts)) {
+          console.error('ERROR: discounts is not an array:', discounts);
+          console.error('ERROR: Full response:', JSON.stringify(discounts, null, 2));
+          this.discountList = [];
+          this.errorMessage = 'Dữ liệu trả về không đúng định dạng';
+          return;
+        }
+        
         this.discountList = discounts
           .map((discount) => ({
             ...discount,
@@ -1134,6 +1151,8 @@ export default {
             dotGiamGiaChiTiets: discount.dotGiamGiaChiTiets || [],
           }))
           .sort((a, b) => b.id - a.id);
+          
+        console.log('DEBUG: Processed discountList:', this.discountList);
       } catch (error) {
         console.error('Lỗi khi lấy dữ liệu:', error);
         this.errorMessage = error.message;
@@ -1368,52 +1387,145 @@ export default {
       this.isSpeechActive = false;
       this.fetchProducts();
     },
-    openUpdateForm(discount) {
-      this.isUpdate = true;
-      this.selectedDiscount = discount;
-      this.errorMessage = '';
-      this.formData = {
-        id: discount.id,
-        maDotGiamGia: discount.maDotGiamGia || '',
-        tenDotGiamGia: discount.tenDotGiamGia || '',
-        loaiGiamGia: discount.loaiGiamGia || 'Phần trăm',
-        soPhanTramGiam: discount.soPhanTramGiam || 0,
-        giaTriGiam: discount.giaTriGiam || 0,
-        ngayBatDau: discount.ngayBatDau ? new Date(discount.ngayBatDau).toISOString().split('T')[0] : '',
-        ngayKetThuc: discount.ngayKetThuc ? new Date(discount.ngayKetThuc).toISOString().split('T')[0] : '',
-        trangThai: discount.trangThai || 'Chưa bắt đầu',
-        selectedProducts: discount.dotGiamGiaChiTiets
-          ? [...new Set(discount.dotGiamGiaChiTiets.map(item => item.idChiTietSanPham?.idSanPham?.id).filter(id => id))]
-          : [],
-        selectedBoSachs: discount.dotGiamGiaBoSachChiTiets
-          ? [...new Set(discount.dotGiamGiaBoSachChiTiets.map(item => item.idBoSach?.id).filter(id => id))]
-          : [],
-      };
-      this.selectedChiTietSanPhamIds = [];
-      this.updateSelectedChiTietSanPhams();
-      this.showForm = false;
-      this.currentProductPage = 1;
-      this.currentBookSetPage = 1;
-      this.activeTab = 'products';
-      this.filters = {
-        maChiTietSanPham: '',
-        tenChiTietSanPham: '',
-        moTa: '',
-        nhaXuatBan: '',
-        trongLuong: '',
-        kichThuoc: '',
-        donGia: '',
-        stt: '',
-      };
-      this.activeFilter = '';
-      this.isSpeechActive = false;
-      this.fetchProducts();
+    async openUpdateForm(discount) {
+      console.log('DEBUG: openUpdateForm called with discount:', discount);
+      
+      try {
+        // Lấy chi tiết đầy đủ của đợt giảm giá từ API
+        const fullDiscount = await DotGiamGiaService.getDiscountById(discount.id);
+        console.log('DEBUG: Full discount data from API:', fullDiscount);
+        
+        // Load relationships separately to avoid circular reference
+        const [products, bookSets] = await Promise.all([
+          DotGiamGiaService.getDiscountProducts(discount.id),
+          DotGiamGiaService.getDiscountBookSets(discount.id)
+        ]);
+        
+        console.log('DEBUG: Loaded products:', products);
+        console.log('DEBUG: Loaded bookSets:', bookSets);
+        console.log('DEBUG: products length:', products?.length);
+        console.log('DEBUG: bookSets length:', bookSets?.length);
+        if (products && products.length > 0) {
+          console.log('DEBUG: First product:', products[0]);
+          console.log('DEBUG: First product.idChiTietSanPham:', products[0].idChiTietSanPham);
+          console.log('DEBUG: First product.idChiTietSanPham.idSanPham:', products[0].idChiTietSanPham?.idSanPham);
+          console.log('DEBUG: First product.idChiTietSanPham.idSanPham.id:', products[0].idChiTietSanPham?.idSanPham?.id);
+        }
+        if (bookSets && bookSets.length > 0) {
+          console.log('DEBUG: First bookSet:', bookSets[0]);
+          console.log('DEBUG: First bookSet.idBoSach:', bookSets[0].idBoSach);
+          console.log('DEBUG: First bookSet.idBoSach.id:', bookSets[0].idBoSach?.id);
+        }
+        
+        this.isUpdate = true;
+        this.selectedDiscount = fullDiscount;
+        this.errorMessage = '';
+        this.formData = {
+          id: fullDiscount.id,
+          maDotGiamGia: fullDiscount.maDotGiamGia || '',
+          tenDotGiamGia: fullDiscount.tenDotGiamGia || '',
+          loaiGiamGia: fullDiscount.loaiGiamGia || 'Phần trăm',
+          soPhanTramGiam: fullDiscount.soPhanTramGiam || 0,
+          giaTriGiam: fullDiscount.giaTriGiam || 0,
+          ngayBatDau: fullDiscount.ngayBatDau ? new Date(fullDiscount.ngayBatDau).toISOString().split('T')[0] : '',
+          ngayKetThuc: fullDiscount.ngayKetThuc ? new Date(fullDiscount.ngayKetThuc).toISOString().split('T')[0] : '',
+          trangThai: fullDiscount.trangThai || 'Chưa bắt đầu',
+          selectedProducts: products
+            ? [...new Set(products.map(item => {
+                console.log('DEBUG: Mapping product item:', item);
+                console.log('DEBUG: item.idChiTietSanPham:', item.idChiTietSanPham);
+                console.log('DEBUG: item.idChiTietSanPham?.idSanPham:', item.idChiTietSanPham?.idSanPham);
+                console.log('DEBUG: item.idChiTietSanPham?.idSanPham?.id:', item.idChiTietSanPham?.idSanPham?.id);
+                return item.idChiTietSanPham?.idSanPham?.id;
+              }).filter(id => {
+                console.log('DEBUG: Filtering product id:', id);
+                return id;
+              }))]
+            : [],
+          selectedBoSachs: bookSets
+            ? [...new Set(bookSets.map(item => {
+                console.log('DEBUG: Mapping bookSet item:', item);
+                console.log('DEBUG: item.idBoSach:', item.idBoSach);
+                console.log('DEBUG: item.idBoSach?.id:', item.idBoSach?.id);
+                return item.idBoSach?.id;
+              }).filter(id => {
+                console.log('DEBUG: Filtering id:', id);
+                return id;
+              }))]
+            : [],
+        };
+        
+        console.log('DEBUG: formData.selectedProducts:', this.formData.selectedProducts);
+        console.log('DEBUG: formData.selectedBoSachs:', this.formData.selectedBoSachs);
+        // Load chi tiết sản phẩm đã chọn
+        this.selectedChiTietSanPhamIds = [];
+        if (products && products.length > 0) {
+          this.selectedChiTietSanPhamIds = products.map(item => item.idChiTietSanPham?.id).filter(id => id);
+          console.log('DEBUG: Loaded selectedChiTietSanPhamIds:', this.selectedChiTietSanPhamIds);
+        }
+        
+        // Load bộ sách đã chọn
+        if (bookSets && bookSets.length > 0) {
+          this.formData.selectedBoSachs = bookSets.map(item => item.idBoSach?.id).filter(id => id);
+          console.log('DEBUG: Loaded selectedBoSachs:', this.formData.selectedBoSachs);
+        } else {
+          this.formData.selectedBoSachs = [];
+        }
+      
+        this.showForm = true; // Hiển thị form
+        this.currentProductPage = 1;
+        this.currentBookSetPage = 1;
+        this.activeTab = 'products';
+        this.filters = {
+          maChiTietSanPham: '',
+          tenChiTietSanPham: '',
+          moTa: '',
+          nhaXuatBan: '',
+          trongLuong: '',
+          kichThuoc: '',
+          donGia: '',
+          stt: '',
+        };
+        this.activeFilter = '';
+        this.isSpeechActive = false;
+        this.fetchProducts();
+        
+        // Await async operations
+        this.$nextTick(async () => {
+          await this.updateSelectedChiTietSanPhams();
+          console.log('DEBUG: After updateSelectedChiTietSanPhams - selectedChiTietSanPhams:', this.selectedChiTietSanPhams.length);
+          console.log('DEBUG: After updateSelectedChiTietSanPhams - selectedChiTietSanPhamIds:', this.selectedChiTietSanPhamIds.length);
+          console.log('DEBUG: After updateSelectedChiTietSanPhams - selectedBoSachs:', this.formData.selectedBoSachs.length);
+        });
+      } catch (error) {
+        console.error('Error loading discount details:', error);
+        this.errorMessage = 'Không thể tải chi tiết đợt giảm giá: ' + (error.message || 'Lỗi không xác định');
+      }
     },
     async updateSelectedChiTietSanPhams() {
       this.selectedChiTietSanPhams = [];
-      for (const productId of this.formData.selectedProducts) {
-        const chiTietSanPhams = await this.fetchChiTietSanPham(productId);
-        this.selectedChiTietSanPhams = [...this.selectedChiTietSanPhams, ...chiTietSanPhams];
+      
+      // Nếu đang edit, load từ selectedChiTietSanPhamIds
+      if (this.isUpdate && this.selectedChiTietSanPhamIds.length > 0) {
+        console.log('DEBUG: Loading chi tiet san pham for edit mode, IDs:', this.selectedChiTietSanPhamIds);
+        for (const chiTietId of this.selectedChiTietSanPhamIds) {
+          try {
+            const chiTietSanPham = await ChiTietSanPhamService.getById(chiTietId);
+            if (chiTietSanPham) {
+              this.selectedChiTietSanPhams.push(chiTietSanPham);
+              console.log('DEBUG: Loaded chi tiet san pham:', chiTietSanPham.tenChiTietSanPham);
+            }
+          } catch (error) {
+            console.error('Error loading chi tiet san pham:', error);
+          }
+        }
+        console.log('DEBUG: Total selectedChiTietSanPhams loaded:', this.selectedChiTietSanPhams.length);
+      } else {
+        // Nếu đang tạo mới, load từ selectedProducts
+        for (const productId of this.formData.selectedProducts) {
+          const chiTietSanPhams = await this.fetchChiTietSanPham(productId);
+          this.selectedChiTietSanPhams = [...this.selectedChiTietSanPhams, ...chiTietSanPhams];
+        }
       }
     },
     closeForm() {

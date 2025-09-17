@@ -27,6 +27,9 @@
             <button class="border border-gray-300 text-sm px-3 py-1 rounded-lg bg-white hover:bg-gray-100">
               Quét mã QR
             </button>
+            <button @click="openAddProductModal" class="bg-green-500 text-white text-sm px-3 py-1 rounded-lg hover:bg-green-600">
+              Chọn chi tiết sản phẩm
+            </button>
             <button v-if="selectedOrder && selectedOrder.trangThai === 'Tạo hóa đơn'" @click="openAddProductModal" class="bg-blue-500 text-white text-sm px-3 py-1 rounded-lg hover:bg-blue-600">
               Thêm sản phẩm
             </button>
@@ -38,11 +41,8 @@
           <table class="w-full text-sm text-left text-gray-500">
             <thead class="text-xs text-gray-700 uppercase bg-gray-50">
             <tr>
+              <th class="px-4 py-2">Loại</th>
               <th class="px-4 py-2">Tên sản phẩm</th>
-              <th class="px-4 py-2">Chất liệu</th>
-              <th class="px-4 py-2">Loại bìa</th>
-              <th class="px-4 py-2">Ngôn ngữ</th>
-              <th class="px-4 py-2">Tác giả</th>
               <th class="px-4 py-2">Số lượng</th>
               <th class="px-4 py-2">Kho</th>
               <th class="px-4 py-2">Giá đã giảm</th>
@@ -53,26 +53,81 @@
             </thead>
             <tbody>
             <tr v-for="prod in paginatedProducts" :key="prod.id" class="bg-white border-b">
-              <td class="px-4 py-2">{{ prod.chiTietSanPham?.tenChiTietSanPham || 'Không xác định' }}</td>
-              <td class="px-4 py-2">{{ prod.chiTietSanPham?.idChatLieu?.tenChatLieu || 'N/A' }}</td>
-              <td class="px-4 py-2">{{ prod.chiTietSanPham?.idLoaiBia?.tenLoaiBia || 'N/A' }}</td>
-              <td class="px-4 py-2">{{ prod.chiTietSanPham?.idNgonNgu?.tenNgonNgu || 'N/A' }}</td>
-              <td class="px-4 py-2">{{ prod.chiTietSanPham?.idTacGia?.tenTacGia || 'N/A' }}</td>
               <td class="px-4 py-2">
-                <input type="number" v-model.number="prod.soLuong" class="w-16 border rounded px-2 py-1 text-sm" :disabled="selectedOrder.trangThai !== 'Tạo hóa đơn'" @input="updateProductQuantity(prod)" />
+                <span class="px-2 py-1 text-xs rounded-full" :class="prod.boSach ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'">
+                  {{ prod.boSach ? 'Bộ sách' : 'Sách lẻ' }}
+                </span>
               </td>
-              <td class="px-4 py-2">{{ prod.chiTietSanPham?.soLuongTon || 0 }}</td>
-              <td class="px-4 py-2">{{ formatCurrency(prod.giaSanPham) }}</td>
-              <td class="px-4 py-2">{{ formatCurrency(prod.giaSanPham) }}</td>
-              <td class="px-4 py-2">{{ formatCurrency(prod.thanhTien || prod.soLuong * prod.giaSanPham) }}</td>
+              <td class="px-4 py-2 font-medium">
+                {{ prod.boSach?.tenBoSach || prod.chiTietSanPham?.tenChiTietSanPham || 'Không xác định' }}
+              </td>
               <td class="px-4 py-2">
-                <button v-if="selectedOrder.trangThai === 'Tạo hóa đơn'" @click="removeItem(prod.id)" class="text-red-500 hover:text-red-700">
-                  <i class="fas fa-trash-alt"></i>
-                </button>
+                <input 
+                  type="number" 
+                  v-model="prod.soLuong" 
+                  min="1" 
+                  :max="prod.boSach?.soLuong || prod.chiTietSanPham?.soLuongTon || 0"
+                  @change="updateProductQuantity(prod)"
+                  class="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </td>
+              <td class="px-4 py-2">{{ prod.boSach?.soLuong || prod.chiTietSanPham?.soLuongTon || 0 }}</td>
+              <!-- Giá đã giảm -->
+              <td class="px-4 py-2">
+                <span v-if="hasDiscount(prod)" class="text-red-500 font-semibold">{{ formatCurrency(prod.giaSanPham) }}</span>
+                <span v-else class="text-gray-900 font-semibold">{{ formatCurrency(prod.giaSanPham) }}</span>
+              </td>
+              <!-- Giá chưa giảm -->
+              <td class="px-4 py-2">
+                <span v-if="hasDiscount(prod)" class="text-gray-500 line-through">{{ formatCurrency(getOriginalPrice(prod)) }}</span>
+                <span v-else class="text-gray-500">{{ formatCurrency(prod.giaSanPham) }}</span>
+              </td>
+              <td class="px-4 py-2 font-semibold">{{ formatCurrency(prod.thanhTien || prod.soLuong * prod.giaSanPham) }}</td>
+              <td class="px-4 py-2">
+                <div class="flex space-x-2">
+                  <!-- Nút Chi tiết cho bộ sách -->
+                  <button 
+                    v-if="prod.boSach" 
+                    @click="openBookSetDetailModal(prod.boSach)" 
+                    class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors duration-200"
+                    title="Xem chi tiết bộ sách"
+                  >
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Chi tiết
+                  </button>
+                  
+                  <!-- Nút Xóa sản phẩm -->
+                  <button 
+                    v-if="selectedOrder && (selectedOrder.trangThai === 'Tạo hóa đơn' || selectedOrder.trangThai === 'Chờ xác nhận')" 
+                    @click="removeItem(prod.id)" 
+                    class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors duration-200"
+                    title="Xóa sản phẩm khỏi hóa đơn"
+                  >
+                    <i class="fas fa-trash-alt mr-1"></i>
+                    Xóa
+                  </button>
+                  
+                  <!-- Debug info -->
+                  <span v-if="selectedOrder" class="text-xs text-gray-400 ml-2">
+                    ({{ selectedOrder.trangThai }})
+                  </span>
+                </div>
               </td>
             </tr>
+            
+            <!-- Chi tiết bộ sách (nếu đang expand) -->
+            <tr v-for="prod in expandedBookSetDetails" :key="`detail-${prod.id}`" class="bg-gray-50">
+              <td colspan="8" class="px-4 py-2">
+                <div class="ml-4 space-y-1">
+                  <div v-for="bookDetail in bookSetDetails[prod.boSach.id]" :key="bookDetail.id" class="text-sm text-gray-600">
+                    {{ bookDetail.tenChiTietSanPham }} | {{ bookDetail.idTacGia?.tenTacGia || 'Không có tác giả' }} | Kho: {{ bookDetail.soLuongTon }} | Giá: {{ formatCurrency(bookDetail.gia) }}
+                  </div>
+                </div>
+              </td>
+            </tr>
+            
             <tr v-if="paginatedProducts.length === 0">
-              <td colspan="11" class="px-4 py-2 text-center text-gray-500">
+              <td colspan="8" class="px-4 py-2 text-center text-gray-500">
                 Chưa có sản phẩm
               </td>
             </tr>
@@ -113,7 +168,7 @@
           <h3 class="text-md font-semibold text-gray-900 mb-2">Hình thức nhận hàng</h3>
           <div class="space-y-2">
             <label class="flex items-center space-x-2">
-              <input type="radio" value="TaiQuay" v-model="deliveryMethod" class="text-sm" />
+<input type="radio" value="TaiQuay" v-model="deliveryMethod" class="text-sm" />
               <span class="text-sm">Tại quầy</span>
             </label>
             <label class="flex items-center space-x-2">
@@ -133,19 +188,26 @@
           <h3 class="text-md font-semibold text-gray-900 mb-2">Hình thức thanh toán</h3>
           <div class="space-y-2">
             <label class="flex items-center space-x-2">
-              <input type="radio" value="chuyenKhoan" v-model="paymentMethod" class="text-sm" />
+              <input type="radio" value="1" v-model="paymentMethod" class="text-sm" />
               <span class="text-sm">Chuyển khoản</span>
             </label>
             <label class="flex items-center space-x-2">
-              <input type="radio" value="tienMat" v-model="paymentMethod" class="text-sm" />
+              <input type="radio" value="4" v-model="paymentMethod" class="text-sm" />
               <span class="text-sm">Tiền mặt</span>
             </label>
           </div>
-          <div class="mt-2" :class="{ 'hidden': paymentMethod !== 'chuyenKhoan' }">
-            <img src="https://via.placeholder.com/150" alt="QR thanh toán" class="mx-auto" />
+          <div class="mt-2" :class="{ 'hidden': paymentMethod !== '1' }">
+            <div class="w-32 h-32 mx-auto bg-gray-200 border-2 border-dashed border-gray-400 flex items-center justify-center">
+              <div class="text-center text-gray-500">
+                <svg class="w-8 h-8 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 6a2 2 0 114 0 2 2 0 01-4 0zm6 0a2 2 0 114 0 2 2 0 01-4 0z" clip-rule="evenodd"></path>
+                </svg>
+                <span class="text-xs">QR Code</span>
+              </div>
+            </div>
             <p class="text-center text-sm text-gray-500 mt-1">Quét mã để thanh toán</p>
           </div>
-          <div v-if="deliveryMethod === 'TaiQuay' && paymentMethod === 'tienMat'" class="mt-4">
+          <div v-if="deliveryMethod === 'TaiQuay' && paymentMethod === '4'" class="mt-4">
             <div class="flex justify-between mb-2">
               <label class="block text-sm font-medium">Tiền khách đưa:</label>
               <input type="number" v-model.number="tienKhachDua" class="w-1/2 border rounded px-2 py-1 text-sm" placeholder="Nhập số tiền" min="0" />
@@ -163,7 +225,7 @@
             <span class="font-medium text-sm">{{ formatCurrency(tongTienHang) }}</span>
           </div>
           <div class="flex justify-between mb-2">
-            <span class="text-gray-600 text-sm">Phí vận chuyển:</span>
+<span class="text-gray-600 text-sm">Phí vận chuyển:</span>
             <span class="font-medium text-sm">{{ formatCurrency(selectedOrder?.phiShip || 0) }}</span>
           </div>
           <div class="flex justify-between mb-2">
@@ -175,13 +237,35 @@
             <span>{{ formatCurrency(thanhTien) }}</span>
           </div>
           <div class="mt-4">
-            <input type="text" placeholder="Nhập voucher..." v-model="voucherCode" class="w-full border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:ring" />
+            <select v-model="selectedVoucher" @change="onVoucherChange" class="w-full border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:ring">
+              <option value="">Chọn voucher...</option>
+              <!-- Voucher cá nhân của khách hàng -->
+              <optgroup v-if="personalVouchers.length > 0" label="Voucher cá nhân">
+                <option v-for="voucher in personalVouchers" :key="'personal-' + voucher.id" :value="voucher">
+                  🎁 {{ voucher.tenPhieuGiamGia }} - {{ formatCurrency(voucher.giaTriGiam) }}
+                </option>
+              </optgroup>
+              <!-- Voucher công khai -->
+              <optgroup v-if="availableVouchers.length > 0" label="Voucher công khai">
+                <option v-for="voucher in availableVouchers" :key="'public-' + voucher.id" :value="voucher">
+                  {{ voucher.tenPhieuGiamGia }} - {{ formatCurrency(voucher.giaTriGiam) }}
+                </option>
+              </optgroup>
+            </select>
           </div>
         </div>
 
-        <div class="mt-6">
+        <div class="mt-6 space-y-2">
           <button v-if="selectedOrder.trangThai === 'Tạo hóa đơn'" @click="xacNhanHoaDon" class="w-full bg-purple-600 text-white py-2 rounded-lg text-sm font-semibold hover:bg-purple-700 transition" :disabled="isConfirmDisabled">
             Xác nhận đơn hàng
+          </button>
+          
+          <button v-if="selectedOrder.trangThai === 'Chờ xác nhận'" @click="openPaymentModal" class="w-full bg-green-600 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-700 transition">
+            Xác nhận thanh toán
+          </button>
+          
+          <button v-if="selectedOrder.trangThai === 'Tạo hóa đơn' || selectedOrder.trangThai === 'Chờ xác nhận'" @click="huyHoaDon" class="w-full bg-red-600 text-white py-2 rounded-lg text-sm font-semibold hover:bg-red-700 transition">
+            Hủy hóa đơn
           </button>
         </div>
       </div>
@@ -191,25 +275,33 @@
     <transition name="fade">
       <div v-if="showAddProductModal" class="fixed inset-0 z-10 flex items-center justify-center bg-gray-600 bg-opacity-50">
         <div class="bg-white p-6 z-10 rounded-lg shadow-lg w-3/4 max-h-[80vh] overflow-y-auto">
-          <h3 class="text-lg font-semibold mb-4">Thêm sản phẩm</h3>
+            <h3 class="text-lg font-semibold mb-4">Chọn chi tiết sản phẩm</h3>
           <form @submit.prevent="addProduct" class="space-y-4">
             <div class="flex justify-between items-center mb-4">
               <div class="w-1/2">
                 <label class="block text-sm font-medium mb-1">Tìm kiếm</label>
                 <input v-model="productSearchQuery" @input="searchProducts" type="text" class="w-full border rounded px-3 py-2" placeholder="Nhập mã hoặc tên sách...">
               </div>
-              <button @click="showAllProducts" type="button" class="text-white bg-gradient-to-r from-purple-500 via-purple-600 to-purple-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-purple-300 shadow-lg shadow-purple-500/50 font-medium rounded-lg text-sm px-5 py-2.5">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 inline mr-2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 9.75h16.5" />
-                </svg>
-                Hiển thị tất cả
-              </button>
+              <div class="flex space-x-2">
+                <button @click="showAllProducts" type="button" class="text-white bg-gradient-to-r from-purple-500 via-purple-600 to-purple-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-purple-300 shadow-lg shadow-purple-500/50 font-medium rounded-lg text-sm px-5 py-2.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 inline mr-2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 9.75h16.5" />
+                  </svg>
+                  Hiển thị sản phẩm
+                </button>
+                <button @click="showAllBookSets" type="button" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 shadow-lg shadow-blue-500/50 font-medium rounded-lg text-sm px-5 py-2.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 inline mr-2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                  </svg>
+                  Hiển thị bộ sách
+                </button>
+              </div>
             </div>
 
             <div class="grid grid-cols-5 gap-4 mb-4">
               <div>
                 <label class="block text-sm font-medium text-gray-700">Giá tối thiểu</label>
-                <input v-model.number="filters.minPrice" type="number" min="0" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="0" />
+<input v-model.number="filters.minPrice" type="number" min="0" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="0" />
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700">Giá tối đa</label>
@@ -245,7 +337,7 @@
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700">Người dịch</label>
-                <select v-model="filters.idNguoiDich" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+<select v-model="filters.idNguoiDich" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
                   <option :value="null">Tất cả</option>
                   <option v-for="item in nguoiDichList" :key="item.id" :value="item.id">{{ item.tenNguoiDich }}</option>
                 </select>
@@ -266,7 +358,8 @@
               </div>
             </div>
 
-            <div v-if="filteredProducts.length" class="max-h-64 overflow-y-auto">
+            <!-- Bảng hiển thị sản phẩm -->
+            <div v-if="filteredProducts.length && !isShowingBookSets" class="max-h-64 overflow-y-auto">
               <table class="w-full text-sm text-left text-gray-500">
                 <thead class="text-xs text-gray-700 uppercase bg-gray-50">
                 <tr>
@@ -287,7 +380,7 @@
                         <img v-for="(image, imgIndex) in product.anhSanPhams" :key="image.id" :src="image.url" class="w-full h-full object-cover absolute top-0 left-0" :class="{'image-active': imgIndex === currentImageIndex[product.id], 'image-inactive': imgIndex !== currentImageIndex[product.id]}" alt="Sản phẩm" />
                       </div>
                       <span v-else class="text-gray-500">Không có ảnh</span>
-                    </div>
+</div>
                   </td>
                   <td class="px-4 py-3 font-medium">{{ product.tenChiTietSanPham }}</td>
                   <td class="px-4 py-3 text-red-500">{{ formatCurrency(product.gia) }}</td>
@@ -295,14 +388,52 @@
                   <td class="px-4 py-3 text-gray-500">{{ product.idTacGia?.tenTacGia || 'Không có' }}</td>
                   <td class="px-4 py-3 text-gray-500">{{ product.soLuongTon }}</td>
                   <td class="px-4 py-3">
-                    <button @click="selectProduct(product)" type="button" class="text-blue-500">Chọn</button>
+                    <button @click="openConfirmationModal(product, 'product')" type="button" class="text-blue-500">Chọn</button>
                   </td>
                 </tr>
                 </tbody>
               </table>
             </div>
-            <p v-else-if="productSearchQuery || allProducts.length" class="text-gray-500">Không tìm thấy sản phẩm phù hợp.</p>
-            <p v-else class="text-gray-500">Vui lòng tìm kiếm hoặc nhấn "Hiển thị tất cả" để xem danh sách sản phẩm.</p>
+
+            <!-- Bảng hiển thị bộ sách -->
+            <div v-if="filteredBookSets.length && isShowingBookSets" class="max-h-64 overflow-y-auto">
+              <table class="w-full text-sm text-left text-gray-500">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                <tr>
+                  <th class="px-4 py-3">Ảnh</th>
+                  <th class="px-4 py-3">Tên bộ sách</th>
+                  <th class="px-4 py-3">Giá</th>
+                  <th class="px-4 py-3">Mã bộ sách</th>
+                  <th class="px-4 py-3">Số lượng tồn</th>
+                  <th class="px-4 py-3">Chọn</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for="bookSet in filteredBookSets" :key="bookSet.id" class="bg-white border-b hover:bg-gray-50">
+                  <td class="px-4 py-3">
+                    <div class="relative w-12 h-12">
+                      <img v-if="bookSet.url" :src="bookSet.url" class="w-full h-full object-cover rounded" alt="Bộ sách" />
+                      <div v-else class="w-full h-full bg-gray-200 rounded flex items-center justify-center">
+                        <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
+                        </svg>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-4 py-3 font-medium">{{ bookSet.tenBoSach }}</td>
+                  <td class="px-4 py-3 text-red-500">{{ formatCurrency(bookSet.giaTien) }}</td>
+                  <td class="px-4 py-3 text-gray-500">{{ bookSet.maBoSach }}</td>
+                  <td class="px-4 py-3 text-gray-500">{{ bookSet.soLuong }}</td>
+                  <td class="px-4 py-3">
+                    <button @click="openConfirmationModal(bookSet, 'bookset')" type="button" class="text-blue-500">Chọn</button>
+                  </td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+            <p v-else-if="(productSearchQuery || allProducts.length) && !isShowingBookSets" class="text-gray-500">Không tìm thấy sản phẩm phù hợp.</p>
+            <p v-else-if="(productSearchQuery || allBookSets.length) && isShowingBookSets" class="text-gray-500">Không tìm thấy bộ sách phù hợp.</p>
+            <p v-else class="text-gray-500">Vui lòng tìm kiếm hoặc nhấn "Hiển thị sản phẩm"/"Hiển thị bộ sách" để xem danh sách.</p>
 
             <div v-if="selectedProduct" class="mt-4">
               <p class="font-medium">Sản phẩm đã chọn: {{ selectedProduct.tenChiTietSanPham }}</p>
@@ -338,7 +469,7 @@
                 <th class="px-4 py-3">Email</th>
                 <th class="px-4 py-3">Số điện thoại</th>
                 <th class="px-4 py-3">Địa chỉ</th>
-                <th class="px-4 py-3">Chọn</th>
+<th class="px-4 py-3">Chọn</th>
               </tr>
               </thead>
               <tbody>
@@ -393,7 +524,7 @@
             </div>
             <div>
               <label class="block text-sm font-medium mb-1">Trạng thái</label>
-              <select v-model="newCustomer.trangThai" class="w-full border rounded px-3 py-2">
+<select v-model="newCustomer.trangThai" class="w-full border rounded px-3 py-2">
                 <option :value="true">Hoạt động</option>
                 <option :value="false">Không hoạt động</option>
               </select>
@@ -403,6 +534,182 @@
               <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Thêm</button>
             </div>
           </form>
+        </div>
+      </div>
+    </transition>
+
+    <!-- Modal xác nhận chọn sản phẩm/bộ sách -->
+    <transition name="fade">
+      <div v-if="showConfirmationModal" class="fixed inset-0 z-20 flex items-center justify-center bg-gray-600 bg-opacity-50">
+        <div class="bg-white p-6 z-20 rounded-lg shadow-lg w-96">
+          <h3 class="text-lg font-semibold mb-4">Xác nhận thêm vào hóa đơn</h3>
+          <div class="space-y-4">
+            <div class="flex items-center space-x-4">
+              <div class="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
+                <img v-if="confirmationItem && confirmationItem.anhSanPhams && confirmationItem.anhSanPhams.length > 0" 
+                     :src="confirmationItem.anhSanPhams[0].url" 
+                     class="w-full h-full object-cover rounded-lg" 
+                     alt="Sản phẩm">
+                <svg v-else class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
+                </svg>
+              </div>
+              <div class="flex-1">
+                <h4 class="font-medium text-gray-900">{{ confirmationItem?.tenChiTietSanPham || confirmationItem?.tenBoSach }}</h4>
+                <p class="text-sm text-gray-500">{{ confirmationItem?.maChiTietSanPham || confirmationItem?.maBoSach }}</p>
+                <p class="text-lg font-semibold text-red-500">{{ formatCurrency(confirmationItem?.gia || confirmationItem?.giaTien) }}</p>
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Số lượng</label>
+              <input v-model.number="confirmationQuantity" 
+                     type="number" 
+                     min="1" 
+                     :max="confirmationItem?.soLuongTon || confirmationItem?.soLuong" 
+                     class="w-full border rounded px-3 py-2" 
+                     required>
+              <p class="text-xs text-gray-500 mt-1">
+                Tồn kho: {{ confirmationItem?.soLuongTon || confirmationItem?.soLuong }} sản phẩm
+              </p>
+            </div>
+            <div class="flex justify-end gap-2 mt-4">
+              <button @click="closeConfirmationModal" type="button" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+                Hủy
+              </button>
+              <button @click="confirmAddToOrder" type="button" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                Xác nhận
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- Modal chi tiết bộ sách -->
+    <transition name="fade">
+      <div v-if="showBookSetDetailModal" class="fixed inset-0 z-30 flex items-center justify-center bg-gray-600 bg-opacity-50">
+        <div class="bg-white p-6 z-30 rounded-lg shadow-lg w-2/3 max-h-[80vh] overflow-y-auto">
+          <h3 class="text-lg font-semibold mb-4">Chi tiết bộ sách: {{ selectedBookSet?.tenBoSach }}</h3>
+          <div class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Mã bộ sách</label>
+                <p class="text-sm text-gray-900">{{ selectedBookSet?.maBoSach }}</p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Giá bộ sách</label>
+                <p class="text-sm text-gray-900 font-semibold text-red-500">{{ formatCurrency(selectedBookSet?.giaTien) }}</p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Số lượng tồn</label>
+                <p class="text-sm text-gray-900">{{ selectedBookSet?.soLuong }}</p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Mô tả</label>
+                <p class="text-sm text-gray-900">{{ selectedBookSet?.moTa || 'Không có mô tả' }}</p>
+              </div>
+            </div>
+            
+            <div>
+              <h4 class="text-md font-medium mb-2">Danh sách sách trong bộ:</h4>
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-500">
+                  <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                    <tr>
+                      <th class="px-4 py-3">Tên sách</th>
+                      <th class="px-4 py-3">Tác giả</th>
+                      <th class="px-4 py-3">Số lượng trong bộ</th>
+                      <th class="px-4 py-3">Kho</th>
+                      <th class="px-4 py-3">Giá</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="bookDetail in bookSetDetails[selectedBookSet?.id] || []" :key="bookDetail.id?.idBoSach + '-' + bookDetail.id?.idChiTietSanPham" class="bg-white border-b hover:bg-gray-50">
+                      <td class="px-4 py-3 font-medium">{{ bookDetail.idChiTietSanPham?.tenChiTietSanPham || 'Không xác định' }}</td>
+                      <td class="px-4 py-3">{{ bookDetail.idChiTietSanPham?.idTacGia?.tenTacGia || 'Không có tác giả' }}</td>
+                      <td class="px-4 py-3">{{ bookDetail.soLuong || 1 }}</td>
+                      <td class="px-4 py-3">{{ bookDetail.idChiTietSanPham?.soLuongTon || 0 }}</td>
+                      <td class="px-4 py-3 text-red-500">{{ formatCurrency(bookDetail.idChiTietSanPham?.gia || 0) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            <div class="flex justify-end gap-2 mt-4">
+              <button @click="closeBookSetDetailModal" type="button" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- Modal thanh toán -->
+    <transition name="fade">
+      <div v-if="showPaymentModal" class="fixed inset-0 z-10 flex items-center justify-center bg-gray-600 bg-opacity-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+          <div class="p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Xác nhận thanh toán</h3>
+            
+            <!-- Tổng tiền cần thanh toán -->
+            <div class="mb-4">
+              <p class="text-sm text-gray-600 mb-2">Tổng tiền cần thanh toán:</p>
+              <p class="text-xl font-bold text-red-600">{{ formatCurrency(thanhTien) }}</p>
+            </div>
+
+            <!-- Hình thức thanh toán (chỉ hiển thị) -->
+            <div class="mb-4">
+              <p class="text-sm text-gray-600 mb-2">Hình thức thanh toán:</p>
+              <p class="text-sm font-medium text-gray-900">
+                {{ paymentMethod === '4' ? 'Tiền mặt' : 'Chuyển khoản' }}
+              </p>
+            </div>
+
+            <!-- Tiền khách đưa (chỉ hiển thị khi thanh toán tiền mặt) -->
+            <div v-if="paymentMethod === '4'" class="mb-4">
+              <p class="text-sm text-gray-600 mb-2">Tiền khách đưa:</p>
+              <p class="text-sm font-medium text-gray-900">{{ formatCurrency(tienKhachDua) }}</p>
+            </div>
+
+            <!-- Tiền trả lại khách (chỉ hiển thị khi thanh toán tiền mặt) -->
+            <div v-if="paymentMethod === '4'" class="mb-4">
+              <p class="text-sm text-gray-600 mb-2">Tiền trả lại khách:</p>
+              <p class="text-sm font-medium" :class="tienTraKhach >= 0 ? 'text-green-600' : 'text-red-600'">
+                {{ formatCurrency(tienTraKhach) }}
+              </p>
+            </div>
+
+            <!-- Ghi chú (chỉ hiển thị nếu có) -->
+            <div v-if="paymentNote" class="mb-4">
+              <p class="text-sm text-gray-600 mb-2">Ghi chú:</p>
+              <p class="text-sm font-medium text-gray-900">{{ paymentNote }}</p>
+            </div>
+
+            <!-- Thông báo lỗi nếu tiền không đủ -->
+            <div v-if="paymentMethod === '4' && tienTraKhach < 0" class="mb-4 p-3 bg-red-50 border border-red-200 rounded">
+              <p class="text-sm text-red-600">⚠️ Số tiền khách đưa không đủ để thanh toán!</p>
+            </div>
+
+            <div class="flex justify-end gap-2">
+              <button 
+                @click="showPaymentModal = false" 
+                type="button" 
+                class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition"
+              >
+                Hủy
+              </button>
+              <button 
+                @click="submitPayment" 
+                type="button" 
+                class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+                :disabled="paymentMethod === '4' && (tienKhachDua <= 0 || tienTraKhach < 0)"
+              >
+                Xác nhận thanh toán
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </transition>
@@ -422,7 +729,10 @@ import ChiTietSanPhamService from "@/service/ChiTietSanPhamService";
 import AnhSanPhamService from "@/service/AnhSanPhamService";
 import KhachHangService from '@/service/KhachHangService';
 import HoaDonService from '@/service/hoaDonService';
+import DotGiamGiaService from '@/service/DotGiamGiaService';
+import PhieuGiamGiaService from '@/service/phieuGiamGiaService';
 import { reactive } from "vue";
+import { API_URL } from '@/config';
 
 export default {
   name: "BanHangTaiQuay",
@@ -434,13 +744,24 @@ export default {
       showAddProductModal: false,
       showSelectCustomerModal: false,
       showAddCustomerModal: false,
+      showConfirmationModal: false,
+      showBookSetDetailModal: false,
+      showPaymentModal: false,
+      selectedBookSet: null,
+      bookSetDetails: {},
+      expandedBookSets: {},
       productSearchQuery: '',
       customerSearchQuery: '',
       searchResults: [],
       allProducts: [],
+      allBookSets: [],
+      isShowingBookSets: false,
       customers: [],
       selectedProduct: null,
       selectedProductQuantity: 1,
+      confirmationItem: null,
+      confirmationQuantity: 1,
+      confirmationType: 'product', // 'product' or 'bookset'
       newCustomer: {
         hoTen: '',
         email: '',
@@ -450,9 +771,15 @@ export default {
         trangThai: true
       },
       deliveryMethod: 'TaiQuay',
-      paymentMethod: 'tienMat',
+      paymentMethod: '4', // 4: tiền mặt, 1: chuyển khoản
       tienKhachDua: 0,
+      paymentNote: '',
       voucherCode: '',
+      selectedVoucher: null, // Voucher được chọn
+      availableVouchers: [], // Danh sách voucher khả dụng
+      personalVouchers: [], // Danh sách voucher cá nhân của khách hàng
+      productDiscounts: {}, // Lưu thông tin giảm giá cho sản phẩm
+      bookSetDiscounts: {}, // Lưu thông tin giảm giá cho bộ sách
       filters: {
         searchQuery: '',
         minPrice: null,
@@ -481,28 +808,73 @@ export default {
       return this.orders[this.selectedOrderIndex] || {};
     },
     tongTienHang() {
-      return this.paginatedProducts.reduce((total, item) => {
+      const total = this.paginatedProducts.reduce((total, item) => {
         return total + (item.thanhTien || item.soLuong * item.giaSanPham);
       }, 0);
+      
+      console.log('DEBUG: tongTienHang computed - paginatedProducts:', this.paginatedProducts.length);
+      console.log('DEBUG: tongTienHang computed - total:', total);
+      
+      // Load lại voucher khi tổng tiền thay đổi
+      this.$nextTick(() => {
+        this.loadAvailableVouchers();
+        // Chỉ load voucher cá nhân nếu đã có khách hàng
+        if (this.selectedOrder && (this.selectedOrder.idKhachHang || this.selectedOrder.khachHang)) {
+          this.loadPersonalVouchers();
+        }
+      });
+      
+      return total;
     },
     tienGiamGia() {
-      const phanTramGiam = this.selectedOrder.phieuGiamGia?.soPhanTramGiam || 0;
-      return (this.tongTienHang * phanTramGiam) / 100;
+      // Sử dụng voucher được chọn thay vì phieuGiamGia từ selectedOrder
+      if (this.selectedVoucher) {
+        return this.selectedVoucher.giaTriGiam || 0;
+      }
+      return 0;
     },
     thanhTien() {
       const phiShip = this.selectedOrder.phiShip || 0;
       return this.tongTienHang - this.tienGiamGia + phiShip;
     },
     tienTraKhach() {
-      return this.paymentMethod === 'tienMat' && this.deliveryMethod === 'TaiQuay' ? this.tienKhachDua - this.thanhTien : 0;
+      return this.paymentMethod === '4' && this.deliveryMethod === 'TaiQuay' ? this.tienKhachDua - this.thanhTien : 0;
     },
     isConfirmDisabled() {
       if (this.selectedOrder.trangThai !== 'Tạo hóa đơn') return true;
       if (this.paginatedProducts.length === 0) return true;
-      if (this.paymentMethod === 'tienMat' && this.deliveryMethod === 'TaiQuay') {
+      if (this.paymentMethod === '4' && this.deliveryMethod === 'TaiQuay') {
         return this.tienTraKhach < 0 || this.tienKhachDua <= 0;
       }
       return false;
+    },
+    filteredBookSets() {
+      return this.allBookSets.filter(bookSet => {
+        const query = this.productSearchQuery.toLowerCase().trim();
+        const numericQuery = parseFloat(query);
+
+        const matchesSearchQuery = !query || (
+            bookSet.maBoSach.toLowerCase().includes(query) ||
+            bookSet.tenBoSach.toLowerCase().includes(query) ||
+            (isFinite(numericQuery) && (
+                bookSet.soLuong === numericQuery ||
+                bookSet.giaTien === numericQuery
+            ))
+        );
+
+        const matchesPriceRange = (
+            (this.filters.minPrice === null || bookSet.giaTien >= this.filters.minPrice) &&
+            (this.filters.maxPrice === null || bookSet.giaTien <= this.filters.maxPrice)
+        );
+
+        return matchesSearchQuery && matchesPriceRange;
+      });
+    },
+    // Computed properties
+    expandedBookSetDetails() {
+      return this.paginatedProducts.filter(prod => 
+        prod.boSach && this.expandedBookSets[prod.boSach.id]
+      );
     },
     filteredProducts() {
       const products = this.productSearchQuery ? this.searchResults : this.allProducts;
@@ -543,7 +915,7 @@ export default {
             customer.soDienThoai?.toLowerCase().includes(query)
         );
       });
-    }
+}
   },
   watch: {
     selectedOrderIndex() {
@@ -604,8 +976,10 @@ export default {
     },
     async fetchOrders() {
       try {
-        const response = await axios.get('http://localhost:8080/api/hoa-don?trangThai=Tạo hóa đơn');
-        this.orders = response.data.map(order => ({
+        const response = await axios.get(`${API_URL}/hoa-don?trangThai=Tạo hóa đơn`);
+        // Kiểm tra xem response.data có phải là array không
+        const data = Array.isArray(response.data) ? response.data : [];
+        this.orders = data.map(order => ({
           ...order,
           hoaDonChiTiets: Array.isArray(order.hoaDonChiTiets) ? order.hoaDonChiTiets : [],
           phieuGiamGia: order.phieuGiamGia || {},
@@ -619,20 +993,33 @@ export default {
         }
       } catch (error) {
         console.error('Lỗi khi tải danh sách hóa đơn:', error);
+        if (error.code === 'ERR_NAME_NOT_RESOLVED' || error.code === 'ERR_NETWORK') {
+          alert('Không thể kết nối đến server. Vui lòng kiểm tra:\n1. Backend server có đang chạy không?\n2. URL API có đúng không?\n3. Kết nối mạng có ổn định không?');
+        }
       }
     },
     async fetchProductsForOrder() {
       if (!this.selectedOrder || !this.selectedOrder.id) return;
       try {
-        const response = await axios.get(`http://localhost:8080/api/hoa-don/${this.selectedOrder.id}`);
+        const response = await axios.get(`${API_URL}/hoa-don/${this.selectedOrder.id}`);
         this.paginatedProducts = response.data.hoaDonChiTiets || [];
+        
+        // Lưu oldQuantity để tính toán chênh lệch khi thay đổi số lượng
+        this.paginatedProducts.forEach(prod => {
+          if (!prod.oldQuantity) {
+            prod.oldQuantity = prod.soLuong;
+          }
+        });
+        
+        // Tải thông tin giảm giá cho các sản phẩm
+        await this.loadProductDiscounts();
       } catch (error) {
         console.error('Lỗi khi tải sản phẩm của hóa đơn:', error);
       }
     },
-    async createNewInvoice() {
+async createNewInvoice() {
       try {
-        const response = await axios.post('http://localhost:8080/api/hoa-don', {
+        const response = await axios.post(`${API_URL}/hoa-don`, {
           loaiHoaDon: this.mapDeliveryMethod(this.deliveryMethod), // Ánh xạ trước khi gửi
         });
         this.orders.push({
@@ -644,43 +1031,82 @@ export default {
         });
         this.selectedOrderIndex = this.orders.length - 1;
         this.paginatedProducts = [];
-        this.tienKhachDua = 0;
+        this.resetPaymentForm(); // Reset form thanh toán
       } catch (error) {
         console.error('Lỗi khi tạo hóa đơn mới:', error);
         alert('Không thể tạo hóa đơn mới. Vui lòng thử lại!');
       }
     },
-    async xacNhanHoaDon() {
-      if (!confirm("Bạn có chắc chắn muốn xác nhận hóa đơn?")) return;
-      if (this.paginatedProducts.length === 0) {
-        alert('Hóa đơn chưa có sản phẩm. Vui lòng thêm sản phẩm trước khi xác nhận!');
+    openPaymentModal() {
+      // Kiểm tra validation trước khi mở modal
+      if (this.paymentMethod === '4' && (this.tienKhachDua <= 0 || this.tienTraKhach < 0)) {
+        alert("Vui lòng nhập số tiền khách đưa hợp lệ!");
         return;
       }
+      
+      this.showPaymentModal = true;
+    },
+    async submitPayment() {
       try {
-        const orderId = this.selectedOrder.id;
+        const orderId = this.selectedOrder?.id;
+        if (!orderId) {
+          console.error("Thiếu ID hóa đơn để xác nhận thanh toán");
+          alert("Không tìm thấy ID hóa đơn!");
+          return;
+        }
+        if (this.paymentMethod === "4" && this.tienTraKhach < 0) {
+          alert("Số tiền khách đưa không đủ để thanh toán!");
+          return;
+        }
+        if (this.paymentMethod === "4" && this.tienKhachDua <= 0) {
+          alert("Vui lòng nhập số tiền khách đưa hợp lệ!");
+          return;
+        }
         const paymentData = {
-          tienMat: this.paymentMethod === 'tienMat' ? this.thanhTien : 0,
-          chuyenKhoan: this.paymentMethod === 'chuyenKhoan' ? this.thanhTien : 0,
-          phuongThucThanhToanId: this.paymentMethod === 'tienMat' ? 1 : 2,
-          ghiChu: '',
-          loaiHoaDon: this.mapDeliveryMethod(this.deliveryMethod), // Ánh xạ trước khi gửi
-          tienKhachDua: this.paymentMethod === 'tienMat' && this.deliveryMethod === 'TaiQuay' ? this.tienKhachDua : 0
+          phuongThucThanhToanId: parseInt(this.paymentMethod), // 4: tiền mặt, 1: chuyển khoản
+          tienMat: this.paymentMethod === "4" ? this.tongTienHang : 0, // Gửi tongTienHang, backend sẽ tự trừ voucher
+          chuyenKhoan: this.paymentMethod === "1" ? this.tongTienHang : 0, // Gửi tongTienHang, backend sẽ tự trừ voucher
+          tienKhachDua: this.paymentMethod === "4" ? this.tienKhachDua : 0,
+          ghiChu: this.paymentNote,
+          phieuGiamGiaId: this.selectedVoucher?.id || null, // Gửi ID voucher nếu có
         };
-        await HoaDonService.updatePayment(orderId, paymentData);
-        alert('Xác nhận hóa đơn thành công!');
-        await this.fetchOrders();
-        this.paginatedProducts = [];
-        this.tienKhachDua = 0;
+        console.log("DEBUG: tongTienHang:", this.tongTienHang);
+        console.log("DEBUG: thanhTien:", this.thanhTien);
+        console.log("DEBUG: tienGiamGia:", this.tienGiamGia);
+        console.log("DEBUG: selectedVoucher:", this.selectedVoucher);
+        console.log("DEBUG: paymentMethod:", this.paymentMethod);
+        console.log("DEBUG: tienMat sẽ gửi:", this.paymentMethod === "4" ? this.tongTienHang : 0);
+        console.log("DEBUG: chuyenKhoan sẽ gửi:", this.paymentMethod === "1" ? this.tongTienHang : 0);
+        console.log("Gửi dữ liệu thanh toán:", paymentData);
+        const response = await HoaDonService.updatePayment(orderId, paymentData);
+        if (response.status === 200) {
+          console.log("Xác nhận thanh toán thành công:", response.data);
+          await HoaDonService.updateTrangThaiHoaDon(orderId, "Hoàn thành");
+          
+          // Trừ số lượng sản phẩm/bộ sách sau khi thanh toán thành công
+          await this.deductStockAfterPayment();
+          
+          // Trừ số lượng voucher sau khi thanh toán thành công
+          await this.deductVoucherAfterPayment();
+          
+          alert("Xác nhận thanh toán thành công!");
+          this.showPaymentModal = false;
+          // Không reset tienKhachDua và paymentNote vì có thể cần dùng lại
+          await this.fetchOrders(); // Refresh danh sách hóa đơn
+        } else {
+          console.error("Xác nhận thanh toán thất bại:", response.status);
+          alert("Có lỗi xảy ra khi xác nhận thanh toán!");
+        }
       } catch (error) {
-        console.error('Lỗi khi xác nhận hóa đơn:', error);
-        alert(error.response?.data?.message || 'Có lỗi xảy ra khi xác nhận hóa đơn. Vui lòng thử lại!');
+        console.error("Lỗi khi xác nhận thanh toán:", error);
+        alert("Có lỗi xảy ra khi xác nhận thanh toán. Vui lòng thử lại!");
       }
     },
     async openAddProductModal() {
       this.showAddProductModal = true;
       this.productSearchQuery = '';
       this.searchResults = [];
-      this.allProducts = [];
+this.allProducts = [];
       this.selectedProduct = null;
       this.selectedProductQuantity = 1;
       this.filters = {
@@ -772,6 +1198,12 @@ export default {
           ...this.selectedOrder,
           ...customerData
         };
+        
+        // Load voucher cá nhân sau khi chọn khách hàng
+        this.$nextTick(() => {
+          this.loadPersonalVouchers();
+        });
+        
         this.closeSelectCustomerModal();
         alert('Chọn khách hàng thành công!');
       } catch (error) {
@@ -779,7 +1211,7 @@ export default {
         alert('Có lỗi xảy ra khi chọn khách hàng. Vui lòng thử lại!');
       }
     },
-    async saveCustomer() {
+async saveCustomer() {
       try {
         const response = await KhachHangService.create(this.newCustomer);
         const orderId = this.selectedOrder.id;
@@ -843,6 +1275,7 @@ export default {
     },
     async showAllProducts() {
       try {
+        this.isShowingBookSets = false;
         this.allProducts = await ChiTietSanPhamService.getAll();
         for (let product of this.allProducts) {
           if (product.id) {
@@ -852,10 +1285,12 @@ export default {
               const img = new Image();
               img.src = image.url;
             });
-          } else {
+} else {
             product.anhSanPhams = [];
           }
         }
+        this.searchResults = [];
+        this.productSearchQuery = '';
       } catch (error) {
         console.error('Lỗi khi tải toàn bộ sản phẩm:', error);
         alert('Có lỗi xảy ra khi tải danh sách sản phẩm!');
@@ -900,7 +1335,7 @@ export default {
           soLuong: this.selectedProductQuantity,
           giaSanPham: this.selectedProduct.gia,
         };
-        const response = await axios.post(`http://localhost:8080/api/hoa-don/${orderId}/add-product`, productData);
+        const response = await axios.post(`${API_URL}/hoa-don/${orderId}/add-product`, productData);
         if (response.status === 200) {
           alert('Thêm sản phẩm thành công!');
           this.closeAddProductModal();
@@ -913,39 +1348,386 @@ export default {
         alert(error.response?.data || 'Có lỗi xảy ra khi thêm sản phẩm!');
       }
     },
-    async updateProductQuantity(item) {
-      if (this.selectedOrder.trangThai !== 'Tạo hóa đơn') return;
-      if (!/^\d+$/.test(item.soLuong) || Number(item.soLuong) < 1) {
-        item.soLuong = 1;
-      }
-      try {
-        const orderId = this.selectedOrder.id;
-        const updatedData = {
-          soLuong: item.soLuong,
-          thanhTien: item.soLuong * item.giaSanPham,
-        };
-        const response = await axios.put(`http://localhost:8080/api/hoa-don/${orderId}/update-product/${item.id}`, updatedData);
-        if (response.status === 200) {
-          await this.fetchProductsForOrder();
-        } else {
-          alert('Có lỗi xảy ra khi cập nhật số lượng!');
-        }
-      } catch (error) {
-        console.error('Lỗi khi cập nhật số lượng:', error);
-        alert('Có lỗi xảy ra khi cập nhật số lượng. Vui lòng thử lại!');
-      }
-    },
     async removeItem(itemId) {
       if (!confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) return;
       try {
         const orderId = this.selectedOrder.id;
-        await axios.delete(`http://localhost:8080/api/hoa-don/${orderId}/remove-product/${itemId}`);
-        this.paginatedProducts = this.paginatedProducts.filter(item => item.id !== itemId);
+        await axios.delete(`${API_URL}/hoa-don/${orderId}/remove-product/${itemId}`);
         alert('Xóa sản phẩm thành công!');
+        // Refresh danh sách sản phẩm để cập nhật thông tin giảm giá
+        await this.fetchProductsForOrder();
       } catch (error) {
         console.error('Lỗi khi xóa sản phẩm:', error);
         alert('Có lỗi xảy ra khi xóa sản phẩm!');
       }
+    },
+    // Methods cho modal xác nhận
+    openConfirmationModal(item, type) {
+      this.confirmationItem = item;
+      this.confirmationType = type;
+      this.confirmationQuantity = 1;
+      this.showConfirmationModal = true;
+    },
+    closeConfirmationModal() {
+      this.showConfirmationModal = false;
+      this.confirmationItem = null;
+      this.confirmationQuantity = 1;
+      this.confirmationType = 'product';
+    },
+    async confirmAddToOrder() {
+      if (!this.confirmationItem || !this.confirmationQuantity) {
+        alert('Vui lòng nhập số lượng hợp lệ!');
+        return;
+      }
+      
+      if (this.confirmationQuantity <= 0) {
+        alert('Số lượng phải lớn hơn 0!');
+        return;
+      }
+      
+      if (!this.selectedOrder || !this.selectedOrder.id) {
+        alert('Vui lòng chọn hóa đơn trước khi thêm sản phẩm!');
+        return;
+      }
+      
+      const maxQuantity = this.confirmationItem?.soLuongTon || this.confirmationItem?.soLuong;
+      if (this.confirmationQuantity > maxQuantity) {
+        alert(`Số lượng không được vượt quá tồn kho (${maxQuantity})!`);
+        return;
+      }
+      
+      try {
+        const orderId = this.selectedOrder.id;
+        let productData;
+        
+        if (this.confirmationType === 'product') {
+          productData = {
+            chiTietSanPhamId: this.confirmationItem.id,
+            soLuong: this.confirmationQuantity,
+            giaSanPham: this.confirmationItem.gia,
+          };
+          const response = await axios.post(`${API_URL}/hoa-don/${orderId}/add-product`, productData);
+          if (response.status === 200) {
+            alert('Thêm sản phẩm thành công!');
+            this.closeConfirmationModal();
+            await this.fetchProductsForOrder();
+          }
+        } else if (this.confirmationType === 'bookset') {
+          productData = {
+            boSachId: this.confirmationItem.id,
+            soLuong: this.confirmationQuantity,
+            giaSanPham: this.confirmationItem.giaTien,
+          };
+          const response = await axios.post(`${API_URL}/hoa-don/${orderId}/add-bosach`, productData);
+          if (response.status === 200) {
+            alert('Thêm bộ sách thành công!');
+            this.closeConfirmationModal();
+            await this.fetchProductsForOrder();
+          }
+        }
+      } catch (error) {
+        console.error('Lỗi khi thêm vào hóa đơn:', error);
+        alert('Có lỗi xảy ra khi thêm vào hóa đơn!');
+      }
+    },
+    // Method trừ số lượng sau khi thanh toán
+    async deductStockAfterPayment() {
+      // Không cần trừ số lượng nữa vì đã trừ khi thay đổi số lượng trong POS
+      console.log('Số lượng đã được trừ khi thay đổi trong POS, không cần trừ lại khi thanh toán');
+    },
+    // Method hủy hóa đơn và khôi phục số lượng
+    async huyHoaDon() {
+      if (!confirm("Bạn có chắc chắn muốn hủy hóa đơn này? Số lượng sản phẩm sẽ được khôi phục lại.")) return;
+      
+      try {
+        const orderId = this.selectedOrder?.id;
+        if (!orderId) {
+          alert("Không tìm thấy ID hóa đơn!");
+          return;
+        }
+        
+        // Gọi API hủy hóa đơn (backend sẽ tự động khôi phục số lượng)
+        const response = await HoaDonService.updateTrangThaiHoaDon(orderId, "Đã hủy");
+        
+        if (response.status === 200) {
+          alert("Hủy hóa đơn thành công! Số lượng sản phẩm đã được khôi phục.");
+          await this.fetchOrders(); // Refresh danh sách hóa đơn
+        } else {
+          alert("Có lỗi xảy ra khi hủy hóa đơn!");
+        }
+      } catch (error) {
+        console.error("Lỗi khi hủy hóa đơn:", error);
+        alert("Có lỗi xảy ra khi hủy hóa đơn. Vui lòng thử lại!");
+      }
+    },
+    // Methods cho modal chi tiết bộ sách
+    async openBookSetDetailModal(bookSet) {
+      this.selectedBookSet = bookSet;
+      this.showBookSetDetailModal = true;
+      
+      try {
+        // Load chi tiết sách trong bộ sách với thông tin đầy đủ
+        const BoSachChiTietService = (await import('@/service/BoSachChiTietService')).default;
+        const details = await BoSachChiTietService.getDetailedByBoSachId(bookSet.id);
+        this.bookSetDetails[bookSet.id] = details;
+        console.log('DEBUG: Loaded book set details:', details);
+      } catch (error) {
+        console.error('Lỗi khi tải chi tiết bộ sách:', error);
+        this.bookSetDetails[bookSet.id] = [];
+      }
+    },
+    closeBookSetDetailModal() {
+      this.showBookSetDetailModal = false;
+      this.selectedBookSet = null;
+    },
+    // Method cho hiển thị bộ sách
+    async showAllBookSets() {
+      try {
+        this.isShowingBookSets = true;
+        // Import BoSachService dynamically
+        const BoSachService = (await import('@/service/BoSachService')).default;
+        this.allBookSets = await BoSachService.getAll();
+        this.searchResults = [];
+        this.productSearchQuery = '';
+      } catch (error) {
+        console.error('Lỗi khi tải danh sách bộ sách:', error);
+        alert('Có lỗi xảy ra khi tải danh sách bộ sách!');
+      }
+    },
+    // Method reset form thanh toán
+    resetPaymentForm() {
+      this.paymentMethod = '4'; // Mặc định tiền mặt
+      this.tienKhachDua = 0;
+      this.paymentNote = '';
+      this.voucherCode = '';
+      this.selectedVoucher = null;
+    },
+    // Method load danh sách voucher khả dụng
+    async loadAvailableVouchers() {
+      try {
+        const totalAmount = this.tongTienHang;
+        console.log('Loading vouchers with totalAmount:', totalAmount);
+        this.availableVouchers = await DotGiamGiaService.getAvailableVouchersForPos(totalAmount);
+        console.log('Available vouchers:', this.availableVouchers);
+      } catch (error) {
+        console.error('Lỗi khi load voucher:', error);
+        this.availableVouchers = [];
+      }
+    },
+    // Method load voucher cá nhân của khách hàng
+    async loadPersonalVouchers() {
+      console.log('DEBUG: loadPersonalVouchers called');
+      console.log('DEBUG: selectedOrder:', this.selectedOrder);
+      console.log('DEBUG: selectedOrder.idKhachHang:', this.selectedOrder?.idKhachHang);
+      console.log('DEBUG: selectedOrder.khachHang:', this.selectedOrder?.khachHang);
+      console.log('DEBUG: tongTienHang:', this.tongTienHang);
+      
+      // Kiểm tra nhiều cách có thể có khách hàng
+      let customerId = null;
+      if (this.selectedOrder?.idKhachHang?.id) {
+        customerId = this.selectedOrder.idKhachHang.id;
+        console.log('DEBUG: Found customer via idKhachHang.id:', customerId);
+      } else if (this.selectedOrder?.khachHang?.id) {
+        customerId = this.selectedOrder.khachHang.id;
+        console.log('DEBUG: Found customer via khachHang.id:', customerId);
+      } else if (this.selectedOrder?.idKhachHang) {
+        customerId = this.selectedOrder.idKhachHang;
+        console.log('DEBUG: Found customer via idKhachHang (direct):', customerId);
+      }
+      
+      if (customerId) {
+        try {
+          const totalAmount = this.tongTienHang;
+          console.log('DEBUG: Calling getPersonalVouchersForCustomer with customerId:', customerId, 'totalAmount:', totalAmount);
+          this.personalVouchers = await DotGiamGiaService.getPersonalVouchersForCustomer(customerId, totalAmount);
+          console.log('DEBUG: personalVouchers result:', this.personalVouchers);
+        } catch (error) {
+          console.error('Lỗi khi load voucher cá nhân:', error);
+          this.personalVouchers = [];
+        }
+      } else {
+        console.log('DEBUG: No customer selected, clearing personal vouchers');
+        this.personalVouchers = [];
+      }
+    },
+    // Method cập nhật số lượng sản phẩm
+    async updateProductQuantity(prod) {
+      // Validate số lượng
+      if (prod.soLuong < 1) {
+        prod.soLuong = 1;
+      }
+      const maxQuantity = prod.boSach?.soLuong || prod.chiTietSanPham?.soLuongTon || 0;
+      if (prod.soLuong > maxQuantity) {
+        prod.soLuong = maxQuantity;
+        alert(`Số lượng không được vượt quá ${maxQuantity}`);
+      }
+      
+      // Cập nhật thành tiền (sử dụng giá đã giảm nếu có)
+      const giaSanPham = this.hasDiscount(prod) ? this.getDiscountedPrice(prod) : prod.giaSanPham;
+      prod.thanhTien = prod.soLuong * giaSanPham;
+      
+      // Cập nhật vào database
+      try {
+        const orderId = this.selectedOrder?.id;
+        if (orderId && prod.chiTietSanPham) {
+          // Cập nhật số lượng chi tiết sản phẩm trong hóa đơn
+          await axios.put(`${API_URL}/hoa-don/${orderId}/update-product-quantity`, {
+            chiTietSanPhamId: prod.chiTietSanPham.id,
+            soLuong: prod.soLuong
+          });
+          console.log('Đã cập nhật số lượng sản phẩm vào database:', prod.chiTietSanPham.id, prod.soLuong);
+          
+          // Trừ số lượng từ kho ngay lập tức
+          const oldQuantity = prod.oldQuantity || 0;
+          const quantityDiff = prod.soLuong - oldQuantity;
+          if (quantityDiff !== 0) {
+            const newStock = prod.chiTietSanPham.soLuongTon - quantityDiff;
+            await axios.put(`${API_URL}/chi-tiet-san-pham/${prod.chiTietSanPham.id}/update-stock`, {
+              soLuongTon: newStock
+            });
+            prod.chiTietSanPham.soLuongTon = newStock;
+            console.log('Đã trừ số lượng từ kho sản phẩm:', prod.chiTietSanPham.id, 'diff:', quantityDiff, 'new stock:', newStock);
+          }
+        } else if (orderId && prod.boSach) {
+          // Cập nhật số lượng bộ sách trong hóa đơn
+          console.log('DEBUG: Gửi request cập nhật bộ sách:', {
+            orderId: orderId,
+            boSachId: prod.boSach.id,
+            soLuong: prod.soLuong
+          });
+          await axios.put(`${API_URL}/hoa-don/${orderId}/update-bosach-quantity`, {
+            boSachId: prod.boSach.id,
+            soLuong: prod.soLuong
+          });
+          console.log('Đã cập nhật số lượng bộ sách vào database:', prod.boSach.id, prod.soLuong);
+          
+          // Trừ số lượng từ kho ngay lập tức
+          const oldQuantity = prod.oldQuantity || 0;
+          const quantityDiff = prod.soLuong - oldQuantity;
+          if (quantityDiff !== 0) {
+            // Trừ số lượng bộ sách chính
+            const newStock = prod.boSach.soLuong - quantityDiff;
+            await axios.put(`${API_URL}/bo-sach/${prod.boSach.id}/update-stock`, {
+              soLuong: newStock
+            });
+            prod.boSach.soLuong = newStock;
+            console.log('Đã trừ số lượng từ kho bộ sách:', prod.boSach.id, 'diff:', quantityDiff, 'new stock:', newStock);
+            
+            // Trừ số lượng chi tiết sản phẩm trong bộ sách
+            try {
+              const boSachChiTietResponse = await axios.get(`${API_URL}/bo-sach/${prod.boSach.id}/chi-tiet`);
+              const boSachChiTiets = boSachChiTietResponse.data;
+              
+              for (const chiTiet of boSachChiTiets) {
+                if (chiTiet.idChiTietSanPham) {
+                  const newChiTietStock = chiTiet.idChiTietSanPham.soLuongTon - (chiTiet.soLuong * quantityDiff);
+                  await axios.put(`${API_URL}/chi-tiet-san-pham/${chiTiet.idChiTietSanPham.id}/update-stock`, {
+                    soLuongTon: newChiTietStock
+                  });
+                  console.log('Đã trừ số lượng chi tiết sản phẩm:', chiTiet.idChiTietSanPham.id, 'diff:', chiTiet.soLuong * quantityDiff, 'new stock:', newChiTietStock);
+                }
+              }
+            } catch (error) {
+              console.error('Lỗi khi trừ số lượng chi tiết sản phẩm:', error);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Lỗi khi cập nhật số lượng vào database:', error);
+        if (error.response && error.response.data && error.response.data.message) {
+          alert('Lỗi: ' + error.response.data.message);
+        } else if (error.response && error.response.status === 400) {
+          alert('Không thể chỉnh sửa hóa đơn đã hủy hoặc đã hoàn thành!');
+        } else {
+          alert('Có lỗi xảy ra khi cập nhật số lượng. Vui lòng thử lại!');
+        }
+      }
+      
+      // Cập nhật oldQuantity cho lần thay đổi tiếp theo
+      prod.oldQuantity = prod.soLuong;
+      
+      // Cập nhật lại paginatedProducts để trigger computed property
+      this.paginatedProducts = [...this.paginatedProducts];
+      
+      // Reload vouchers khi tổng tiền thay đổi
+      this.$nextTick(() => {
+        this.loadAvailableVouchers();
+        this.loadPersonalVouchers();
+      });
+    },
+    // Method xử lý khi chọn voucher
+    onVoucherChange() {
+      if (this.selectedVoucher) {
+        this.voucherCode = this.selectedVoucher.maPhieuGiamGia;
+      } else {
+        this.voucherCode = '';
+      }
+    },
+    // Method trừ số lượng voucher sau thanh toán
+    async deductVoucherAfterPayment() {
+      if (this.selectedVoucher) {
+        try {
+          // Gọi API để trừ số lượng voucher
+          await PhieuGiamGiaService.deductVoucherQuantity(this.selectedVoucher.id);
+          console.log('Đã trừ số lượng voucher:', this.selectedVoucher.tenPhieuGiamGia);
+        } catch (error) {
+          console.error('Lỗi khi trừ số lượng voucher:', error);
+          // Không throw error để không ảnh hưởng đến thanh toán
+        }
+      }
+    },
+    // Method lấy thông tin giảm giá cho sản phẩm
+    async loadProductDiscounts() {
+      try {
+        for (const product of this.paginatedProducts) {
+          if (product.chiTietSanPham) {
+            // Lấy thông tin giảm giá cho sản phẩm lẻ
+            const discountInfo = await DotGiamGiaService.getActiveDetail(product.chiTietSanPham.id);
+            if (discountInfo && discountInfo.giaBanDau) {
+              this.productDiscounts[product.chiTietSanPham.id] = discountInfo;
+            }
+          } else if (product.boSach) {
+            // Lấy thông tin giảm giá cho bộ sách
+            const discountInfo = await DotGiamGiaService.getActiveBoSachDetail(product.boSach.id);
+            if (discountInfo && discountInfo.giaBanDau) {
+              this.bookSetDiscounts[product.boSach.id] = discountInfo;
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Lỗi khi tải thông tin giảm giá:', error);
+      }
+    },
+    // Method lấy giá gốc của sản phẩm
+    getOriginalPrice(product) {
+      if (product.chiTietSanPham) {
+        const discountInfo = this.productDiscounts[product.chiTietSanPham.id];
+        return discountInfo ? discountInfo.giaBanDau : product.giaSanPham;
+      } else if (product.boSach) {
+        const discountInfo = this.bookSetDiscounts[product.boSach.id];
+        return discountInfo ? discountInfo.giaBanDau : product.giaSanPham;
+      }
+      return product.giaSanPham;
+    },
+    // Method lấy giá đã giảm của sản phẩm
+    getDiscountedPrice(product) {
+      if (product.chiTietSanPham) {
+        const discountInfo = this.productDiscounts[product.chiTietSanPham.id];
+        return discountInfo ? discountInfo.giaSauGiam : product.giaSanPham;
+      } else if (product.boSach) {
+        const discountInfo = this.bookSetDiscounts[product.boSach.id];
+        return discountInfo ? discountInfo.giaSauGiam : product.giaSanPham;
+      }
+      return product.giaSanPham;
+    },
+    // Method kiểm tra sản phẩm có giảm giá không
+    hasDiscount(product) {
+      if (product.chiTietSanPham) {
+        return this.productDiscounts[product.chiTietSanPham.id] != null;
+      } else if (product.boSach) {
+        return this.bookSetDiscounts[product.boSach.id] != null;
+      }
+      return false;
     },
   },
 };
@@ -983,5 +1765,8 @@ export default {
   opacity: 0;
   transition: opacity 0.5s ease-in-out;
   z-index: 0;
+}
+.line-through {
+  text-decoration: line-through;
 }
 </style>

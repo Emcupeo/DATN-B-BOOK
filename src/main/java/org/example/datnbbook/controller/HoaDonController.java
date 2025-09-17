@@ -333,4 +333,76 @@ public class HoaDonController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @PutMapping("/hoa-don/{id}/update-product-quantity")
+    public ResponseEntity<HoaDon> updateProductQuantity(@PathVariable int id, @RequestBody Map<String, Object> request) {
+        try {
+            // Xử lý chiTietSanPhamId có thể là String hoặc Integer
+            Object chiTietSanPhamIdObj = request.get("chiTietSanPhamId");
+            Integer chiTietSanPhamId;
+            if (chiTietSanPhamIdObj instanceof String) {
+                chiTietSanPhamId = Integer.parseInt((String) chiTietSanPhamIdObj);
+            } else if (chiTietSanPhamIdObj instanceof Integer) {
+                chiTietSanPhamId = (Integer) chiTietSanPhamIdObj;
+            } else {
+                throw new IllegalArgumentException("chiTietSanPhamId must be String or Integer");
+            }
+            
+            // Xử lý soLuong có thể là String hoặc Integer
+            Object soLuongObj = request.get("soLuong");
+            Integer soLuong;
+            if (soLuongObj instanceof String) {
+                soLuong = Integer.parseInt((String) soLuongObj);
+            } else if (soLuongObj instanceof Integer) {
+                soLuong = (Integer) soLuongObj;
+            } else {
+                throw new IllegalArgumentException("soLuong must be String or Integer");
+            }
+            
+            System.out.println("DEBUG: updateProductQuantity called for order ID: " + id + ", chiTietSanPhamId: " + chiTietSanPhamId + ", soLuong: " + soLuong);
+            
+            HoaDon updatedHoaDon = hoaDonService.updateProductQuantity(id, chiTietSanPhamId, soLuong);
+            return ResponseEntity.ok(updatedHoaDon);
+        } catch (Exception e) {
+            System.out.println("DEBUG: updateProductQuantity error: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PutMapping("/hoa-don/{id}/update-bosach-quantity")
+    public ResponseEntity<HoaDon> updateBoSachQuantity(@PathVariable int id, @RequestBody Map<String, Object> request) {
+        try {
+            // Xử lý boSachId có thể là String hoặc Integer
+            Object boSachIdObj = request.get("boSachId");
+            Integer boSachId;
+            if (boSachIdObj instanceof String) {
+                boSachId = Integer.parseInt((String) boSachIdObj);
+            } else if (boSachIdObj instanceof Integer) {
+                boSachId = (Integer) boSachIdObj;
+            } else {
+                throw new IllegalArgumentException("boSachId must be String or Integer");
+            }
+            
+            // Xử lý soLuong có thể là String hoặc Integer
+            Object soLuongObj = request.get("soLuong");
+            Integer soLuong;
+            if (soLuongObj instanceof String) {
+                soLuong = Integer.parseInt((String) soLuongObj);
+            } else if (soLuongObj instanceof Integer) {
+                soLuong = (Integer) soLuongObj;
+            } else {
+                throw new IllegalArgumentException("soLuong must be String or Integer");
+            }
+            
+            System.out.println("DEBUG: updateBoSachQuantity called for order ID: " + id + ", boSachId: " + boSachId + ", soLuong: " + soLuong);
+            
+            HoaDon updatedHoaDon = hoaDonService.updateBoSachQuantity(id, boSachId, soLuong);
+            return ResponseEntity.ok(updatedHoaDon);
+        } catch (Exception e) {
+            System.out.println("DEBUG: updateBoSachQuantity error: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().build();
+        }
+    }
 }

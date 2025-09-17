@@ -311,12 +311,10 @@
                     v-model="sortBy"
                     class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                   >
-                    <option value="relevance">Liên quan nhất</option>
+                    <option value="bestselling">Bán chạy nhất</option>
                     <option value="price-low">Giá tăng dần</option>
                     <option value="price-high">Giá giảm dần</option>
-                    <option value="rating">Đánh giá cao nhất</option>
                     <option value="newest">Mới nhất</option>
-                    <option value="popular">Phổ biến nhất</option>
                   </select>
                 </div>
 
@@ -461,7 +459,7 @@ export default {
     
     // Reactive data
     const viewMode = ref('grid')
-    const sortBy = ref('relevance')
+    const sortBy = ref('bestselling')
     const currentPage = ref(1)
     const itemsPerPage = 12
     const showMobileFilters = ref(false)
@@ -623,16 +621,14 @@ export default {
       const books = [...filteredBooks.value]
       
       switch (sortBy.value) {
+        case 'bestselling':
+          return books.sort((a, b) => (b.sales || 0) - (a.sales || 0))
         case 'price-low':
           return books.sort((a, b) => a.price - b.price)
         case 'price-high':
           return books.sort((a, b) => b.price - a.price)
-        case 'rating':
-          return books.sort((a, b) => b.rating - a.rating)
         case 'newest':
           return books.sort((a, b) => new Date(b.publishedDate || Date.now()) - new Date(a.publishedDate || Date.now()))
-        case 'popular':
-          return books.sort((a, b) => (b.sales || 0) - (a.sales || 0))
         default:
           return books
       }
@@ -867,12 +863,35 @@ export default {
     // Load saved filters and apply category from query when component mounts
     loadSavedFilters()
 
-    // Apply category from query string if provided (e.g., /products?category=Văn học)
+    // Apply filters from query string if provided (e.g., /products?category=Văn học&type=bookset&sort=newest)
     try {
       const params = new URLSearchParams(window.location.search)
+      
+      // Apply category filter
       const categoryFromQuery = params.get('category')
       if (categoryFromQuery) {
         filters.categories = [categoryFromQuery]
+      }
+      
+      // Apply type filter (bookset for book sets)
+      const typeFromQuery = params.get('type')
+      if (typeFromQuery === 'bookset') {
+        filters.categories = ['Bộ sách']
+        filters.productTypes = ['Bộ sách']
+      }
+      
+      // Apply sort filter
+      const sortFromQuery = params.get('sort')
+      if (sortFromQuery) {
+        if (sortFromQuery === 'newest') {
+          sortBy.value = 'newest'
+        } else if (sortFromQuery === 'bestselling') {
+          sortBy.value = 'bestselling'
+        } else if (sortFromQuery === 'price-low') {
+          sortBy.value = 'price-low'
+        } else if (sortFromQuery === 'price-high') {
+          sortBy.value = 'price-high'
+        }
       }
     } catch (e) {
       // Fallback: ignore invalid query strings

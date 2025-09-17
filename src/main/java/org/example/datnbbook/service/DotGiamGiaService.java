@@ -4,9 +4,11 @@ import org.example.datnbbook.dto.ActiveDiscountDetailDTO;
 import org.example.datnbbook.model.BoSach;
 import org.example.datnbbook.model.ChiTietSanPham;
 import org.example.datnbbook.model.DotGiamGia;
+import org.example.datnbbook.model.DotGiamGiaBoSachChiTiet;
 import org.example.datnbbook.model.DotGiamGiaChiTiet;
 import org.example.datnbbook.repository.BoSachRepository;
 import org.example.datnbbook.repository.ChiTietSanPhamRepository;
+import org.example.datnbbook.repository.DotGiamGiaBoSachChiTietRepository;
 import org.example.datnbbook.repository.DotGiamGiaChiTietRepository;
 import org.example.datnbbook.repository.DotGiamGiaRepository;
 import org.slf4j.Logger;
@@ -29,6 +31,9 @@ public class DotGiamGiaService {
     private DotGiamGiaChiTietRepository dotGiamGiaChiTietRepository;
 
     @Autowired
+    private DotGiamGiaBoSachChiTietRepository dotGiamGiaBoSachChiTietRepository;
+
+    @Autowired
     private ChiTietSanPhamRepository chiTietSanPhamRepository;
 
     @Autowired
@@ -41,7 +46,39 @@ public class DotGiamGiaService {
     private DotGiamGiaBoSachChiTietService dotGiamGiaBoSachChiTietService;
 
     public List<DotGiamGia> getAll() {
-        return repository.findAllActive();
+        List<DotGiamGia> allDiscounts = repository.findAllActive();
+        // Temporarily simplified to avoid circular reference issues
+        // TODO: Re-enable relationship loading after fixing serialization
+        return allDiscounts;
+    }
+
+    public java.util.Optional<DotGiamGia> getById(Integer id) {
+        return repository.findById(id);
+    }
+
+    public List<DotGiamGiaChiTiet> getDiscountProducts(Integer id) {
+        List<DotGiamGiaChiTiet> products = dotGiamGiaChiTietRepository.findByDotGiamGiaId(id);
+        // Force load relationships for products
+        for (DotGiamGiaChiTiet chiTiet : products) {
+            if (chiTiet.getIdChiTietSanPham() != null) {
+                chiTiet.getIdChiTietSanPham().getTenChiTietSanPham();
+                chiTiet.getIdChiTietSanPham().getMaChiTietSanPham();
+            }
+        }
+        return products;
+    }
+
+    public List<DotGiamGiaBoSachChiTiet> getDiscountBookSets(Integer id) {
+        // Use repository directly to get entities instead of DTOs
+        List<DotGiamGiaBoSachChiTiet> bookSets = dotGiamGiaBoSachChiTietRepository.findByIdDotGiamGia(id);
+        // Force load relationships for book sets
+        for (DotGiamGiaBoSachChiTiet boSachChiTiet : bookSets) {
+            if (boSachChiTiet.getIdBoSach() != null) {
+                boSachChiTiet.getIdBoSach().getTenBoSach();
+                boSachChiTiet.getIdBoSach().getMaBoSach();
+            }
+        }
+        return bookSets;
     }
 
     public org.example.datnbbook.dto.ActiveDiscountDetailDTO getActiveDetail(Integer ctspId) {
@@ -325,5 +362,69 @@ public class DotGiamGiaService {
     // Get active discount detail for BoSach
     public ActiveDiscountDetailDTO getActiveBoSachDetail(Integer boSachId) {
         return dotGiamGiaBoSachChiTietService.getActiveDiscountByBoSachId(boSachId);
+    }
+
+    // Lấy danh sách voucher khả dụng cho POS
+    public List<DotGiamGia> getAvailableVouchersForPos(Double totalAmount) {
+        List<DotGiamGia> allVouchers = repository.findAllActive();
+        
+        return allVouchers.stream()
+                .filter(voucher -> {
+                    // Kiểm tra voucher có đang hoạt động không
+                    if (!voucher.getTrangThai()) {
+                        return false;
+                    }
+                    
+                    // Kiểm tra thời gian
+                    java.time.Instant now = java.time.Instant.now();
+                    if (voucher.getNgayBatDau().isAfter(now) || voucher.getNgayKetThuc().isBefore(now)) {
+                        return false;
+                    }
+                    
+                    // Kiểm tra giá trị đơn hàng tối thiểu (tạm thời bỏ qua vì chưa có trường này)
+                    // if (totalAmount != null && voucher.getGiaTriDonHangToiThieu() != null) {
+                    //     if (totalAmount < voucher.getGiaTriDonHangToiThieu().doubleValue()) {
+                    //         return false;
+                    //     }
+                    // }
+                    
+                    // Kiểm tra số lượng còn lại (tạm thời bỏ qua vì chưa có trường này)
+                    // if (voucher.getSoLuong() != null && voucher.getSoLuong() <= 0) {
+                    //     return false;
+                    // }
+                    
+                    return true;
+                })
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    // Lấy voucher cá nhân của khách hàng
+    public List<DotGiamGia> getPersonalVouchersForCustomer(Long customerId, Double totalAmount) {
+        // Tạm thời trả về danh sách rỗng vì DotGiamGia không có mối quan hệ với voucher cá nhân
+        // Voucher cá nhân sẽ được xử lý trong PhieuGiamGiaService
+        return new java.util.ArrayList<>();
+        
+        // Code cũ đã bị comment:
+        // List<DotGiamGia> personalVouchers = repository.findPersonalVouchersByCustomerId(customerId);
+        // return personalVouchers.stream()...
+    }
+
+    // Trừ số lượng voucher sau thanh toán
+    @Transactional
+    public DotGiamGia deductVoucherQuantity(Integer voucherId) {
+        DotGiamGia voucher = repository.findById(voucherId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy voucher với ID: " + voucherId));
+        
+        // Tạm thời bỏ qua logic trừ số lượng vì chưa có trường soLuong
+        // if (voucher.getSoLuong() != null && voucher.getSoLuong() > 0) {
+        //     voucher.setSoLuong(voucher.getSoLuong() - 1);
+        //     voucher.setUpdatedAt(java.time.Instant.now());
+        //     return repository.save(voucher);
+        // } else {
+        //     throw new RuntimeException("Voucher đã hết số lượng hoặc không có số lượng");
+        // }
+        
+        // Tạm thời chỉ trả về voucher mà không thay đổi gì
+        return voucher;
     }
 }

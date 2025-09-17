@@ -1,6 +1,7 @@
 package org.example.datnbbook.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -22,6 +23,7 @@ import java.util.Set;
 @Setter
 @Entity
 @Table(name = "dot_giam_gia")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class DotGiamGia {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -64,8 +66,12 @@ public class DotGiamGia {
     private Boolean deleted;
 
     @OneToMany(mappedBy = "idDotGiamGia")
-    @JsonIgnore // Ngăn serialize quan hệ này
+    @JsonIgnore // Temporarily ignore to avoid circular reference
     private Set<DotGiamGiaChiTiet> dotGiamGiaChiTiets = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "idDotGiamGia")
+    @JsonIgnore // Temporarily ignore to avoid circular reference
+    private Set<DotGiamGiaBoSachChiTiet> dotGiamGiaBoSachChiTiets = new LinkedHashSet<>();
 
     @Override
     public String toString() {

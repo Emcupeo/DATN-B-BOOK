@@ -33,9 +33,108 @@ export default {
   async getListDiscounts() {
     try {
       const response = await axiosInstance.get('');
-      return response.data;
+      console.log('DEBUG: Full axios response:', response);
+      console.log('DEBUG: Response data:', response.data);
+      console.log('DEBUG: Response data type:', typeof response.data);
+      console.log('DEBUG: Response data is array:', Array.isArray(response.data));
+      
+      // Fix: Parse JSON string if needed
+      let data = response.data;
+      if (typeof data === 'string') {
+        console.log('DEBUG: Parsing JSON string...');
+        console.log('DEBUG: String length:', data.length);
+        console.log('DEBUG: First 500 chars:', data.substring(0, 500));
+        console.log('DEBUG: Last 500 chars:', data.substring(data.length - 500));
+        
+        try {
+          data = JSON.parse(data);
+          console.log('DEBUG: Parsed data:', data);
+          console.log('DEBUG: Parsed data type:', typeof data);
+          console.log('DEBUG: Parsed data is array:', Array.isArray(data));
+        } catch (parseError) {
+          console.error('DEBUG: JSON parse error:', parseError);
+          console.error('DEBUG: Problematic JSON string:', data);
+          console.error('DEBUG: String length:', data.length);
+          
+          // Try to find where the JSON breaks
+          const errorIndex = parseError.message.match(/position (\d+)/);
+          if (errorIndex) {
+            const pos = parseInt(errorIndex[1]);
+            console.error('DEBUG: Error at position:', pos);
+            console.error('DEBUG: Context around error:', data.substring(Math.max(0, pos - 100), pos + 100));
+          }
+          
+          throw new Error('Không thể parse dữ liệu từ server! JSON không hợp lệ.');
+        }
+      }
+      
+      return data;
     } catch (error) {
+      console.error('DEBUG: Error in getListDiscounts:', error);
       throw new Error(error.response?.data?.message || 'Không thể lấy danh sách đợt giảm giá!');
+    }
+  },
+
+  async getDiscountById(id) {
+    try {
+      const response = await axiosInstance.get(`/${id}`);
+      
+      // Fix: Parse JSON string if needed
+      let data = response.data;
+      if (typeof data === 'string') {
+        try {
+          data = JSON.parse(data);
+        } catch (parseError) {
+          console.error('DEBUG: JSON parse error in getDiscountById:', parseError);
+          throw new Error('Không thể parse dữ liệu từ server!');
+        }
+      }
+      
+      return data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Không thể lấy chi tiết đợt giảm giá!');
+    }
+  },
+
+  async getDiscountProducts(id) {
+    try {
+      const response = await axiosInstance.get(`/${id}/products`);
+      
+      // Fix: Parse JSON string if needed
+      let data = response.data;
+      if (typeof data === 'string') {
+        try {
+          data = JSON.parse(data);
+        } catch (parseError) {
+          console.error('DEBUG: JSON parse error in getDiscountProducts:', parseError);
+          throw new Error('Không thể parse dữ liệu từ server!');
+        }
+      }
+      
+      return data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Không thể lấy danh sách sản phẩm của đợt giảm giá!');
+    }
+  },
+
+  async getDiscountBookSets(id) {
+    try {
+      const response = await axiosInstance.get(`/${id}/book-sets`);
+      
+      // Fix: Parse JSON string if needed
+      let data = response.data;
+      if (typeof data === 'string') {
+        try {
+          data = JSON.parse(data);
+        } catch (parseError) {
+          console.error('DEBUG: JSON parse error in getDiscountBookSets:', parseError);
+          throw new Error('Không thể parse dữ liệu từ server!');
+        }
+      }
+      
+      return data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Không thể lấy danh sách bộ sách của đợt giảm giá!');
     }
   },
 
@@ -125,6 +224,125 @@ export default {
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Không thể lấy danh sách bộ sách!');
+    }
+  },
+
+  // Lấy danh sách voucher khả dụng cho POS
+  async getAvailableVouchersForPos(totalAmount = null) {
+    try {
+      // Sử dụng API phieu-giam-gia thay vì discounts
+      const response = await axios.get('http://localhost:8080/api/admin/phieu-giam-gia', {
+        params: {
+          loaiApDung: 'PUBLIC', // Chỉ lấy voucher công khai
+          trangThai: 'true',
+          page: 0,
+          size: 100
+        }
+      });
+      
+      // Lọc theo điều kiện
+      let vouchers = response.data.content || [];
+      const now = new Date();
+      
+      vouchers = vouchers.filter(voucher => {
+        // Kiểm tra loại áp dụng
+        if (voucher.loaiApDung !== 'PUBLIC') {
+          return false;
+        }
+        
+        // Kiểm tra thời gian hoạt động
+        const startDate = new Date(voucher.ngayBatDau);
+        const endDate = new Date(voucher.ngayKetThuc);
+        if (now < startDate || now > endDate) {
+          return false;
+        }
+        
+        // Kiểm tra số lượng còn lại
+        if (!voucher.soLuong || voucher.soLuong <= 0) {
+          return false;
+        }
+        
+        // Kiểm tra giá trị đơn hàng tối thiểu
+        if (totalAmount && voucher.giaTriDonHangToiThieu && totalAmount < voucher.giaTriDonHangToiThieu) {
+          return false;
+        }
+        
+        return true;
+      });
+      
+      return vouchers;
+    } catch (error) {
+      console.error('Lỗi khi lấy danh sách voucher:', error);
+      throw new Error(error.response?.data?.message || 'Không thể lấy danh sách voucher!');
+    }
+  },
+
+  // Lấy voucher cá nhân của khách hàng
+  async getPersonalVouchersForCustomer(customerId, totalAmount = null) {
+    try {
+      // Sử dụng API phieu-giam-gia với filter theo khách hàng
+      const response = await axios.get('http://localhost:8080/api/admin/phieu-giam-gia', {
+        params: {
+          loaiApDung: 'CUSTOMER', // Voucher cá nhân
+          trangThai: 'true',
+          page: 0,
+          size: 100
+        }
+      });
+      
+      // Lọc theo điều kiện
+      let vouchers = response.data.content || [];
+      const now = new Date();
+      
+      vouchers = vouchers.filter(voucher => {
+        // Kiểm tra loại áp dụng
+        if (voucher.loaiApDung !== 'CUSTOMER') {
+          return false;
+        }
+        
+        // Kiểm tra khách hàng
+        if (voucher.khachHangId !== customerId) {
+          return false;
+        }
+        
+        // Kiểm tra thời gian hoạt động
+        const startDate = new Date(voucher.ngayBatDau);
+        const endDate = new Date(voucher.ngayKetThuc);
+        if (now < startDate || now > endDate) {
+          return false;
+        }
+        
+        // Kiểm tra số lượng còn lại
+        if (!voucher.soLuong || voucher.soLuong <= 0) {
+          return false;
+        }
+        
+        // Kiểm tra giá trị đơn hàng tối thiểu
+        if (totalAmount && voucher.giaTriDonHangToiThieu && totalAmount < voucher.giaTriDonHangToiThieu) {
+          return false;
+        }
+        
+        return true;
+      });
+      
+      return vouchers;
+    } catch (error) {
+      console.error('Lỗi khi lấy voucher cá nhân:', error);
+      throw new Error(error.response?.data?.message || 'Không thể lấy voucher cá nhân!');
+    }
+  },
+
+  // Trừ số lượng voucher sau thanh toán
+  async deductVoucherQuantity(voucherId) {
+    try {
+      // Sử dụng API phieu-giam-gia để cập nhật số lượng
+      const response = await axios.put(`http://localhost:8080/api/admin/phieu-giam-gia/${voucherId}`, {
+        soLuong: -1 // Giảm 1
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Lỗi khi trừ số lượng voucher:', error);
+      throw new Error(error.response?.data?.message || 'Không thể trừ số lượng voucher!');
     }
   },
 };

@@ -282,9 +282,27 @@
               <p class="text-red-500 font-semibold text-center">
                 {{ formatCurrency(item.thanhTien || (item.soLuong * item.giaSanPham)) }}
               </p>
-              <div class="flex justify-center">
-                <button v-if="order.trangThai === 'Chờ giao hàng'" @click="removeItem(item.id)" class="text-gray-500 hover:text-red-500">
-                  <i class="fas fa-trash text-xl"></i>
+              <div class="flex justify-center space-x-2">
+                <!-- Nút Chi tiết cho bộ sách -->
+                <button 
+                  v-if="item.boSach" 
+                  @click="openBookSetDetailModal(item.boSach)" 
+                  class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors duration-200"
+                  title="Xem chi tiết bộ sách"
+                >
+                  <i class="fas fa-info-circle mr-1"></i>
+                  Chi tiết
+                </button>
+                
+                <!-- Nút Xóa sản phẩm -->
+                <button 
+                  v-if="order.trangThai === 'Chờ giao hàng'" 
+                  @click="removeItem(item.id)" 
+                  class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors duration-200"
+                  title="Xóa sản phẩm khỏi hóa đơn"
+                >
+                  <i class="fas fa-trash-alt mr-1"></i>
+                  Xóa
                 </button>
               </div>
             </div>
@@ -492,6 +510,67 @@
           </div>
         </div>
       </transition>
+
+      <!-- Modal chi tiết bộ sách -->
+      <transition name="fade">
+        <div v-if="showBookSetDetailModal" class="fixed inset-0 z-30 flex items-center justify-center bg-gray-600 bg-opacity-50">
+          <div class="bg-white p-6 z-30 rounded-lg shadow-lg w-2/3 max-h-[80vh] overflow-y-auto">
+            <h3 class="text-lg font-semibold mb-4">Chi tiết bộ sách: {{ selectedBookSet?.tenBoSach }}</h3>
+            <div class="space-y-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Mã bộ sách</label>
+                  <p class="text-sm text-gray-900">{{ selectedBookSet?.maBoSach }}</p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Giá bộ sách</label>
+                  <p class="text-sm text-gray-900 font-semibold text-red-500">{{ formatCurrency(selectedBookSet?.giaTien) }}</p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Số lượng tồn</label>
+                  <p class="text-sm text-gray-900">{{ selectedBookSet?.soLuong }}</p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Mô tả</label>
+                  <p class="text-sm text-gray-900">{{ selectedBookSet?.moTa || 'Không có mô tả' }}</p>
+                </div>
+              </div>
+              
+              <div>
+                <h4 class="text-md font-medium mb-2">Danh sách sách trong bộ:</h4>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                      <tr>
+                        <th class="px-4 py-3">Tên sách</th>
+                        <th class="px-4 py-3">Tác giả</th>
+                        <th class="px-4 py-3">Số lượng trong bộ</th>
+                        <th class="px-4 py-3">Kho</th>
+                        <th class="px-4 py-3">Giá</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="bookDetail in bookSetDetails[selectedBookSet?.id] || []" :key="bookDetail.id?.idBoSach + '-' + bookDetail.id?.idChiTietSanPham" class="bg-white border-b hover:bg-gray-50">
+                        <td class="px-4 py-3 font-medium">{{ bookDetail.idChiTietSanPham?.tenChiTietSanPham || 'Không xác định' }}</td>
+                        <td class="px-4 py-3">{{ bookDetail.idChiTietSanPham?.idTacGia?.tenTacGia || 'Không có tác giả' }}</td>
+                        <td class="px-4 py-3">{{ bookDetail.soLuong || 1 }}</td>
+                        <td class="px-4 py-3">{{ bookDetail.idChiTietSanPham?.soLuongTon || 0 }}</td>
+                        <td class="px-4 py-3 text-red-500">{{ formatCurrency(bookDetail.idChiTietSanPham?.gia || 0) }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              
+              <div class="flex justify-end gap-2 mt-4">
+                <button @click="closeBookSetDetailModal" type="button" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+                  Đóng
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </transition>
     </div>
   </div>
 </template>
@@ -577,6 +656,9 @@ export default {
       showCustomerForm: false,
       showAddProductModal: false,
       showPaymentModal: false,
+      showBookSetDetailModal: false,
+      selectedBookSet: null,
+      bookSetDetails: {},
       customerFormData: {
         tenNguoiNhan: '',
         soDienThoaiNguoiNhan: '',
@@ -1351,6 +1433,26 @@ export default {
         this.selectedAddressWard = this.wards.find(w => w.name === this.order.diaChi.xaPhuong) || null;
       }
     },
+    // Methods cho modal chi tiết bộ sách
+    async openBookSetDetailModal(bookSet) {
+      this.selectedBookSet = bookSet;
+      this.showBookSetDetailModal = true;
+      
+      try {
+        // Load chi tiết sách trong bộ sách với thông tin đầy đủ
+        const BoSachChiTietService = (await import('@/service/BoSachChiTietService')).default;
+        const details = await BoSachChiTietService.getDetailedByBoSachId(bookSet.id);
+        this.bookSetDetails[bookSet.id] = details;
+        console.log('DEBUG: Loaded book set details in QuanLyHoaDon:', details);
+      } catch (error) {
+        console.error('Lỗi khi tải chi tiết bộ sách:', error);
+        this.bookSetDetails[bookSet.id] = [];
+      }
+    },
+    closeBookSetDetailModal() {
+      this.showBookSetDetailModal = false;
+      this.selectedBookSet = null;
+    }
   },
   async mounted() {
     await this.fetchOrder();
