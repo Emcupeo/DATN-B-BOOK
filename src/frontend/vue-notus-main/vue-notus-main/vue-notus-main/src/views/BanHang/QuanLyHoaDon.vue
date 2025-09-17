@@ -28,7 +28,7 @@
 
         <!-- Nút quay về trạng thái trước -->
         <div class="mt-4 flex justify-end">
-          <button v-if="order.trangThai !== 'Tạo hóa đơn' && order.trangThai !== 'Chờ xác nhận'"
+          <button v-if="order.trangThai !== 'Tạo hóa đơn' && order.trangThai !== 'Chờ xác nhận' && order.trangThai !== 'Hoàn thành'"
                   @click="quayVeTrangThai"
                   class="bg-orange-500 text-white px-4 py-2 rounded">
             Quay về trạng thái trước

@@ -478,6 +478,9 @@ export default {
 
     // Sample data for filters
     const languages = computed(() => {
+      if (!books.value || books.value.length === 0) {
+        return []
+      }
       const languageSet = new Set()
       books.value.forEach(book => {
         if (book.language) {
@@ -489,13 +492,16 @@ export default {
     // const formats = ['Bìa mềm', 'Bìa cứng', 'E-book', 'Audiobook'] // Removed per requirement
 
     // Computed properties
-    const books = computed(() => store.products.value)
+    const books = computed(() => store.products.value || [])
     const categories = computed(() => {
       console.log('Categories from store:', store.categories.value)
-      return store.categories.value
+      return store.categories.value || []
     })
 
     const priceRange = computed(() => {
+      if (!books.value || books.value.length === 0) {
+        return { min: 0, max: 1000000 }
+      }
       const prices = books.value.map(book => book.price)
       return {
         min: Math.min(...prices),
@@ -517,6 +523,9 @@ export default {
     }, { immediate: true })
 
     const filteredBooks = computed(() => {
+      if (!books.value || books.value.length === 0) {
+        return []
+      }
       let result = [...books.value]
 
       // Search filter
@@ -584,6 +593,9 @@ export default {
 
     // Category data for the categories bar
     const categoryData = computed(() => {
+      if (!books.value || books.value.length === 0) {
+        return []
+      }
       const categoryCounts = {}
       const categoryIcons = {
         'Văn học': '📚',
@@ -681,13 +693,10 @@ export default {
     const hasActiveFilters = computed(() => {
       return filters.search || 
              filters.categories.length > 0 || 
-             filters.authors.length > 0 || 
-             filters.publishers.length > 0 || 
-             filters.ratings.length > 0 || 
+             filters.productTypes.length > 0 || 
              filters.inStock || 
              filters.onSale || 
              filters.languages.length > 0 || 
-             false ||
              filters.priceRange[0] !== priceRange.value.min ||
              filters.priceRange[1] !== priceRange.value.max
     })
@@ -703,16 +712,8 @@ export default {
         active.push({ key: 'categories', label: `Danh mục: ${filters.categories.join(', ')}` })
       }
       
-      if (filters.authors.length > 0) {
-        active.push({ key: 'authors', label: `Tác giả: ${filters.authors.join(', ')}` })
-      }
-      
-      if (filters.publishers.length > 0) {
-        active.push({ key: 'publishers', label: `NXB: ${filters.publishers.join(', ')}` })
-      }
-      
-      if (filters.ratings.length > 0) {
-        active.push({ key: 'ratings', label: `Đánh giá: ${Math.min(...filters.ratings)}+ sao` })
+      if (filters.productTypes.length > 0) {
+        active.push({ key: 'productTypes', label: `Loại sản phẩm: ${filters.productTypes.join(', ')}` })
       }
       
       if (filters.inStock) {
@@ -727,8 +728,6 @@ export default {
         active.push({ key: 'languages', label: `Ngôn ngữ: ${filters.languages.join(', ')}` })
       }
       
-      // Removed active badge for formats
-      
       return active
     })
 
@@ -741,6 +740,9 @@ export default {
     }
 
     const getCategoryCount = (category) => {
+      if (!books.value || books.value.length === 0) {
+        return 0
+      }
       if (category === 'Tất cả') {
         return books.value.length
       }
@@ -750,6 +752,9 @@ export default {
     }
 
     const getProductTypeCount = (productType) => {
+      if (!books.value || books.value.length === 0) {
+        return 0
+      }
       if (productType === 'Sách lẻ') {
         // Đếm tất cả sản phẩm KHÔNG phải bộ sách
         return books.value.filter(book => book.category !== 'Bộ sách').length

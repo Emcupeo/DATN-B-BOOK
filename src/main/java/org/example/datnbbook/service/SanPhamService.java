@@ -92,6 +92,15 @@ public class SanPhamService {
             sp.setMaSanPham(nextMaSanPham);
         }
         sp.setDeleted(false); // Đảm bảo sản phẩm mới không bị đánh dấu xóa
+        
+        // Set created_at và updated_at nếu chưa có
+        if (sp.getCreatedAt() == null) {
+            sp.setCreatedAt(Instant.now());
+        }
+        if (sp.getUpdatedAt() == null) {
+            sp.setUpdatedAt(Instant.now());
+        }
+        
         return sanPhamRepository.save(sp);
     }
 
@@ -105,6 +114,9 @@ public class SanPhamService {
                 .orElseThrow(() -> new RuntimeException("Sản phẩm không tồn tại với id: " + id));
 
         BeanUtils.copyProperties(sanPhamDTO, sanPham, "maSanPham", "id", "deleted", "danhMuc");
+        
+        // Set updated_at
+        sanPham.setUpdatedAt(Instant.now());
         
         // Xử lý danh mục
         if (sanPhamDTO.getIdDanhMuc() != null) {
@@ -193,6 +205,11 @@ public class SanPhamService {
         sanPham.setTenSanPham(request.getTenSanPham());
         sanPham.setMoTa(request.getMoTaSanPham());
         sanPham.setDeleted(false);
+        
+        // Set created_at và updated_at
+        Instant now = Instant.now();
+        sanPham.setCreatedAt(now);
+        sanPham.setUpdatedAt(now);
         
         // Xử lý danh mục
         if (request.getIdDanhMuc() != null) {

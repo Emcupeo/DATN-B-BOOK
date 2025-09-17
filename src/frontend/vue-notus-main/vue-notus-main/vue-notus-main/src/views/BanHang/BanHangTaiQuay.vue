@@ -184,18 +184,35 @@
           </div>
         </div>
 
-        <div class="mb-6" v-if="deliveryMethod === 'TaiQuay'">
+        <div class="mb-6">
           <h3 class="text-md font-semibold text-gray-900 mb-2">Hình thức thanh toán</h3>
           <div class="space-y-2">
-            <label class="flex items-center space-x-2">
-              <input type="radio" value="1" v-model="paymentMethod" class="text-sm" />
-              <span class="text-sm">Chuyển khoản</span>
-            </label>
-            <label class="flex items-center space-x-2">
-              <input type="radio" value="4" v-model="paymentMethod" class="text-sm" />
-              <span class="text-sm">Tiền mặt</span>
-            </label>
+            <!-- Tại quầy: Chuyển khoản và Tiền mặt -->
+            <template v-if="deliveryMethod === 'TaiQuay'">
+              <label class="flex items-center space-x-2">
+                <input type="radio" value="1" v-model="paymentMethod" class="text-sm" />
+                <span class="text-sm">Chuyển khoản</span>
+              </label>
+              <label class="flex items-center space-x-2">
+                <input type="radio" value="4" v-model="paymentMethod" class="text-sm" />
+                <span class="text-sm">Tiền mặt</span>
+              </label>
+            </template>
+            
+            <!-- Giao hàng: COD và Tiền mặt -->
+            <template v-if="deliveryMethod === 'GiaoHang'">
+              <label class="flex items-center space-x-2">
+                <input type="radio" value="cod" v-model="paymentMethod" class="text-sm" />
+                <span class="text-sm">Thanh toán khi nhận hàng (COD)</span>
+              </label>
+              <label class="flex items-center space-x-2">
+                <input type="radio" value="4" v-model="paymentMethod" class="text-sm" />
+                <span class="text-sm">Tiền mặt</span>
+              </label>
+            </template>
           </div>
+          
+          <!-- QR Code cho chuyển khoản -->
           <div class="mt-2" :class="{ 'hidden': paymentMethod !== '1' }">
             <div class="w-32 h-32 mx-auto bg-gray-200 border-2 border-dashed border-gray-400 flex items-center justify-center">
               <div class="text-center text-gray-500">
@@ -207,7 +224,9 @@
             </div>
             <p class="text-center text-sm text-gray-500 mt-1">Quét mã để thanh toán</p>
           </div>
-          <div v-if="deliveryMethod === 'TaiQuay' && paymentMethod === '4'" class="mt-4">
+          
+          <!-- Tiền khách đưa hiển thị khi thanh toán tiền mặt (tại quầy hoặc giao hàng) -->
+          <div v-if="paymentMethod === '4'" class="mt-4">
             <div class="flex justify-between mb-2">
               <label class="block text-sm font-medium">Tiền khách đưa:</label>
               <input type="number" v-model.number="tienKhachDua" class="w-1/2 border rounded px-2 py-1 text-sm" placeholder="Nhập số tiền" min="0" />
@@ -663,7 +682,8 @@
             <div class="mb-4">
               <p class="text-sm text-gray-600 mb-2">Hình thức thanh toán:</p>
               <p class="text-sm font-medium text-gray-900">
-                {{ paymentMethod === '4' ? 'Tiền mặt' : 'Chuyển khoản' }}
+                {{ paymentMethod === 'cod' ? 'Thanh toán khi nhận hàng (COD)' : 
+                   paymentMethod === '4' ? 'Tiền mặt' : 'Chuyển khoản' }}
               </p>
             </div>
 
@@ -924,6 +944,12 @@ export default {
     },
     deliveryMethod() {
       this.tienKhachDua = 0; // Reset tiền khách đưa khi thay đổi hình thức nhận hàng
+      // Reset payment method khi chuyển đổi delivery method
+      if (this.deliveryMethod === 'TaiQuay') {
+        this.paymentMethod = '4'; // Mặc định tiền mặt cho tại quầy
+      } else if (this.deliveryMethod === 'GiaoHang') {
+        this.paymentMethod = '4'; // Mặc định COD cho giao hàng
+      }
     },
     paymentMethod() {
       this.tienKhachDua = 0; // Reset tiền khách đưa khi thay đổi hình thức thanh toán
@@ -1039,6 +1065,7 @@ async createNewInvoice() {
     },
     openPaymentModal() {
       // Kiểm tra validation trước khi mở modal
+      // Validate tiền khách đưa khi thanh toán tiền mặt (tại quầy hoặc giao hàng)
       if (this.paymentMethod === '4' && (this.tienKhachDua <= 0 || this.tienTraKhach < 0)) {
         alert("Vui lòng nhập số tiền khách đưa hợp lệ!");
         return;
@@ -1054,6 +1081,7 @@ async createNewInvoice() {
           alert("Không tìm thấy ID hóa đơn!");
           return;
         }
+        // Validate tiền khách đưa khi thanh toán tiền mặt (tại quầy hoặc giao hàng)
         if (this.paymentMethod === "4" && this.tienTraKhach < 0) {
           alert("Số tiền khách đưa không đủ để thanh toán!");
           return;
@@ -1062,11 +1090,14 @@ async createNewInvoice() {
           alert("Vui lòng nhập số tiền khách đưa hợp lệ!");
           return;
         }
+        // Map payment method cho backend
+        const backendPaymentMethod = this.paymentMethod === "cod" ? "4" : this.paymentMethod;
+        
         const paymentData = {
-          phuongThucThanhToanId: parseInt(this.paymentMethod), // 4: tiền mặt, 1: chuyển khoản
-          tienMat: this.paymentMethod === "4" ? this.tongTienHang : 0, // Gửi tongTienHang, backend sẽ tự trừ voucher
-          chuyenKhoan: this.paymentMethod === "1" ? this.tongTienHang : 0, // Gửi tongTienHang, backend sẽ tự trừ voucher
-          tienKhachDua: this.paymentMethod === "4" ? this.tienKhachDua : 0,
+          phuongThucThanhToanId: parseInt(backendPaymentMethod), // 4: tiền mặt, 1: chuyển khoản
+          tienMat: backendPaymentMethod === "4" ? this.tongTienHang : 0, // Gửi tongTienHang, backend sẽ tự trừ voucher
+          chuyenKhoan: backendPaymentMethod === "1" ? this.tongTienHang : 0, // Gửi tongTienHang, backend sẽ tự trừ voucher
+          tienKhachDua: backendPaymentMethod === "4" ? this.tienKhachDua : 0,
           ghiChu: this.paymentNote,
           phieuGiamGiaId: this.selectedVoucher?.id || null, // Gửi ID voucher nếu có
         };
@@ -1075,8 +1106,9 @@ async createNewInvoice() {
         console.log("DEBUG: tienGiamGia:", this.tienGiamGia);
         console.log("DEBUG: selectedVoucher:", this.selectedVoucher);
         console.log("DEBUG: paymentMethod:", this.paymentMethod);
-        console.log("DEBUG: tienMat sẽ gửi:", this.paymentMethod === "4" ? this.tongTienHang : 0);
-        console.log("DEBUG: chuyenKhoan sẽ gửi:", this.paymentMethod === "1" ? this.tongTienHang : 0);
+        console.log("DEBUG: backendPaymentMethod:", backendPaymentMethod);
+        console.log("DEBUG: tienMat sẽ gửi:", backendPaymentMethod === "4" ? this.tongTienHang : 0);
+        console.log("DEBUG: chuyenKhoan sẽ gửi:", backendPaymentMethod === "1" ? this.tongTienHang : 0);
         console.log("Gửi dữ liệu thanh toán:", paymentData);
         const response = await HoaDonService.updatePayment(orderId, paymentData);
         if (response.status === 200) {

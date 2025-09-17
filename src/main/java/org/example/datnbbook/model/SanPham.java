@@ -50,9 +50,11 @@ public class SanPham {
     @Column(name = "deleted")
     private Boolean deleted = false;
 
+    @ColumnDefault("getdate()")
     @Column(name = "created_at")
     private Instant createdAt;
 
+    @ColumnDefault("getdate()")
     @Column(name = "updated_at")
     private Instant updatedAt;
 
