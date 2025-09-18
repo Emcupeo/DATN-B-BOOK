@@ -62,10 +62,10 @@
                 {{ prod.boSach?.tenBoSach || prod.chiTietSanPham?.tenChiTietSanPham || 'Không xác định' }}
               </td>
               <td class="px-4 py-2">
-                <input 
-                  type="number" 
-                  v-model="prod.soLuong" 
-                  min="1" 
+                <input
+                  type="number"
+                  v-model="prod.soLuong"
+                  min="1"
                   :max="prod.boSach?.soLuong || prod.chiTietSanPham?.soLuongTon || 0"
                   @change="updateProductQuantity(prod)"
                   class="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -86,27 +86,27 @@
               <td class="px-4 py-2">
                 <div class="flex space-x-2">
                   <!-- Nút Chi tiết cho bộ sách -->
-                  <button 
-                    v-if="prod.boSach" 
-                    @click="openBookSetDetailModal(prod.boSach)" 
+                  <button
+                    v-if="prod.boSach"
+                    @click="openBookSetDetailModal(prod.boSach)"
                     class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors duration-200"
                     title="Xem chi tiết bộ sách"
                   >
                     <i class="fas fa-info-circle mr-1"></i>
                     Chi tiết
                   </button>
-                  
+
                   <!-- Nút Xóa sản phẩm -->
-                  <button 
-                    v-if="selectedOrder && (selectedOrder.trangThai === 'Tạo hóa đơn' || selectedOrder.trangThai === 'Chờ xác nhận')" 
-                    @click="removeItem(prod.id)" 
+                  <button
+                    v-if="selectedOrder && (selectedOrder.trangThai === 'Tạo hóa đơn' || selectedOrder.trangThai === 'Chờ xác nhận')"
+                    @click="removeItem(prod.id)"
                     class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors duration-200"
                     title="Xóa sản phẩm khỏi hóa đơn"
                   >
                     <i class="fas fa-trash-alt mr-1"></i>
                     Xóa
                   </button>
-                  
+
                   <!-- Debug info -->
                   <span v-if="selectedOrder" class="text-xs text-gray-400 ml-2">
                     ({{ selectedOrder.trangThai }})
@@ -114,7 +114,7 @@
                 </div>
               </td>
             </tr>
-            
+
             <!-- Chi tiết bộ sách (nếu đang expand) -->
             <tr v-for="prod in expandedBookSetDetails" :key="`detail-${prod.id}`" class="bg-gray-50">
               <td colspan="8" class="px-4 py-2">
@@ -125,7 +125,7 @@
                 </div>
               </td>
             </tr>
-            
+
             <tr v-if="paginatedProducts.length === 0">
               <td colspan="8" class="px-4 py-2 text-center text-gray-500">
                 Chưa có sản phẩm
@@ -178,7 +178,10 @@
           </div>
           <div class="mt-2 p-2 border rounded" :class="{ 'hidden': deliveryMethod !== 'GiaoHang' }">
             <label class="block text-sm mb-1">Địa chỉ giao hàng</label>
-            <input type="text" v-model="selectedOrder.diaChiGiaoHang" class="w-full border rounded px-2 py-1 text-sm" />
+            <label class="flex items-center gap-2 mb-2 text-sm">
+              <input type="checkbox" v-model="useDefaultAddress" /> Sử dụng địa chỉ mặc định của khách hàng (nếu có)
+            </label>
+            <input type="text" v-model="selectedOrder.diaChi" class="w-full border rounded px-2 py-1 text-sm" />
             <label class="block text-sm mt-2 mb-1">SĐT người nhận</label>
             <input type="text" v-model="selectedOrder.soDienThoaiNguoiNhan" class="w-full border rounded px-2 py-1 text-sm" />
           </div>
@@ -198,7 +201,7 @@
                 <span class="text-sm">Tiền mặt</span>
               </label>
             </template>
-            
+
             <!-- Giao hàng: COD và Tiền mặt -->
             <template v-if="deliveryMethod === 'GiaoHang'">
               <label class="flex items-center space-x-2">
@@ -211,7 +214,7 @@
               </label>
             </template>
           </div>
-          
+
           <!-- QR Code cho chuyển khoản -->
           <div class="mt-2" :class="{ 'hidden': paymentMethod !== '1' }">
             <div class="w-32 h-32 mx-auto bg-gray-200 border-2 border-dashed border-gray-400 flex items-center justify-center">
@@ -224,7 +227,7 @@
             </div>
             <p class="text-center text-sm text-gray-500 mt-1">Quét mã để thanh toán</p>
           </div>
-          
+
           <!-- Tiền khách đưa hiển thị khi thanh toán tiền mặt (tại quầy hoặc giao hàng) -->
           <div v-if="paymentMethod === '4'" class="mt-4">
             <div class="flex justify-between mb-2">
@@ -278,11 +281,11 @@
           <button v-if="selectedOrder.trangThai === 'Tạo hóa đơn'" @click="xacNhanHoaDon" class="w-full bg-purple-600 text-white py-2 rounded-lg text-sm font-semibold hover:bg-purple-700 transition" :disabled="isConfirmDisabled">
             Xác nhận đơn hàng
           </button>
-          
+
           <button v-if="selectedOrder.trangThai === 'Chờ xác nhận'" @click="openPaymentModal" class="w-full bg-green-600 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-700 transition">
             Xác nhận thanh toán
           </button>
-          
+
           <button v-if="selectedOrder.trangThai === 'Tạo hóa đơn' || selectedOrder.trangThai === 'Chờ xác nhận'" @click="huyHoaDon" class="w-full bg-red-600 text-white py-2 rounded-lg text-sm font-semibold hover:bg-red-700 transition">
             Hủy hóa đơn
           </button>
@@ -565,9 +568,9 @@
           <div class="space-y-4">
             <div class="flex items-center space-x-4">
               <div class="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
-                <img v-if="confirmationItem && confirmationItem.anhSanPhams && confirmationItem.anhSanPhams.length > 0" 
-                     :src="confirmationItem.anhSanPhams[0].url" 
-                     class="w-full h-full object-cover rounded-lg" 
+                <img v-if="confirmationItem && confirmationItem.anhSanPhams && confirmationItem.anhSanPhams.length > 0"
+                     :src="confirmationItem.anhSanPhams[0].url"
+                     class="w-full h-full object-cover rounded-lg"
                      alt="Sản phẩm">
                 <svg v-else class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
@@ -581,11 +584,11 @@
             </div>
             <div>
               <label class="block text-sm font-medium mb-1">Số lượng</label>
-              <input v-model.number="confirmationQuantity" 
-                     type="number" 
-                     min="1" 
-                     :max="confirmationItem?.soLuongTon || confirmationItem?.soLuong" 
-                     class="w-full border rounded px-3 py-2" 
+              <input v-model.number="confirmationQuantity"
+                     type="number"
+                     min="1"
+                     :max="confirmationItem?.soLuongTon || confirmationItem?.soLuong"
+                     class="w-full border rounded px-3 py-2"
                      required>
               <p class="text-xs text-gray-500 mt-1">
                 Tồn kho: {{ confirmationItem?.soLuongTon || confirmationItem?.soLuong }} sản phẩm
@@ -628,7 +631,7 @@
                 <p class="text-sm text-gray-900">{{ selectedBookSet?.moTa || 'Không có mô tả' }}</p>
               </div>
             </div>
-            
+
             <div>
               <h4 class="text-md font-medium mb-2">Danh sách sách trong bộ:</h4>
               <div class="overflow-x-auto">
@@ -654,7 +657,7 @@
                 </table>
               </div>
             </div>
-            
+
             <div class="flex justify-end gap-2 mt-4">
               <button @click="closeBookSetDetailModal" type="button" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
                 Đóng
@@ -671,7 +674,7 @@
         <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
           <div class="p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Xác nhận thanh toán</h3>
-            
+
             <!-- Tổng tiền cần thanh toán -->
             <div class="mb-4">
               <p class="text-sm text-gray-600 mb-2">Tổng tiền cần thanh toán:</p>
@@ -682,7 +685,7 @@
             <div class="mb-4">
               <p class="text-sm text-gray-600 mb-2">Hình thức thanh toán:</p>
               <p class="text-sm font-medium text-gray-900">
-                {{ paymentMethod === 'cod' ? 'Thanh toán khi nhận hàng (COD)' : 
+                {{ paymentMethod === 'cod' ? 'Thanh toán khi nhận hàng (COD)' :
                    paymentMethod === '4' ? 'Tiền mặt' : 'Chuyển khoản' }}
               </p>
             </div>
@@ -713,16 +716,16 @@
             </div>
 
             <div class="flex justify-end gap-2">
-              <button 
-                @click="showPaymentModal = false" 
-                type="button" 
+              <button
+                @click="showPaymentModal = false"
+                type="button"
                 class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition"
               >
                 Hủy
               </button>
-              <button 
-                @click="submitPayment" 
-                type="button" 
+              <button
+                @click="submitPayment"
+                type="button"
                 class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
                 :disabled="paymentMethod === '4' && (tienKhachDua <= 0 || tienTraKhach < 0)"
               >
@@ -795,11 +798,11 @@ export default {
       tienKhachDua: 0,
       paymentNote: '',
       voucherCode: '',
-      selectedVoucher: null, // Voucher được chọn
-      availableVouchers: [], // Danh sách voucher khả dụng
-      personalVouchers: [], // Danh sách voucher cá nhân của khách hàng
-      productDiscounts: {}, // Lưu thông tin giảm giá cho sản phẩm
-      bookSetDiscounts: {}, // Lưu thông tin giảm giá cho bộ sách
+      selectedVoucher: null,
+      availableVouchers: [],
+      personalVouchers: [],
+      productDiscounts: {},
+      bookSetDiscounts: {},
       filters: {
         searchQuery: '',
         minPrice: null,
@@ -831,23 +834,15 @@ export default {
       const total = this.paginatedProducts.reduce((total, item) => {
         return total + (item.thanhTien || item.soLuong * item.giaSanPham);
       }, 0);
-      
-      console.log('DEBUG: tongTienHang computed - paginatedProducts:', this.paginatedProducts.length);
-      console.log('DEBUG: tongTienHang computed - total:', total);
-      
-      // Load lại voucher khi tổng tiền thay đổi
       this.$nextTick(() => {
         this.loadAvailableVouchers();
-        // Chỉ load voucher cá nhân nếu đã có khách hàng
         if (this.selectedOrder && (this.selectedOrder.idKhachHang || this.selectedOrder.khachHang)) {
           this.loadPersonalVouchers();
         }
       });
-      
       return total;
     },
     tienGiamGia() {
-      // Sử dụng voucher được chọn thay vì phieuGiamGia từ selectedOrder
       if (this.selectedVoucher) {
         return this.selectedVoucher.giaTriGiam || 0;
       }
@@ -858,21 +853,19 @@ export default {
       return this.tongTienHang - this.tienGiamGia + phiShip;
     },
     tienTraKhach() {
-      return this.paymentMethod === '4' && this.deliveryMethod === 'TaiQuay' ? this.tienKhachDua - this.thanhTien : 0;
+      return this.paymentMethod === '4' ? this.tienKhachDua - this.thanhTien : 0;
     },
     isConfirmDisabled() {
       if (this.selectedOrder.trangThai !== 'Tạo hóa đơn') return true;
       if (this.paginatedProducts.length === 0) return true;
-      if (this.paymentMethod === '4' && this.deliveryMethod === 'TaiQuay') {
-        return this.tienTraKhach < 0 || this.tienKhachDua <= 0;
-      }
+      if (this.paymentMethod === '4' && this.tienTraKhach < 0) return true;
+      if (this.paymentMethod === '4' && this.tienKhachDua <= 0) return true;
       return false;
     },
     filteredBookSets() {
       return this.allBookSets.filter(bookSet => {
         const query = this.productSearchQuery.toLowerCase().trim();
         const numericQuery = parseFloat(query);
-
         const matchesSearchQuery = !query || (
             bookSet.maBoSach.toLowerCase().includes(query) ||
             bookSet.tenBoSach.toLowerCase().includes(query) ||
@@ -881,19 +874,16 @@ export default {
                 bookSet.giaTien === numericQuery
             ))
         );
-
         const matchesPriceRange = (
             (this.filters.minPrice === null || bookSet.giaTien >= this.filters.minPrice) &&
             (this.filters.maxPrice === null || bookSet.giaTien <= this.filters.maxPrice)
         );
-
         return matchesSearchQuery && matchesPriceRange;
       });
     },
-    // Computed properties
     expandedBookSetDetails() {
-      return this.paginatedProducts.filter(prod => 
-        prod.boSach && this.expandedBookSets[prod.boSach.id]
+      return this.paginatedProducts.filter(prod =>
+          prod.boSach && this.expandedBookSets[prod.boSach.id]
       );
     },
     filteredProducts() {
@@ -901,7 +891,6 @@ export default {
       return products.filter(item => {
         const query = this.filters.searchQuery.toLowerCase().trim();
         const numericQuery = parseFloat(query);
-
         const matchesSearchQuery = !query || (
             item.maChiTietSanPham.toLowerCase().includes(query) ||
             item.tenChiTietSanPham.toLowerCase().includes(query) ||
@@ -910,7 +899,6 @@ export default {
                 item.gia === numericQuery
             ))
         );
-
         return (
             matchesSearchQuery &&
             (this.filters.minPrice === null || item.gia >= this.filters.minPrice) &&
@@ -935,24 +923,27 @@ export default {
             customer.soDienThoai?.toLowerCase().includes(query)
         );
       });
-}
+    }
   },
   watch: {
     selectedOrderIndex() {
       this.fetchProductsForOrder();
-      this.tienKhachDua = 0; // Reset tiền khách đưa khi chuyển hóa đơn
+      this.tienKhachDua = 0;
     },
-    deliveryMethod() {
-      this.tienKhachDua = 0; // Reset tiền khách đưa khi thay đổi hình thức nhận hàng
-      // Reset payment method khi chuyển đổi delivery method
+    deliveryMethod(newValue, oldValue) {
+      console.log(`DEBUG: deliveryMethod changed from "${oldValue}" to "${newValue}"`);
+      console.log(`DEBUG: loaiHoaDon: ${this.mapDeliveryMethod(newValue)}`);
+      this.tienKhachDua = 0;
       if (this.deliveryMethod === 'TaiQuay') {
-        this.paymentMethod = '4'; // Mặc định tiền mặt cho tại quầy
+        console.log('DEBUG: Selected Tại quầy, setting paymentMethod to Tiền mặt (4)');
+        this.paymentMethod = '4';
       } else if (this.deliveryMethod === 'GiaoHang') {
-        this.paymentMethod = '4'; // Mặc định COD cho giao hàng
+        console.log('DEBUG: Selected Giao hàng, setting paymentMethod to COD');
+        this.paymentMethod = 'cod';
       }
     },
     paymentMethod() {
-      this.tienKhachDua = 0; // Reset tiền khách đưa khi thay đổi hình thức thanh toán
+      this.tienKhachDua = 0;
     },
     filters: {
       handler() {
@@ -987,11 +978,9 @@ export default {
     this.clearImageIntervals();
   },
   methods: {
-    // Hàm ánh xạ giá trị deliveryMethod
     mapDeliveryMethod(value) {
       return value === 'TaiQuay' ? 'Tại quầy' : 'Giao hàng';
     },
-
     formatCurrency(value) {
       return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(value || 0);
     },
@@ -1003,15 +992,14 @@ export default {
     async fetchOrders() {
       try {
         const response = await axios.get(`${API_URL}/hoa-don?trangThai=Tạo hóa đơn`);
-        // Kiểm tra xem response.data có phải là array không
         const data = Array.isArray(response.data) ? response.data : [];
         this.orders = data.map(order => ({
           ...order,
           hoaDonChiTiets: Array.isArray(order.hoaDonChiTiets) ? order.hoaDonChiTiets : [],
           phieuGiamGia: order.phieuGiamGia || {},
-          diaChiGiaoHang: order.diaChi || '',
+          diaChi: order.diaChi || '',
           soDienThoaiNguoiNhan: order.soDienThoaiNguoiNhan || '',
-          loaiHoaDon: order.loaiHoaDon === 'Tại quầy' ? 'TaiQuay' : 'GiaoHang', // Ánh xạ ngược
+          loaiHoaDon: order.loaiHoaDon === 'Tại quầy' ? 'TaiQuay' : 'GiaoHang',
         }));
         if (this.orders.length > 0) {
           this.selectedOrderIndex = 0;
@@ -1019,9 +1007,7 @@ export default {
         }
       } catch (error) {
         console.error('Lỗi khi tải danh sách hóa đơn:', error);
-        if (error.code === 'ERR_NAME_NOT_RESOLVED' || error.code === 'ERR_NETWORK') {
-          alert('Không thể kết nối đến server. Vui lòng kiểm tra:\n1. Backend server có đang chạy không?\n2. URL API có đúng không?\n3. Kết nối mạng có ổn định không?');
-        }
+        alert('Không thể tải danh sách hóa đơn!');
       }
     },
     async fetchProductsForOrder() {
@@ -1029,24 +1015,21 @@ export default {
       try {
         const response = await axios.get(`${API_URL}/hoa-don/${this.selectedOrder.id}`);
         this.paginatedProducts = response.data.hoaDonChiTiets || [];
-        
-        // Lưu oldQuantity để tính toán chênh lệch khi thay đổi số lượng
         this.paginatedProducts.forEach(prod => {
           if (!prod.oldQuantity) {
             prod.oldQuantity = prod.soLuong;
           }
         });
-        
-        // Tải thông tin giảm giá cho các sản phẩm
         await this.loadProductDiscounts();
       } catch (error) {
         console.error('Lỗi khi tải sản phẩm của hóa đơn:', error);
+        alert('Không thể tải sản phẩm của hóa đơn!');
       }
     },
-async createNewInvoice() {
+    async createNewInvoice() {
       try {
         const response = await axios.post(`${API_URL}/hoa-don`, {
-          loaiHoaDon: this.mapDeliveryMethod(this.deliveryMethod), // Ánh xạ trước khi gửi
+          loaiHoaDon: this.mapDeliveryMethod(this.deliveryMethod),
         });
         this.orders.push({
           ...response.data,
@@ -1057,20 +1040,89 @@ async createNewInvoice() {
         });
         this.selectedOrderIndex = this.orders.length - 1;
         this.paginatedProducts = [];
-        this.resetPaymentForm(); // Reset form thanh toán
+        this.resetPaymentForm();
       } catch (error) {
         console.error('Lỗi khi tạo hóa đơn mới:', error);
-        alert('Không thể tạo hóa đơn mới. Vui lòng thử lại!');
+        alert('Không thể tạo hóa đơn mới!');
       }
     },
-    openPaymentModal() {
-      // Kiểm tra validation trước khi mở modal
-      // Validate tiền khách đưa khi thanh toán tiền mặt (tại quầy hoặc giao hàng)
+    async xacNhanHoaDon() {
+      try {
+        const orderId = this.selectedOrder?.id;
+        if (!orderId) {
+          console.error("Thiếu ID hóa đơn để xác nhận");
+          alert("Không tìm thấy ID hóa đơn!");
+          return;
+        }
+        if (this.deliveryMethod === 'GiaoHang') {
+          const hasCustomer = !!(this.selectedOrder?.idKhachHang || this.selectedOrder?.khachHang || this.selectedOrder?.tenNguoiNhan);
+          if (!hasCustomer) {
+            alert('Giao hàng chỉ áp dụng khi đã chọn khách hàng. Vui lòng chọn khách hàng trước.');
+            return;
+          }
+        }
+        if (this.paginatedProducts.length === 0) {
+          alert("Hóa đơn phải có ít nhất một sản phẩm!");
+          return;
+        }
+        // Với Tại quầy và thanh toán tiền mặt cần kiểm tra tiền khách đưa
+        if (this.deliveryMethod === 'TaiQuay' && this.paymentMethod === '4' && (this.tienKhachDua <= 0 || this.tienTraKhach < 0)) {
+          alert("Số tiền khách đưa không đủ để thanh toán!");
+          return;
+        }
+        // Cập nhật thông tin hóa đơn trước khi xác nhận
+        await HoaDonService.updateHoaDon(orderId, {
+          phiShip: this.selectedOrder.phiShip || 0,
+          tongTien: this.thanhTien
+        });
+        // Nếu là Tại quầy, ghi nhận thanh toán ngay để lưu phương thức
+        if (this.deliveryMethod === 'TaiQuay') {
+          const paymentMethodId = this.paymentMethod === '1' ? 1 : 4;
+          const paymentData = {
+            phuongThucThanhToanId: paymentMethodId,
+            tienMat: paymentMethodId === 4 ? this.thanhTien : 0,
+            chuyenKhoan: paymentMethodId === 1 ? this.thanhTien : 0,
+            tienKhachDua: paymentMethodId === 4 ? this.tienKhachDua : 0,
+            ghiChu: this.paymentNote,
+            phieuGiamGiaId: this.selectedVoucher?.id || null,
+            loaiHoaDon: this.mapDeliveryMethod(this.deliveryMethod),
+            tongTien: this.thanhTien,
+          };
+          const payRes = await HoaDonService.updatePayment(orderId, paymentData);
+          if (payRes.status !== 200) {
+            alert('Có lỗi khi ghi nhận thanh toán, vui lòng thử lại!');
+            return;
+          }
+        }
+        // Đặt trạng thái dựa trên deliveryMethod
+        const newStatus = this.deliveryMethod === 'TaiQuay' ? 'Hoàn thành' : 'Chờ xác nhận';
+        console.log(`DEBUG: Confirming order ID: ${orderId}, deliveryMethod: ${this.deliveryMethod}, newStatus: ${newStatus}`);
+        const response = await HoaDonService.updateTrangThaiHoaDon(orderId, newStatus);
+        if (response.status === 200) {
+          console.log(`DEBUG: Order confirmed successfully, status: ${newStatus}`);
+          alert("Xác nhận hóa đơn thành công!");
+          await this.fetchOrders();
+        } else {
+          console.error("Xác nhận hóa đơn thất bại:", response.status);
+          alert("Có lỗi xảy ra khi xác nhận hóa đơn!");
+        }
+      } catch (error) {
+        console.error("Lỗi khi xác nhận hóa đơn:", error);
+        alert("Có lỗi xảy ra khi xác nhận hóa đơn!");
+      }
+    },
+    async openPaymentModal() {
+      if (this.deliveryMethod === 'GiaoHang') {
+        const hasCustomer = !!(this.selectedOrder?.idKhachHang || this.selectedOrder?.khachHang || this.selectedOrder?.tenNguoiNhan);
+        if (!hasCustomer) {
+          alert('Giao hàng chỉ áp dụng khi đã chọn khách hàng. Vui lòng chọn khách hàng trước.');
+          return;
+        }
+      }
       if (this.paymentMethod === '4' && (this.tienKhachDua <= 0 || this.tienTraKhach < 0)) {
         alert("Vui lòng nhập số tiền khách đưa hợp lệ!");
         return;
       }
-      
       this.showPaymentModal = true;
     },
     async submitPayment() {
@@ -1081,64 +1133,63 @@ async createNewInvoice() {
           alert("Không tìm thấy ID hóa đơn!");
           return;
         }
-        // Validate tiền khách đưa khi thanh toán tiền mặt (tại quầy hoặc giao hàng)
-        if (this.paymentMethod === "4" && this.tienTraKhach < 0) {
+        const backendPaymentMethod = this.paymentMethod === "cod" ? "4" : this.paymentMethod;
+        const paymentMethodId = parseInt(backendPaymentMethod, 10);
+        if (Number.isNaN(paymentMethodId)) {
+          alert('Phương thức thanh toán không hợp lệ!');
+          return;
+        }
+        if (![1, 4].includes(paymentMethodId)) {
+          console.error("Phương thức thanh toán không hợp lệ:", backendPaymentMethod);
+          alert("Phương thức thanh toán không hợp lệ!");
+          return;
+        }
+        if (this.thanhTien <= 0) {
+          alert("Tổng tiền hóa đơn không hợp lệ!");
+          return;
+        }
+        if (paymentMethodId === 4 && (this.tienKhachDua <= 0 || this.tienTraKhach < 0)) {
           alert("Số tiền khách đưa không đủ để thanh toán!");
           return;
         }
-        if (this.paymentMethod === "4" && this.tienKhachDua <= 0) {
-          alert("Vui lòng nhập số tiền khách đưa hợp lệ!");
-          return;
-        }
-        // Map payment method cho backend
-        const backendPaymentMethod = this.paymentMethod === "cod" ? "4" : this.paymentMethod;
-        
         const paymentData = {
-          phuongThucThanhToanId: parseInt(backendPaymentMethod), // 4: tiền mặt, 1: chuyển khoản
-          tienMat: backendPaymentMethod === "4" ? this.tongTienHang : 0, // Gửi tongTienHang, backend sẽ tự trừ voucher
-          chuyenKhoan: backendPaymentMethod === "1" ? this.tongTienHang : 0, // Gửi tongTienHang, backend sẽ tự trừ voucher
-          tienKhachDua: backendPaymentMethod === "4" ? this.tienKhachDua : 0,
+          phuongThucThanhToanId: paymentMethodId,
+          tienMat: paymentMethodId === 4 ? this.thanhTien : 0,
+          chuyenKhoan: paymentMethodId === 1 ? this.thanhTien : 0,
+          tienKhachDua: paymentMethodId === 4 ? this.tienKhachDua : 0,
           ghiChu: this.paymentNote,
-          phieuGiamGiaId: this.selectedVoucher?.id || null, // Gửi ID voucher nếu có
+          phieuGiamGiaId: this.selectedVoucher?.id || null,
+          loaiHoaDon: this.mapDeliveryMethod(this.deliveryMethod),
+          tongTien: this.thanhTien,
         };
-        console.log("DEBUG: tongTienHang:", this.tongTienHang);
-        console.log("DEBUG: thanhTien:", this.thanhTien);
-        console.log("DEBUG: tienGiamGia:", this.tienGiamGia);
-        console.log("DEBUG: selectedVoucher:", this.selectedVoucher);
-        console.log("DEBUG: paymentMethod:", this.paymentMethod);
-        console.log("DEBUG: backendPaymentMethod:", backendPaymentMethod);
-        console.log("DEBUG: tienMat sẽ gửi:", backendPaymentMethod === "4" ? this.tongTienHang : 0);
-        console.log("DEBUG: chuyenKhoan sẽ gửi:", backendPaymentMethod === "1" ? this.tongTienHang : 0);
-        console.log("Gửi dữ liệu thanh toán:", paymentData);
+        // Cập nhật thông tin hóa đơn trước khi xác nhận thanh toán
+        await HoaDonService.updateHoaDon(orderId, {
+          phiShip: this.selectedOrder.phiShip || 0,
+          tongTien: this.thanhTien
+        });
         const response = await HoaDonService.updatePayment(orderId, paymentData);
         if (response.status === 200) {
-          console.log("Xác nhận thanh toán thành công:", response.data);
-          await HoaDonService.updateTrangThaiHoaDon(orderId, "Hoàn thành");
-          
-          // Trừ số lượng sản phẩm/bộ sách sau khi thanh toán thành công
+          const newStatus = backendPaymentMethod === "1" ? "Thanh toán thành công" : "Thanh toán";
+          await HoaDonService.updateTrangThaiHoaDon(orderId, newStatus);
           await this.deductStockAfterPayment();
-          
-          // Trừ số lượng voucher sau khi thanh toán thành công
           await this.deductVoucherAfterPayment();
-          
           alert("Xác nhận thanh toán thành công!");
           this.showPaymentModal = false;
-          // Không reset tienKhachDua và paymentNote vì có thể cần dùng lại
-          await this.fetchOrders(); // Refresh danh sách hóa đơn
+          await this.fetchOrders();
         } else {
           console.error("Xác nhận thanh toán thất bại:", response.status);
           alert("Có lỗi xảy ra khi xác nhận thanh toán!");
         }
       } catch (error) {
         console.error("Lỗi khi xác nhận thanh toán:", error);
-        alert("Có lỗi xảy ra khi xác nhận thanh toán. Vui lòng thử lại!");
+        alert(error.response?.data?.message || "Có lỗi xảy ra khi xác nhận thanh toán!");
       }
     },
     async openAddProductModal() {
       this.showAddProductModal = true;
       this.productSearchQuery = '';
       this.searchResults = [];
-this.allProducts = [];
+      this.allProducts = [];
       this.selectedProduct = null;
       this.selectedProductQuantity = 1;
       this.filters = {
@@ -1202,6 +1253,7 @@ this.allProducts = [];
         this.customers = await KhachHangService.getAll();
       } catch (error) {
         console.error('Lỗi khi tải danh sách khách hàng:', error);
+        alert('Không thể tải danh sách khách hàng!');
       }
     },
     async searchCustomers() {
@@ -1213,7 +1265,7 @@ this.allProducts = [];
         }
       } catch (error) {
         console.error('Lỗi khi tìm kiếm khách hàng:', error);
-        alert('Không thể tìm kiếm khách hàng. Vui lòng thử lại!');
+        alert('Không thể tìm kiếm khách hàng!');
       }
     },
     async selectCustomer(customer) {
@@ -1223,27 +1275,24 @@ this.allProducts = [];
           idKhachHang: customer.id,
           tenNguoiNhan: customer.hoTen,
           soDienThoaiNguoiNhan: customer.soDienThoai,
-          diaChiGiaoHang: this.formatDiaChi(customer)
+          diaChi: this.formatDiaChi(customer)
         };
         await HoaDonService.updateCustomerInfo(orderId, customerData);
         this.orders[this.selectedOrderIndex] = {
           ...this.selectedOrder,
           ...customerData
         };
-        
-        // Load voucher cá nhân sau khi chọn khách hàng
         this.$nextTick(() => {
           this.loadPersonalVouchers();
         });
-        
         this.closeSelectCustomerModal();
         alert('Chọn khách hàng thành công!');
       } catch (error) {
         console.error('Lỗi khi chọn khách hàng:', error);
-        alert('Có lỗi xảy ra khi chọn khách hàng. Vui lòng thử lại!');
+        alert('Có lỗi xảy ra khi chọn khách hàng!');
       }
     },
-async saveCustomer() {
+    async saveCustomer() {
       try {
         const response = await KhachHangService.create(this.newCustomer);
         const orderId = this.selectedOrder.id;
@@ -1251,7 +1300,7 @@ async saveCustomer() {
           idKhachHang: response.id,
           tenNguoiNhan: response.hoTen,
           soDienThoaiNguoiNhan: response.soDienThoai,
-          diaChiGiaoHang: ''
+          diaChi: ''
         };
         await HoaDonService.updateCustomerInfo(orderId, customerData);
         this.orders[this.selectedOrderIndex] = {
@@ -1317,7 +1366,7 @@ async saveCustomer() {
               const img = new Image();
               img.src = image.url;
             });
-} else {
+          } else {
             product.anhSanPhams = [];
           }
         }
@@ -1359,7 +1408,6 @@ async saveCustomer() {
         alert(`Số lượng vượt quá số lượng tồn kho (${this.selectedProduct.soLuongTon})!`);
         return;
       }
-      if (!confirm('Bạn có chắc chắn muốn thêm sản phẩm này vào hóa đơn?')) return;
       try {
         const orderId = this.selectedOrder.id;
         const productData = {
@@ -1386,15 +1434,13 @@ async saveCustomer() {
         const orderId = this.selectedOrder.id;
         await axios.delete(`${API_URL}/hoa-don/${orderId}/remove-product/${itemId}`);
         alert('Xóa sản phẩm thành công!');
-        // Refresh danh sách sản phẩm để cập nhật thông tin giảm giá
         await this.fetchProductsForOrder();
       } catch (error) {
         console.error('Lỗi khi xóa sản phẩm:', error);
         alert('Có lỗi xảy ra khi xóa sản phẩm!');
       }
     },
-    // Methods cho modal xác nhận
-    openConfirmationModal(item, type) {
+    async openConfirmationModal(item, type) {
       this.confirmationItem = item;
       this.confirmationType = type;
       this.confirmationQuantity = 1;
@@ -1411,27 +1457,22 @@ async saveCustomer() {
         alert('Vui lòng nhập số lượng hợp lệ!');
         return;
       }
-      
       if (this.confirmationQuantity <= 0) {
         alert('Số lượng phải lớn hơn 0!');
         return;
       }
-      
       if (!this.selectedOrder || !this.selectedOrder.id) {
         alert('Vui lòng chọn hóa đơn trước khi thêm sản phẩm!');
         return;
       }
-      
       const maxQuantity = this.confirmationItem?.soLuongTon || this.confirmationItem?.soLuong;
       if (this.confirmationQuantity > maxQuantity) {
         alert(`Số lượng không được vượt quá tồn kho (${maxQuantity})!`);
         return;
       }
-      
       try {
         const orderId = this.selectedOrder.id;
         let productData;
-        
         if (this.confirmationType === 'product') {
           productData = {
             chiTietSanPhamId: this.confirmationItem.id,
@@ -1462,47 +1503,36 @@ async saveCustomer() {
         alert('Có lỗi xảy ra khi thêm vào hóa đơn!');
       }
     },
-    // Method trừ số lượng sau khi thanh toán
     async deductStockAfterPayment() {
-      // Không cần trừ số lượng nữa vì đã trừ khi thay đổi số lượng trong POS
       console.log('Số lượng đã được trừ khi thay đổi trong POS, không cần trừ lại khi thanh toán');
     },
-    // Method hủy hóa đơn và khôi phục số lượng
     async huyHoaDon() {
-      if (!confirm("Bạn có chắc chắn muốn hủy hóa đơn này? Số lượng sản phẩm sẽ được khôi phục lại.")) return;
-      
+      if (!confirm("Bạn có chắc chắn muốn hủy hóa đơn này?")) return;
       try {
         const orderId = this.selectedOrder?.id;
         if (!orderId) {
           alert("Không tìm thấy ID hóa đơn!");
           return;
         }
-        
-        // Gọi API hủy hóa đơn (backend sẽ tự động khôi phục số lượng)
         const response = await HoaDonService.updateTrangThaiHoaDon(orderId, "Đã hủy");
-        
         if (response.status === 200) {
-          alert("Hủy hóa đơn thành công! Số lượng sản phẩm đã được khôi phục.");
-          await this.fetchOrders(); // Refresh danh sách hóa đơn
+          alert("Hủy hóa đơn thành công!");
+          await this.fetchOrders();
         } else {
           alert("Có lỗi xảy ra khi hủy hóa đơn!");
         }
       } catch (error) {
         console.error("Lỗi khi hủy hóa đơn:", error);
-        alert("Có lỗi xảy ra khi hủy hóa đơn. Vui lòng thử lại!");
+        alert("Có lỗi xảy ra khi hủy hóa đơn!");
       }
     },
-    // Methods cho modal chi tiết bộ sách
     async openBookSetDetailModal(bookSet) {
       this.selectedBookSet = bookSet;
       this.showBookSetDetailModal = true;
-      
       try {
-        // Load chi tiết sách trong bộ sách với thông tin đầy đủ
         const BoSachChiTietService = (await import('@/service/BoSachChiTietService')).default;
         const details = await BoSachChiTietService.getDetailedByBoSachId(bookSet.id);
         this.bookSetDetails[bookSet.id] = details;
-        console.log('DEBUG: Loaded book set details:', details);
       } catch (error) {
         console.error('Lỗi khi tải chi tiết bộ sách:', error);
         this.bookSetDetails[bookSet.id] = [];
@@ -1512,11 +1542,9 @@ async saveCustomer() {
       this.showBookSetDetailModal = false;
       this.selectedBookSet = null;
     },
-    // Method cho hiển thị bộ sách
     async showAllBookSets() {
       try {
         this.isShowingBookSets = true;
-        // Import BoSachService dynamically
         const BoSachService = (await import('@/service/BoSachService')).default;
         this.allBookSets = await BoSachService.getAll();
         this.searchResults = [];
@@ -1526,65 +1554,42 @@ async saveCustomer() {
         alert('Có lỗi xảy ra khi tải danh sách bộ sách!');
       }
     },
-    // Method reset form thanh toán
     resetPaymentForm() {
-      this.paymentMethod = '4'; // Mặc định tiền mặt
+      this.paymentMethod = '4';
       this.tienKhachDua = 0;
       this.paymentNote = '';
       this.voucherCode = '';
       this.selectedVoucher = null;
     },
-    // Method load danh sách voucher khả dụng
     async loadAvailableVouchers() {
       try {
-        const totalAmount = this.tongTienHang;
-        console.log('Loading vouchers with totalAmount:', totalAmount);
-        this.availableVouchers = await DotGiamGiaService.getAvailableVouchersForPos(totalAmount);
-        console.log('Available vouchers:', this.availableVouchers);
+        this.availableVouchers = await DotGiamGiaService.getAvailableVouchersForPos(this.tongTienHang);
       } catch (error) {
         console.error('Lỗi khi load voucher:', error);
         this.availableVouchers = [];
       }
     },
-    // Method load voucher cá nhân của khách hàng
     async loadPersonalVouchers() {
-      console.log('DEBUG: loadPersonalVouchers called');
-      console.log('DEBUG: selectedOrder:', this.selectedOrder);
-      console.log('DEBUG: selectedOrder.idKhachHang:', this.selectedOrder?.idKhachHang);
-      console.log('DEBUG: selectedOrder.khachHang:', this.selectedOrder?.khachHang);
-      console.log('DEBUG: tongTienHang:', this.tongTienHang);
-      
-      // Kiểm tra nhiều cách có thể có khách hàng
       let customerId = null;
       if (this.selectedOrder?.idKhachHang?.id) {
         customerId = this.selectedOrder.idKhachHang.id;
-        console.log('DEBUG: Found customer via idKhachHang.id:', customerId);
       } else if (this.selectedOrder?.khachHang?.id) {
         customerId = this.selectedOrder.khachHang.id;
-        console.log('DEBUG: Found customer via khachHang.id:', customerId);
       } else if (this.selectedOrder?.idKhachHang) {
         customerId = this.selectedOrder.idKhachHang;
-        console.log('DEBUG: Found customer via idKhachHang (direct):', customerId);
       }
-      
       if (customerId) {
         try {
-          const totalAmount = this.tongTienHang;
-          console.log('DEBUG: Calling getPersonalVouchersForCustomer with customerId:', customerId, 'totalAmount:', totalAmount);
-          this.personalVouchers = await DotGiamGiaService.getPersonalVouchersForCustomer(customerId, totalAmount);
-          console.log('DEBUG: personalVouchers result:', this.personalVouchers);
+          this.personalVouchers = await DotGiamGiaService.getPersonalVouchersForCustomer(customerId, this.tongTienHang);
         } catch (error) {
           console.error('Lỗi khi load voucher cá nhân:', error);
           this.personalVouchers = [];
         }
       } else {
-        console.log('DEBUG: No customer selected, clearing personal vouchers');
         this.personalVouchers = [];
       }
     },
-    // Method cập nhật số lượng sản phẩm
     async updateProductQuantity(prod) {
-      // Validate số lượng
       if (prod.soLuong < 1) {
         prod.soLuong = 1;
       }
@@ -1593,23 +1598,15 @@ async saveCustomer() {
         prod.soLuong = maxQuantity;
         alert(`Số lượng không được vượt quá ${maxQuantity}`);
       }
-      
-      // Cập nhật thành tiền (sử dụng giá đã giảm nếu có)
       const giaSanPham = this.hasDiscount(prod) ? this.getDiscountedPrice(prod) : prod.giaSanPham;
       prod.thanhTien = prod.soLuong * giaSanPham;
-      
-      // Cập nhật vào database
       try {
         const orderId = this.selectedOrder?.id;
         if (orderId && prod.chiTietSanPham) {
-          // Cập nhật số lượng chi tiết sản phẩm trong hóa đơn
           await axios.put(`${API_URL}/hoa-don/${orderId}/update-product-quantity`, {
             chiTietSanPhamId: prod.chiTietSanPham.id,
             soLuong: prod.soLuong
           });
-          console.log('Đã cập nhật số lượng sản phẩm vào database:', prod.chiTietSanPham.id, prod.soLuong);
-          
-          // Trừ số lượng từ kho ngay lập tức
           const oldQuantity = prod.oldQuantity || 0;
           const quantityDiff = prod.soLuong - oldQuantity;
           if (quantityDiff !== 0) {
@@ -1618,76 +1615,43 @@ async saveCustomer() {
               soLuongTon: newStock
             });
             prod.chiTietSanPham.soLuongTon = newStock;
-            console.log('Đã trừ số lượng từ kho sản phẩm:', prod.chiTietSanPham.id, 'diff:', quantityDiff, 'new stock:', newStock);
           }
         } else if (orderId && prod.boSach) {
-          // Cập nhật số lượng bộ sách trong hóa đơn
-          console.log('DEBUG: Gửi request cập nhật bộ sách:', {
-            orderId: orderId,
-            boSachId: prod.boSach.id,
-            soLuong: prod.soLuong
-          });
           await axios.put(`${API_URL}/hoa-don/${orderId}/update-bosach-quantity`, {
             boSachId: prod.boSach.id,
             soLuong: prod.soLuong
           });
-          console.log('Đã cập nhật số lượng bộ sách vào database:', prod.boSach.id, prod.soLuong);
-          
-          // Trừ số lượng từ kho ngay lập tức
           const oldQuantity = prod.oldQuantity || 0;
           const quantityDiff = prod.soLuong - oldQuantity;
           if (quantityDiff !== 0) {
-            // Trừ số lượng bộ sách chính
             const newStock = prod.boSach.soLuong - quantityDiff;
             await axios.put(`${API_URL}/bo-sach/${prod.boSach.id}/update-stock`, {
               soLuong: newStock
             });
             prod.boSach.soLuong = newStock;
-            console.log('Đã trừ số lượng từ kho bộ sách:', prod.boSach.id, 'diff:', quantityDiff, 'new stock:', newStock);
-            
-            // Trừ số lượng chi tiết sản phẩm trong bộ sách
-            try {
-              const boSachChiTietResponse = await axios.get(`${API_URL}/bo-sach/${prod.boSach.id}/chi-tiet`);
-              const boSachChiTiets = boSachChiTietResponse.data;
-              
-              for (const chiTiet of boSachChiTiets) {
-                if (chiTiet.idChiTietSanPham) {
-                  const newChiTietStock = chiTiet.idChiTietSanPham.soLuongTon - (chiTiet.soLuong * quantityDiff);
-                  await axios.put(`${API_URL}/chi-tiet-san-pham/${chiTiet.idChiTietSanPham.id}/update-stock`, {
-                    soLuongTon: newChiTietStock
-                  });
-                  console.log('Đã trừ số lượng chi tiết sản phẩm:', chiTiet.idChiTietSanPham.id, 'diff:', chiTiet.soLuong * quantityDiff, 'new stock:', newChiTietStock);
-                }
+            const boSachChiTietResponse = await axios.get(`${API_URL}/bo-sach/${prod.boSach.id}/chi-tiet`);
+            const boSachChiTiets = boSachChiTietResponse.data;
+            for (const chiTiet of boSachChiTiets) {
+              if (chiTiet.idChiTietSanPham) {
+                const newChiTietStock = chiTiet.idChiTietSanPham.soLuongTon - (chiTiet.soLuong * quantityDiff);
+                await axios.put(`${API_URL}/chi-tiet-san-pham/${chiTiet.idChiTietSanPham.id}/update-stock`, {
+                  soLuongTon: newChiTietStock
+                });
               }
-            } catch (error) {
-              console.error('Lỗi khi trừ số lượng chi tiết sản phẩm:', error);
             }
           }
         }
       } catch (error) {
-        console.error('Lỗi khi cập nhật số lượng vào database:', error);
-        if (error.response && error.response.data && error.response.data.message) {
-          alert('Lỗi: ' + error.response.data.message);
-        } else if (error.response && error.response.status === 400) {
-          alert('Không thể chỉnh sửa hóa đơn đã hủy hoặc đã hoàn thành!');
-        } else {
-          alert('Có lỗi xảy ra khi cập nhật số lượng. Vui lòng thử lại!');
-        }
+        console.error('Lỗi khi cập nhật số lượng:', error);
+        alert('Có lỗi xảy ra khi cập nhật số lượng!');
       }
-      
-      // Cập nhật oldQuantity cho lần thay đổi tiếp theo
       prod.oldQuantity = prod.soLuong;
-      
-      // Cập nhật lại paginatedProducts để trigger computed property
       this.paginatedProducts = [...this.paginatedProducts];
-      
-      // Reload vouchers khi tổng tiền thay đổi
       this.$nextTick(() => {
         this.loadAvailableVouchers();
         this.loadPersonalVouchers();
       });
     },
-    // Method xử lý khi chọn voucher
     onVoucherChange() {
       if (this.selectedVoucher) {
         this.voucherCode = this.selectedVoucher.maPhieuGiamGia;
@@ -1695,31 +1659,24 @@ async saveCustomer() {
         this.voucherCode = '';
       }
     },
-    // Method trừ số lượng voucher sau thanh toán
     async deductVoucherAfterPayment() {
       if (this.selectedVoucher) {
         try {
-          // Gọi API để trừ số lượng voucher
           await PhieuGiamGiaService.deductVoucherQuantity(this.selectedVoucher.id);
-          console.log('Đã trừ số lượng voucher:', this.selectedVoucher.tenPhieuGiamGia);
         } catch (error) {
           console.error('Lỗi khi trừ số lượng voucher:', error);
-          // Không throw error để không ảnh hưởng đến thanh toán
         }
       }
     },
-    // Method lấy thông tin giảm giá cho sản phẩm
     async loadProductDiscounts() {
       try {
         for (const product of this.paginatedProducts) {
           if (product.chiTietSanPham) {
-            // Lấy thông tin giảm giá cho sản phẩm lẻ
             const discountInfo = await DotGiamGiaService.getActiveDetail(product.chiTietSanPham.id);
             if (discountInfo && discountInfo.giaBanDau) {
               this.productDiscounts[product.chiTietSanPham.id] = discountInfo;
             }
           } else if (product.boSach) {
-            // Lấy thông tin giảm giá cho bộ sách
             const discountInfo = await DotGiamGiaService.getActiveBoSachDetail(product.boSach.id);
             if (discountInfo && discountInfo.giaBanDau) {
               this.bookSetDiscounts[product.boSach.id] = discountInfo;
@@ -1730,7 +1687,6 @@ async saveCustomer() {
         console.error('Lỗi khi tải thông tin giảm giá:', error);
       }
     },
-    // Method lấy giá gốc của sản phẩm
     getOriginalPrice(product) {
       if (product.chiTietSanPham) {
         const discountInfo = this.productDiscounts[product.chiTietSanPham.id];
@@ -1741,7 +1697,6 @@ async saveCustomer() {
       }
       return product.giaSanPham;
     },
-    // Method lấy giá đã giảm của sản phẩm
     getDiscountedPrice(product) {
       if (product.chiTietSanPham) {
         const discountInfo = this.productDiscounts[product.chiTietSanPham.id];
@@ -1752,7 +1707,6 @@ async saveCustomer() {
       }
       return product.giaSanPham;
     },
-    // Method kiểm tra sản phẩm có giảm giá không
     hasDiscount(product) {
       if (product.chiTietSanPham) {
         return this.productDiscounts[product.chiTietSanPham.id] != null;
