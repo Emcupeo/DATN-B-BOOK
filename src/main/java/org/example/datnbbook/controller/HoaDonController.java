@@ -144,12 +144,14 @@ public class HoaDonController {
             BigDecimal tienKhachDua = request.get("tienKhachDua") != null ? new BigDecimal(request.get("tienKhachDua").toString()) : BigDecimal.ZERO;
             Long phieuGiamGiaId = request.get("phieuGiamGiaId") != null ? 
                 Long.valueOf(request.get("phieuGiamGiaId").toString()) : null;
+            String phuongThucThanhToan = request.get("phuongThucThanhToan") != null ? request.get("phuongThucThanhToan").toString() : null;
             
             System.out.println("DEBUG: Parsed values - tienMat=" + tienMat + ", chuyenKhoan=" + chuyenKhoan + 
                              ", phuongThucThanhToanId=" + phuongThucThanhToanId + ", ghiChu=" + ghiChu + 
-                             ", loaiHoaDon=" + loaiHoaDon + ", tienKhachDua=" + tienKhachDua + ", phieuGiamGiaId=" + phieuGiamGiaId);
+                             ", loaiHoaDon=" + loaiHoaDon + ", tienKhachDua=" + tienKhachDua + ", phieuGiamGiaId=" + phieuGiamGiaId + 
+                             ", phuongThucThanhToan=" + phuongThucThanhToan);
             
-            HoaDon updatedHoaDon = hoaDonService.updatePayment(id, tienMat, chuyenKhoan, phuongThucThanhToanId, ghiChu, loaiHoaDon, tienKhachDua, phieuGiamGiaId);
+            HoaDon updatedHoaDon = hoaDonService.updatePayment(id, tienMat, chuyenKhoan, phuongThucThanhToanId, ghiChu, loaiHoaDon, tienKhachDua, phieuGiamGiaId, phuongThucThanhToan);
             return ResponseEntity.ok(updatedHoaDon);
         } catch (Exception e) {
             System.out.println("DEBUG: updatePayment error: " + e.getMessage());

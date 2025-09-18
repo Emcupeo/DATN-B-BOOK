@@ -187,7 +187,7 @@
       <div class="mt-4">
         <h3 class="text-md font-semibold">Lịch sử thanh toán</h3>
         <div class="bg-white p-6 rounded-lg shadow-md">
-          <template v-if="order.trangThai === 'Thanh toán thành công' || order.trangThai === 'Hoàn thành'">
+          <template v-if="order.trangThai === 'Thanh toán thành công' || order.trangThai === 'Hoàn thành' || order.trangThai === 'Đã thanh toán' || (order.trangThai === 'Chờ giao hàng' && order.phuongThucThanhToan === 'VNPAY')">
             <table class="w-full text-sm text-left text-gray-500">
               <thead class="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
@@ -201,10 +201,10 @@
               <tbody>
               <tr class="bg-white border-b hover:bg-gray-50">
                 <td class="px-4 py-3">{{ formatCurrency(order.tongTien) }}</td>
-                <td class="px-4 py-3">{{ formatDate(order.updatedAt || order.lichSuHoaDons.find(h => h.trangThaiMoi === 'Thanh toán thành công')?.createdAt) }}</td>
+                <td class="px-4 py-3">{{ formatDate(order.updatedAt || order.lichSuHoaDons.find(h => h.trangThaiMoi === 'Thanh toán thành công' || h.trangThaiMoi === 'Đã thanh toán' || h.trangThaiMoi === 'Chờ giao hàng')?.createdAt) }}</td>
                 <td class="px-4 py-3">
-                    <span :class="getPaymentClass(order.hinhThucThanhToan?.phuongThucThanhToan?.kieuThanhToan)">
-                      {{ order.hinhThucThanhToan?.phuongThucThanhToan?.kieuThanhToan || 'Không xác định' }}
+                    <span :class="getPaymentClass(order.phuongThucThanhToan || order.hinhThucThanhToan?.phuongThucThanhToan?.kieuThanhToan)">
+                      {{ order.phuongThucThanhToan ? getPaymentMethodNameFromString(order.phuongThucThanhToan) : (order.hinhThucThanhToan?.phuongThucThanhToan?.kieuThanhToan || 'Không xác định') }}
                     </span>
                 </td>
                 <td class="px-4 py-3">
@@ -1148,8 +1148,33 @@ export default {
           return "bg-blue-200 text-blue-800 px-2 py-1 rounded";
         case "VNPAY":
           return "bg-purple-200 text-purple-800 px-2 py-1 rounded";
+        case "COD":
+          return "bg-orange-200 text-orange-800 px-2 py-1 rounded";
+        case "TIEN_MAT":
+          return "bg-green-200 text-green-800 px-2 py-1 rounded";
+        case "CHUYEN_KHOAN":
+          return "bg-blue-200 text-blue-800 px-2 py-1 rounded";
         default:
           return "bg-gray-200 text-gray-800 px-2 py-1 rounded";
+      }
+    },
+
+    getPaymentMethodNameFromString(phuongThucThanhToan) {
+      if (!phuongThucThanhToan) {
+        return "Chưa xác định";
+      }
+      
+      switch (phuongThucThanhToan) {
+        case "COD":
+          return "COD";
+        case "VNPAY":
+          return "VNPAY";
+        case "TIEN_MAT":
+          return "Tiền mặt";
+        case "CHUYEN_KHOAN":
+          return "Chuyển khoản";
+        default:
+          return phuongThucThanhToan;
       }
     },
     increaseQuantity(item) {

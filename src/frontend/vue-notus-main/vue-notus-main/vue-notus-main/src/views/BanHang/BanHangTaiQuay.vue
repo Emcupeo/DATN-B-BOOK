@@ -1087,6 +1087,7 @@ export default {
             phieuGiamGiaId: this.selectedVoucher?.id || null,
             loaiHoaDon: this.mapDeliveryMethod(this.deliveryMethod),
             tongTien: this.thanhTien,
+            phuongThucThanhToan: paymentMethodId === 4 ? 'TIEN_MAT' : 'CHUYEN_KHOAN'
           };
           const payRes = await HoaDonService.updatePayment(orderId, paymentData);
           if (payRes.status !== 200) {
@@ -1161,6 +1162,7 @@ export default {
           phieuGiamGiaId: this.selectedVoucher?.id || null,
           loaiHoaDon: this.mapDeliveryMethod(this.deliveryMethod),
           tongTien: this.thanhTien,
+          phuongThucThanhToan: paymentMethodId === 4 ? 'TIEN_MAT' : 'CHUYEN_KHOAN'
         };
         // Cập nhật thông tin hóa đơn trước khi xác nhận thanh toán
         await HoaDonService.updateHoaDon(orderId, {

@@ -96,6 +96,10 @@ public class HoaDon {
     @Column(name = "trang_thai", length = 50)
     private String trangThai;
 
+    @Nationalized
+    @Column(name = "phuong_thuc_thanh_toan", length = 50)
+    private String phuongThucThanhToan;
+
     @ColumnDefault("getdate()")
     @Column(name = "created_at")
     private Instant createdAt;

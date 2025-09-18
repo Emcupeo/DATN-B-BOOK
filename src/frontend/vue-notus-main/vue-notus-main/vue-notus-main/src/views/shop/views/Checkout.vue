@@ -1852,7 +1852,8 @@ export default {
           ghiChu: ghiChu.value || '',
           loaiHoaDon: 'Online',
           tienKhachDua: paymentMethod.value === 'cod' ? finalTotal.value : 0,
-          phieuGiamGiaId: discountInfo.value ? discountInfo.value.id : null
+          phieuGiamGiaId: discountInfo.value ? discountInfo.value.id : null,
+          phuongThucThanhToan: paymentMethod.value === 'cod' ? 'COD' : 'VNPAY'
         }
         await hoaDonService.updatePayment(hoaDonId, paymentPayload)
         
@@ -2090,7 +2091,8 @@ export default {
           ghiChu: tempOrderData.ghiChu || '',
           loaiHoaDon: 'Online',
           tienKhachDua: 0,
-          phieuGiamGiaId: tempOrderData.discountInfo ? tempOrderData.discountInfo.id : null
+          phieuGiamGiaId: tempOrderData.discountInfo ? tempOrderData.discountInfo.id : null,
+          phuongThucThanhToan: 'VNPAY'
         })
 
         // 6. Ghi nhận ngày đặt hàng (trạng thái đã được set trong updatePayment)
