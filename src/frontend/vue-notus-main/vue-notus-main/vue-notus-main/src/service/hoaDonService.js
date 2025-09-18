@@ -48,34 +48,30 @@ class HoaDonService {
         });
     }
 
-    addBoSachToOrder(hoaDonId, productData) {
-        return axios.post(`${API_URL_ListHoaDon}/${hoaDonId}/add-bosach`, productData, {
-            headers: { "Content-Type": "application/json" }
-        });
-    }
-
-    updatePayment(id, paymentData) {
-        return axios.put(`${API_URL_ListHoaDon}/${id}/cap-nhat-thanh-toan`, paymentData, {
-            headers: { "Content-Type": "application/json" }
-        });
-    }
-
-    updateProductQuantity(hoaDonId, chiTietId, data) {
-        return axios.put(`${API_URL_ListHoaDon}/${hoaDonId}/update-product/${chiTietId}`, {
-            soLuong: data.soLuong
-        }, {
+    updateProductQuantity(hoaDonId, chiTietId, updatedData) {
+        return axios.put(`${API_URL_ListHoaDon}/${hoaDonId}/chi-tiet/${chiTietId}/cap-nhat-so-luong`, updatedData, {
             headers: { "Content-Type": "application/json" }
         });
     }
 
     removeProductFromOrder(hoaDonId, chiTietId) {
-        return axios.delete(`${API_URL_ListHoaDon}/${hoaDonId}/remove-product/${chiTietId}`, {
+        return axios.delete(`${API_URL_ListHoaDon}/${hoaDonId}/chi-tiet/${chiTietId}`);
+    }
+
+    updateCustomerInfo(hoaDonId, customerData) {
+        return axios.put(`${API_URL_ListHoaDon}/${hoaDonId}/cap-nhat-thong-tin-khach-hang`, customerData, {
             headers: { "Content-Type": "application/json" }
         });
     }
 
-    updateCustomerInfo(hoaDonId, data) {
-        return axios.put(`${API_URL_ListHoaDon}/${hoaDonId}/cap-nhat-thong-tin-khach-hang`, data, {
+    updatePayment(hoaDonId, paymentData) {
+        return axios.put(`${API_URL_ListHoaDon}/${hoaDonId}/cap-nhat-thanh-toan`, paymentData, {
+            headers: { "Content-Type": "application/json" }
+        });
+    }
+
+    addBoSachToOrder(hoaDonId, productData) {
+        return axios.post(`${API_URL_ListHoaDon}/${hoaDonId}/add-bosach`, productData, {
             headers: { "Content-Type": "application/json" }
         });
     }

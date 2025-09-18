@@ -78,7 +78,12 @@
               <div class="flex-1 min-w-0">
                 <h3 class="font-semibold text-gray-900 truncate">{{ item.title }}</h3>
                 <p class="text-gray-600 text-sm">{{ item.author }}</p>
-                <p class="text-blue-600 font-semibold">{{ formatPrice(item.price) }}</p>
+                <div class="flex items-center space-x-2">
+                  <span v-if="item.originalPrice && item.originalPrice > item.price" class="text-gray-500 line-through text-sm">
+                    {{ formatPrice(item.originalPrice) }}
+                  </span>
+                  <span class="text-red-600 font-semibold">{{ formatPrice(item.price) }}</span>
+                </div>
                 <p v-if="item.stockQuantity" class="text-xs text-gray-500">Tồn kho: {{ item.stockQuantity }}</p>
               </div>
 
@@ -107,6 +112,9 @@
               </div>
 
               <div class="text-right min-w-0">
+                <div v-if="item.originalPrice && item.originalPrice > item.price" class="text-sm text-gray-500 line-through">
+                  {{ formatPrice(item.originalPrice * item.quantity) }}
+                </div>
                 <p class="font-bold text-lg text-gray-900">{{ formatPrice(item.price * item.quantity) }}</p>
                 <button 
                   @click="removeFromCart(item.id)"

@@ -18,7 +18,7 @@ import Shop from "@/layouts/Shop.vue";
 import { useAuthStore } from "@/store/auth";
 
 // views for Admin layout
-import Dashboard from "@/views/admin/Dashboard.vue";
+import Dashboard from "@/views/admin/DashboardReal.vue";
 import Settings from "@/views/admin/Settings.vue";
 import Tables from "@/views/admin/Tables.vue";
 import Maps from "@/views/admin/Maps.vue";

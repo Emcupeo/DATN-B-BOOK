@@ -11,11 +11,11 @@ const routes = [
     redirect: "/admin/dashboard",
     component: () => import("../layouts/Admin.vue"),
     children: [
-      {
-        path: "dashboard",
-        name: "AdminDashboard",
-        component: () => import("../views/admin/Dashboard.vue"),
-      },
+          {
+            path: "dashboard",
+            name: "AdminDashboard",
+            component: () => import("../views/admin/DashboardReal.vue"),
+          },
       {
         path: "settings",
         name: "AdminSettings",
@@ -39,12 +39,12 @@ const routes = [
       {
         path: "hoa-don",
         name: "HoaDon",
-        component: () => import("../views/BanHang/HoaDon.vue"),
+        component: () => import("../views/admin/HoaDon.vue"),
       },
       {
         path: "hoa-don-chi-tiet/:id",
         name: "QuanLyHoaDon",
-        component: () => import("../views/BanHang/QuanLyHoaDon.vue"),
+        component: () => import("../views/admin/QuanLyHoaDon.vue"),
       },
       {
         path: "sach",

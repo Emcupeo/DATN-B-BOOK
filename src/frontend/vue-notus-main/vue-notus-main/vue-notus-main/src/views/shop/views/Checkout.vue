@@ -493,7 +493,10 @@
                     <i class="fas fa-check-circle text-green-600 mr-2 text-sm"></i>
                     <div>
                       <div class="text-sm font-medium text-green-800">{{ discountInfo.tenPhieuGiamGia }}</div>
-                      <div class="text-xs text-green-600">Giảm {{ discountInfo.soPhanTramGiam || discountInfo.giaTriGiam }}%</div>
+                      <div class="text-xs text-green-600">
+                        <span v-if="discountInfo.soPhanTramGiam">Giảm {{ discountInfo.soPhanTramGiam }}%</span>
+                        <span v-else-if="discountInfo.giaTriGiam">Trừ {{ formatPrice(discountInfo.giaTriGiam) }}</span>
+                      </div>
                     </div>
                   </div>
                   <button 
@@ -541,6 +544,12 @@
                   <div class="flex-1 min-w-0">
                     <h4 class="font-medium text-sm text-gray-900 truncate">{{ item.title }}</h4>
                     <p class="text-xs text-gray-500 truncate">{{ item.author }}</p>
+                    <div class="text-xs mt-1">
+                      <span v-if="item.originalPrice && item.originalPrice > item.price" class="text-gray-500 line-through mr-2">
+                        {{ formatPrice(item.originalPrice) }}
+                      </span>
+                      <span class="text-red-600 font-medium">{{ formatPrice(item.price) }}</span>
+                    </div>
                     <div class="flex items-center justify-between mt-1">
                       <!-- Quantity Controls -->
                       <div class="flex items-center space-x-2">
@@ -564,7 +573,14 @@
                           </svg>
                         </button>
                 </div>
-                      <span class="text-sm font-semibold text-gray-900">{{ formatPrice(item.price * item.quantity) }}</span>
+                      <div class="text-right">
+                        <div v-if="item.originalPrice && item.originalPrice > item.price" class="text-xs text-gray-500 line-through">
+                          {{ formatPrice(item.originalPrice * item.quantity) }}
+                        </div>
+                        <div class="text-sm font-semibold text-gray-900">
+                          {{ formatPrice(item.price * item.quantity) }}
+                        </div>
+                      </div>
               </div>
               </div>
                 </div>

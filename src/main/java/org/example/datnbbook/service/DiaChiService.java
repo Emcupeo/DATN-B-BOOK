@@ -42,7 +42,11 @@ public class DiaChiService {
 
         // Nếu là địa chỉ mặc định, cập nhật các địa chỉ khác
         if (Boolean.TRUE.equals(diaChiDTO.getMacDinh())) {
-            khachHang.getDanhSachDiaChi().forEach(d -> d.setMacDinh(false));
+            // Lấy danh sách địa chỉ hiện tại của khách hàng
+            List<DiaChi> existingAddresses = diaChiRepository.findByKhachHangIdAndDeletedFalse(khachHangId);
+            existingAddresses.forEach(d -> d.setMacDinh(false));
+            // Lưu lại các địa chỉ đã cập nhật
+            diaChiRepository.saveAll(existingAddresses);
         }
 
         DiaChi savedDiaChi = diaChiRepository.save(diaChi);
@@ -65,7 +69,11 @@ public class DiaChiService {
         // Xử lý địa chỉ mặc định
         if (Boolean.TRUE.equals(diaChiDTO.getMacDinh()) && !Boolean.TRUE.equals(diaChi.getMacDinh())) {
             KhachHang khachHang = diaChi.getKhachHang();
-            khachHang.getDanhSachDiaChi().forEach(d -> d.setMacDinh(false));
+            // Lấy danh sách địa chỉ hiện tại của khách hàng
+            List<DiaChi> existingAddresses = diaChiRepository.findByKhachHangIdAndDeletedFalse(khachHang.getId());
+            existingAddresses.forEach(d -> d.setMacDinh(false));
+            // Lưu lại các địa chỉ đã cập nhật
+            diaChiRepository.saveAll(existingAddresses);
             diaChi.setMacDinh(true);
         }
 
