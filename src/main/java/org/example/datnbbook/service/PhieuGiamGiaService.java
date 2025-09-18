@@ -201,9 +201,15 @@ public class PhieuGiamGiaService {
             phieuGiamGiaKhachHangService.save(link);
 
             try {
-                emailService.sendVoucherEmail(khach.getEmail(), khach.getHoTen(),
-                        dto.getSoPhanTramGiam() != null ? "Giảm theo phần trăm" : "Giảm theo giá trị tiền",
-                        dto.getGiaTriGiam().doubleValue());
+                String voucherType = dto.getSoPhanTramGiam() != null ? "Giảm theo phần trăm" : "Giảm theo giá trị tiền";
+                Double voucherValue = dto.getSoPhanTramGiam() != null ? 
+                    dto.getSoPhanTramGiam().doubleValue() : dto.getGiaTriGiam().doubleValue();
+                
+                String startDate = dto.getNgayBatDau() != null ? dto.getNgayBatDau().toString() : null;
+                String endDate = dto.getNgayKetThuc() != null ? dto.getNgayKetThuc().toString() : null;
+                
+                emailService.sendVoucherEmail(khach.getEmail(), khach.getHoTen(), voucherType, voucherValue, false, 
+                    phieu.getMaPhieuGiamGia(), dto.getTenPhieuGiamGia(), dto.getMoTa(), startDate, endDate);
             } catch (MessagingException e) {
                 logger.error("Lỗi khi gửi email cho {}: {}", khach.getEmail(), e.getMessage());
             }
@@ -240,11 +246,12 @@ public class PhieuGiamGiaService {
         List<PhieuGiamGiaKhachHang> danhSachCu = phieuGiamGiaKhachHangService.findByPhieuGiamGiaId(existingPhieu.getId());
         Long oldCustomerId = danhSachCu.isEmpty() ? null : Long.valueOf(danhSachCu.get(0).getKhachHang().getId());
 
-        if (dto.getKhachHangId() != null && !dto.getKhachHangId().equals(oldCustomerId)) {
+        if (dto.getKhachHangId() != null) {
             var kh = khachHangRepository.findById(dto.getKhachHangId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng"));
 
             if (danhSachCu.isEmpty()) {
+                // Tạo mới liên kết khách hàng
                 PhieuGiamGiaKhachHang link = new PhieuGiamGiaKhachHang();
                 link.setPhieuGiamGia(existingPhieu);
                 link.setKhachHang(kh);
@@ -254,13 +261,29 @@ public class PhieuGiamGiaService {
                 link.setSoLuong(1);
                 phieuGiamGiaKhachHangService.save(link);
             } else {
+                // Cập nhật liên kết khách hàng
                 PhieuGiamGiaKhachHang link = danhSachCu.get(0);
                 link.setKhachHang(kh);
                 phieuGiamGiaKhachHangService.save(link);
             }
 
-            emailService.sendVoucherEmail(kh.getEmail(), kh.getHoTen(), existingPhieu.getTenPhieuGiamGia(), existingPhieu.getGiaTriGiam().doubleValue());
+            // Gửi email thông báo cho khách hàng (cả khi tạo mới và cập nhật)
+            try {
+                String voucherType = existingPhieu.getSoPhanTramGiam() != null ? "Giảm theo phần trăm" : "Giảm theo giá trị tiền";
+                Double voucherValue = existingPhieu.getSoPhanTramGiam() != null ? 
+                    existingPhieu.getSoPhanTramGiam().doubleValue() : existingPhieu.getGiaTriGiam().doubleValue();
+                boolean isUpdate = !danhSachCu.isEmpty(); // Nếu đã có liên kết khách hàng thì là cập nhật
+                
+                String startDate = existingPhieu.getNgayBatDau() != null ? existingPhieu.getNgayBatDau().toString() : null;
+                String endDate = existingPhieu.getNgayKetThuc() != null ? existingPhieu.getNgayKetThuc().toString() : null;
+                
+                emailService.sendVoucherEmail(kh.getEmail(), kh.getHoTen(), voucherType, voucherValue, isUpdate, 
+                    existingPhieu.getMaPhieuGiamGia(), existingPhieu.getTenPhieuGiamGia(), existingPhieu.getMoTa(), startDate, endDate);
+            } catch (MessagingException e) {
+                logger.error("Lỗi khi gửi email cho {}: {}", kh.getEmail(), e.getMessage());
+            }
         } else if (dto.getKhachHangId() == null && !danhSachCu.isEmpty()) {
+            // Xóa liên kết khách hàng nếu không có khách hàng
             for (PhieuGiamGiaKhachHang link : danhSachCu) {
                 phieuGiamGiaKhachHangService.delete(link);
             }

@@ -473,7 +473,7 @@ public class HoaDonService {
         }
 
         // Gửi email xác nhận
-        if ("Hoàn thành".equals(newTrangThai) || "Đã thanh toán".equals(newTrangThai) || "Chờ xác nhận".equals(newTrangThai)) {
+        if ("Hoàn thành".equals(newTrangThai) || "Đã thanh toán".equals(newTrangThai) || "Chờ xác nhận".equals(newTrangThai) || "Chờ giao hàng".equals(newTrangThai)) {
             sendOrderConfirmationEmail(updatedHoaDon);
         }
 
@@ -810,10 +810,31 @@ public class HoaDonService {
             
             // Xác định phương thức thanh toán
             String paymentMethod = "Chưa thanh toán";
-            if (hoaDon.getHinhThucThanhToan() != null && 
+            
+            // Ưu tiên sử dụng trường mới phuongThucThanhToan
+            if (hoaDon.getPhuongThucThanhToan() != null && !hoaDon.getPhuongThucThanhToan().trim().isEmpty()) {
+                String phuongThuc = hoaDon.getPhuongThucThanhToan();
+                switch (phuongThuc) {
+                    case "VNPAY":
+                        paymentMethod = "VNPAY (Thanh toán online)";
+                        break;
+                    case "COD":
+                        paymentMethod = "COD (Thanh toán khi nhận hàng)";
+                        break;
+                    case "TIEN_MAT":
+                        paymentMethod = "Tiền mặt";
+                        break;
+                    case "CHUYEN_KHOAN":
+                        paymentMethod = "Chuyển khoản";
+                        break;
+                    default:
+                        paymentMethod = phuongThuc;
+                        break;
+                }
+            } else if (hoaDon.getHinhThucThanhToan() != null && 
                 hoaDon.getHinhThucThanhToan().getPhuongThucThanhToan() != null) {
+                // Fallback về cách cũ nếu không có trường mới
                 String kieuThanhToan = hoaDon.getHinhThucThanhToan().getPhuongThucThanhToan().getKieuThanhToan();
-                // Hiển thị tên phương thức thanh toán thân thiện hơn
                 if ("Chuyển khoản".equals(kieuThanhToan)) {
                     paymentMethod = "VNPAY (Chuyển khoản)";
                 } else if ("Tiền mặt".equals(kieuThanhToan)) {

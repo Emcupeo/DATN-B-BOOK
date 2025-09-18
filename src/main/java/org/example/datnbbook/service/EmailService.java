@@ -2,32 +2,16 @@ package org.example.datnbbook.service;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-
-import java.util.Properties;
 
 @Service
 public class EmailService {
 
-    private final JavaMailSender mailSender;
-
-    public EmailService() {
-        JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
-        mailSender.setHost("smtp-relay.brevo.com");
-        mailSender.setPort(587);
-        mailSender.setUsername("h5studiogl@gmail.com");
-        mailSender.setPassword("fScdnZ4WmEDqjBA1");
-
-        Properties props = mailSender.getJavaMailProperties();
-        props.put("mail.transport.protocol", "smtp");
-        props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.starttls.enable", "true");
-        
-        this.mailSender = mailSender;
-    }
+    @Autowired
+    private JavaMailSender mailSender;
 
     public void sendEmployeeCredentials(String toEmail, String employeeCode, String password) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
@@ -87,51 +71,148 @@ public class EmailService {
     }
 
     public void sendVoucherEmail(String to, String customerName, String voucherType, Double voucherValue) throws MessagingException {
+        sendVoucherEmail(to, customerName, voucherType, voucherValue, false, null);
+    }
+
+    public void sendVoucherEmail(String to, String customerName, String voucherType, Double voucherValue, boolean isUpdate) throws MessagingException {
+        sendVoucherEmail(to, customerName, voucherType, voucherValue, isUpdate, null);
+    }
+
+    public void sendVoucherEmail(String to, String customerName, String voucherType, Double voucherValue, boolean isUpdate, String voucherCode) throws MessagingException {
+        sendVoucherEmail(to, customerName, voucherType, voucherValue, isUpdate, voucherCode, null, null, null, null);
+    }
+
+    public void sendVoucherEmail(String to, String customerName, String voucherType, Double voucherValue, boolean isUpdate, String voucherCode, 
+                                String voucherName, String description, String startDate, String endDate) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
         helper.setFrom("h5studiogl@gmail.com");
         helper.setTo(to);
-        helper.setSubject("Chúc mừng bạn nhận voucher giảm giá!");
-        helper.setText(
-                "<html>" +
-                        "<head>" +
-                        "<meta charset='UTF-8'>" +
-                        "<style>" +
-                        "body { font-family: 'Arial', sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; color: #333; }" +
-                        ".email-container { width: 100%; max-width: 600px; margin: 20px auto; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1); }" +
-                        ".email-header { text-align: center; padding-bottom: 20px; }" +
-                        ".email-header h1 { font-size: 24px; color: #333; margin-bottom: 10px; }" +
-                        ".email-body { font-size: 16px; line-height: 1.5; margin-bottom: 20px; }" +
-                        ".voucher-info { font-size: 18px; font-weight: bold; color: #4CAF50; padding: 10px; background-color: #e8f5e9; border-radius: 5px; }" +
-                        ".footer { text-align: center; font-size: 14px; color: #777; padding-top: 20px; border-top: 1px solid #ddd; }" +
-                        ".footer a { color: #4CAF50; text-decoration: none; }" +
-                        "</style>" +
-                        "</head>" +
-                        "<body>" +
-                        "<div class='email-container'>" +
-                        "<div class='email-header'>" +
-                        "<h1>Xin chào " + customerName + "!</h1>" +
-                        "<p>Chúc mừng bạn đã nhận được một phần quà đặc biệt từ chúng tôi!</p>" +
-                        "</div>" +
-                        "<div class='email-body'>" +
-                        "<p>Chúng tôi rất vui mừng thông báo rằng bạn đã nhận được một <strong>Voucher Giảm Giá</strong> tuyệt vời từ chúng tôi!</p>" +
-                        "<p class='voucher-info'>Voucher giảm giá: " + voucherType + "</p>" +
-                        "<p class='voucher-info'>Giá trị voucher: " + voucherValue + "</p>" +
-                        "<p>Hãy sử dụng voucher này để tận hưởng các ưu đãi hấp dẫn khi mua sắm tại cửa hàng của chúng tôi. Đừng bỏ lỡ cơ hội này!</p>" +
-                        "<p>Chúc bạn có một ngày tuyệt vời và hy vọng sẽ sớm gặp lại bạn trong những lần mua sắm tới!</p>" +
-                        "</div>" +
-                        "<div class='footer'>" +
-                        "<p>Cảm ơn bạn đã luôn ủng hộ chúng tôi!</p>" +
-                        "<p><a href='http://www.yourwebsite.com'>Truy cập website của chúng tôi</a></p>" +
-                        "</div>" +
-                        "</div>" +
-                        "</body>" +
-                        "</html>",
-                true
+        helper.setSubject(isUpdate ? "Cập nhật voucher giảm giá của bạn!" : "Chúc mừng bạn nhận voucher giảm giá!");
+        String content = String.format("""
+            <html>
+            <head>
+                <meta charset='UTF-8'>
+                <style>
+                    body { font-family: 'Arial', sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; color: #333; }
+                    .email-container { width: 100%%; max-width: 600px; margin: 20px auto; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1); }
+                    .email-header { text-align: center; padding-bottom: 20px; border-bottom: 2px solid #4CAF50; }
+                    .email-header h1 { font-size: 24px; color: #4CAF50; margin-bottom: 10px; }
+                    .email-body { font-size: 16px; line-height: 1.6; margin-bottom: 20px; }
+                    .voucher-info { background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0; }
+                    .voucher-info h3 { color: #4CAF50; margin-top: 0; }
+                    .info-row { display: flex; justify-content: space-between; margin: 8px 0; }
+                    .info-label { font-weight: bold; color: #555; }
+                    .info-value { color: #333; }
+                    .footer { text-align: center; font-size: 14px; color: #777; padding-top: 20px; border-top: 1px solid #ddd; }
+                    .footer a { color: #4CAF50; text-decoration: none; }
+                    .success-message { background-color: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin: 15px 0; }
+                    .voucher-code { background-color: #e8f5e9; padding: 8px 12px; border-radius: 4px; font-family: monospace; font-weight: bold; color: #2e7d32; }
+                </style>
+            </head>
+            <body>
+                <div class='email-container'>
+                    <div class='email-header'>
+                        <h1>🎉 %s</h1>
+                        <p>Cảm ơn bạn đã tin tưởng B-Book</p>
+                    </div>
+                    
+                    <div class='success-message'>
+                        <strong>Xin chào %s!</strong><br>
+                        %s
+                    </div>
+                    
+                    <div class='voucher-info'>
+                        <h3>📋 Thông tin phiếu giảm giá</h3>
+                        %s
+                        <div class='info-row'>
+                            <span class='info-label'>Loại giảm giá:</span>
+                            <span class='info-value'>%s</span>
+                        </div>
+                        <div class='info-row'>
+                            <span class='info-label'>Giá trị giảm:</span>
+                            <span class='info-value'><strong style='color: #4CAF50; font-size: 18px;'>%s</strong></span>
+                        </div>
+                        %s
+                    </div>
+                    
+                    <div class='voucher-info'>
+                        <h3>⏰ Thời gian áp dụng</h3>
+                        %s
+                        %s
+                    </div>
+                    
+                    <div class='email-body'>
+                        <p><strong>Hướng dẫn sử dụng:</strong></p>
+                        <ul>
+                            <li>Nhập mã phiếu khi thanh toán để áp dụng giảm giá</li>
+                            <li>Phiếu có thể sử dụng cho tất cả sản phẩm phù hợp</li>
+                            <li>Mỗi đơn hàng chỉ được áp dụng một phiếu giảm giá</li>
+                        </ul>
+                        
+                        <p>Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi qua hotline hoặc email.</p>
+                    </div>
+                    
+                    <div class='footer'>
+                        <p>Cảm ơn bạn đã tin tưởng và lựa chọn B-Book!</p>
+                        <p><a href='http://localhost:3000'>Truy cập website của chúng tôi</a></p>
+                        <p><a href='http://localhost:3000/order-lookup'>Tra cứu đơn hàng</a></p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """, 
+            isUpdate ? "Cập nhật voucher thành công!" : "Chúc mừng bạn nhận voucher!",
+            customerName,
+            isUpdate ? "Chúng tôi đã cập nhật thông tin voucher giảm giá của bạn. Dưới đây là thông tin chi tiết:" : "Chúng tôi rất vui mừng thông báo rằng bạn đã nhận được một Voucher Giảm Giá tuyệt vời từ chúng tôi!",
+            voucherCode != null ? String.format("<div class='info-row'><span class='info-label'>Mã phiếu:</span><span class='info-value'><span class='voucher-code'>%s</span></span></div>", voucherCode) : "",
+            voucherType,
+            formatVoucherValue(voucherType, voucherValue),
+            voucherName != null && !voucherName.trim().isEmpty() ? String.format("<div class='info-row'><span class='info-label'>Tên phiếu:</span><span class='info-value'>%s</span></div>", voucherName) : "",
+            description != null && !description.trim().isEmpty() ? String.format("<div class='info-row'><span class='info-label'>Mô tả:</span><span class='info-value'>%s</span></div>", description) : "",
+            startDate != null ? String.format("<div class='info-row'><span class='info-label'>Từ ngày:</span><span class='info-value'>%s</span></div>", formatDate(startDate)) : "",
+            endDate != null ? String.format("<div class='info-row'><span class='info-label'>Đến ngày:</span><span class='info-value'>%s</span></div>", formatDate(endDate)) : ""
         );
+        
+        helper.setText(content, true);
 
         mailSender.send(message);
+    }
+
+    private String formatVoucherValue(String voucherType, Double voucherValue) {
+        if (voucherValue == null) {
+            return "Không xác định";
+        }
+        
+        if ("Giảm theo phần trăm".equals(voucherType)) {
+            return String.format("%.0f%%", voucherValue);
+        } else if ("Giảm theo giá trị tiền".equals(voucherType)) {
+            return String.format("%,.0f ₫", voucherValue);
+        } else {
+            return voucherValue.toString();
+        }
+    }
+
+    private String formatDate(String dateString) {
+        if (dateString == null || dateString.trim().isEmpty()) {
+            return "Không xác định";
+        }
+        
+        try {
+            // Parse date string and format it nicely
+            if (dateString.contains("T")) {
+                // Handle ISO format: 2024-01-01T00:00:00
+                String datePart = dateString.split("T")[0];
+                String[] parts = datePart.split("-");
+                if (parts.length == 3) {
+                    return String.format("%s/%s/%s", parts[2], parts[1], parts[0]);
+                }
+            }
+            return dateString;
+        } catch (Exception e) {
+            return dateString;
+        }
     }
 
     public void sendOrderConfirmationEmail(String toEmail, String customerName, String orderCode, 
