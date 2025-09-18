@@ -1874,7 +1874,7 @@ export default {
         }
         
         // Cập nhật thông tin đơn hàng
-        paymentMethod.value = paymentMethod.value === 'bank' ? 'Chuyển khoản' : 'COD'
+        paymentMethod.value = paymentMethod.value === 'bank' ? 'VNPAY (Thanh toán online)' : 'COD (Thanh toán khi nhận hàng)'
         deliveryTime.value = selectedDeliveryMethod.value === 'express' ? '1-2 ngày làm việc' : '2-5 ngày làm việc'
         
         // Lưu thông tin đơn hàng vào localStorage
@@ -2113,7 +2113,7 @@ export default {
         
         // Cập nhật thông tin đơn hàng
         orderCode.value = realOrderCode
-        paymentMethod.value = 'Chuyển khoản'
+        paymentMethod.value = 'VNPAY (Thanh toán online)'
         deliveryTime.value = selectedDeliveryMethod.value === 'express' ? '1-2 ngày làm việc' : '2-5 ngày làm việc'
         
         // Lưu thông tin đơn hàng vào localStorage

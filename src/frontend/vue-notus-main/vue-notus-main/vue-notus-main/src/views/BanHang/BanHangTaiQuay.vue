@@ -6,9 +6,22 @@
         <h5 class="text-lg font-bold text-gray-900 mb-4">Quản lý bán hàng</h5>
         <div class="flex flex-wrap border-b">
           <button v-for="(order, index) in orders" :key="order.id"
-                  :class="['px-4 py-2 text-sm font-medium mr-2 mb-2 rounded-t-lg', { 'bg-blue-100 border border-blue-500 text-blue-700': selectedOrderIndex === index, 'bg-gray-200 text-gray-600 hover:bg-gray-300': selectedOrderIndex !== index }]"
+                  :class="['px-4 py-2 text-sm font-medium mr-2 mb-2 rounded-t-lg flex items-center space-x-2', { 'bg-blue-100 border border-blue-500 text-blue-700': selectedOrderIndex === index, 'bg-gray-200 text-gray-600 hover:bg-gray-300': selectedOrderIndex !== index }]"
                   @click="selectedOrderIndex = index">
-            Hóa đơn #{{ order.maHoaDon || index + 1 }}
+            <span>Hóa đơn #{{ order.maHoaDon || index + 1 }}</span>
+            <!-- Badge phương thức thanh toán -->
+            <span v-if="order.phuongThucThanhToanId" 
+                  :class="['px-2 py-1 text-xs rounded-full font-semibold',
+                    order.phuongThucThanhToanId === 1 ? 'bg-blue-100 text-blue-800' : 
+                    order.phuongThucThanhToanId === 4 ? 'bg-green-100 text-green-800' : 
+                    'bg-orange-100 text-orange-800']">
+              <i :class="order.phuongThucThanhToanId === 1 ? 'fas fa-credit-card' : 
+                        order.phuongThucThanhToanId === 4 ? 'fas fa-money-bill-wave' : 
+                        'fas fa-truck'"></i>
+              {{ order.phuongThucThanhToanId === 1 ? 'Chuyển khoản' : 
+                 order.phuongThucThanhToanId === 4 ? 'Tiền mặt' : 
+                 'COD' }}
+            </span>
           </button>
           <button @click="createNewInvoice" class="ml-auto bg-green-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-green-700 transition">
             Tạo hóa đơn mới
@@ -26,9 +39,6 @@
           <div class="flex space-x-2">
             <button class="border border-gray-300 text-sm px-3 py-1 rounded-lg bg-white hover:bg-gray-100">
               Quét mã QR
-            </button>
-            <button @click="openAddProductModal" class="bg-green-500 text-white text-sm px-3 py-1 rounded-lg hover:bg-green-600">
-              Chọn chi tiết sản phẩm
             </button>
             <button v-if="selectedOrder && selectedOrder.trangThai === 'Tạo hóa đơn'" @click="openAddProductModal" class="bg-blue-500 text-white text-sm px-3 py-1 rounded-lg hover:bg-blue-600">
               Thêm sản phẩm
@@ -192,25 +202,37 @@
           <div class="space-y-2">
             <!-- Tại quầy: Chuyển khoản và Tiền mặt -->
             <template v-if="deliveryMethod === 'TaiQuay'">
-              <label class="flex items-center space-x-2">
+              <label class="flex items-center space-x-2 p-2 rounded-lg border-2 transition-all" 
+                     :class="paymentMethod === '1' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'">
                 <input type="radio" value="1" v-model="paymentMethod" class="text-sm" />
-                <span class="text-sm">Chuyển khoản</span>
+                <i class="fas fa-credit-card text-blue-600"></i>
+                <span class="text-sm font-medium">Chuyển khoản</span>
+                <span class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">CHUYỂN KHOẢN</span>
               </label>
-              <label class="flex items-center space-x-2">
+              <label class="flex items-center space-x-2 p-2 rounded-lg border-2 transition-all" 
+                     :class="paymentMethod === '4' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'">
                 <input type="radio" value="4" v-model="paymentMethod" class="text-sm" />
-                <span class="text-sm">Tiền mặt</span>
+                <i class="fas fa-money-bill-wave text-green-600"></i>
+                <span class="text-sm font-medium">Tiền mặt</span>
+                <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">TIỀN MẶT</span>
               </label>
             </template>
 
             <!-- Giao hàng: COD và Tiền mặt -->
             <template v-if="deliveryMethod === 'GiaoHang'">
-              <label class="flex items-center space-x-2">
+              <label class="flex items-center space-x-2 p-2 rounded-lg border-2 transition-all" 
+                     :class="paymentMethod === 'cod' ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-orange-300'">
                 <input type="radio" value="cod" v-model="paymentMethod" class="text-sm" />
-                <span class="text-sm">Thanh toán khi nhận hàng (COD)</span>
+                <i class="fas fa-truck text-orange-600"></i>
+                <span class="text-sm font-medium">Thanh toán khi nhận hàng (COD)</span>
+                <span class="px-2 py-1 text-xs bg-orange-100 text-orange-800 rounded-full">COD</span>
               </label>
-              <label class="flex items-center space-x-2">
+              <label class="flex items-center space-x-2 p-2 rounded-lg border-2 transition-all" 
+                     :class="paymentMethod === '4' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'">
                 <input type="radio" value="4" v-model="paymentMethod" class="text-sm" />
-                <span class="text-sm">Tiền mặt</span>
+                <i class="fas fa-money-bill-wave text-green-600"></i>
+                <span class="text-sm font-medium">Tiền mặt</span>
+                <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">TIỀN MẶT</span>
               </label>
             </template>
           </div>
@@ -242,6 +264,35 @@
         </div>
 
         <div class="border-t pt-4">
+          <!-- Hiển thị phương thức thanh toán nếu đã có -->
+          <div v-if="selectedOrder?.phuongThucThanhToanId" class="flex justify-between items-center mb-3 p-2 rounded-lg" 
+               :class="selectedOrder.phuongThucThanhToanId === 1 ? 'bg-blue-50 border border-blue-200' :
+                       selectedOrder.phuongThucThanhToanId === 4 ? 'bg-green-50 border border-green-200' : 
+                       'bg-orange-50 border border-orange-200'">
+            <span class="text-gray-600 text-sm font-medium">Phương thức thanh toán:</span>
+            <div class="flex items-center space-x-2">
+              <i :class="selectedOrder.phuongThucThanhToanId === 1 ? 'fas fa-credit-card text-blue-600' :
+                        selectedOrder.phuongThucThanhToanId === 4 ? 'fas fa-money-bill-wave text-green-600' : 
+                        'fas fa-truck text-orange-600'"></i>
+              <span :class="['text-sm font-semibold',
+                selectedOrder.phuongThucThanhToanId === 1 ? 'text-blue-700' :
+                selectedOrder.phuongThucThanhToanId === 4 ? 'text-green-700' : 
+                'text-orange-700']">
+                {{ selectedOrder.phuongThucThanhToanId === 1 ? 'Chuyển khoản' :
+                   selectedOrder.phuongThucThanhToanId === 4 ? 'Tiền mặt' : 
+                   'COD' }}
+              </span>
+              <span :class="['px-2 py-1 text-xs rounded-full font-bold',
+                selectedOrder.phuongThucThanhToanId === 1 ? 'bg-blue-100 text-blue-800' :
+                selectedOrder.phuongThucThanhToanId === 4 ? 'bg-green-100 text-green-800' : 
+                'bg-orange-100 text-orange-800']">
+                {{ selectedOrder.phuongThucThanhToanId === 1 ? 'CHUYỂN KHOẢN' :
+                   selectedOrder.phuongThucThanhToanId === 4 ? 'TIỀN MẶT' : 
+                   'COD' }}
+              </span>
+            </div>
+          </div>
+          
           <div class="flex justify-between mb-2">
             <span class="text-gray-600 text-sm">Tạm tính:</span>
             <span class="font-medium text-sm">{{ formatCurrency(tongTienHang) }}</span>
@@ -684,10 +735,22 @@
             <!-- Hình thức thanh toán (chỉ hiển thị) -->
             <div class="mb-4">
               <p class="text-sm text-gray-600 mb-2">Hình thức thanh toán:</p>
-              <p class="text-sm font-medium text-gray-900">
-                {{ paymentMethod === 'cod' ? 'Thanh toán khi nhận hàng (COD)' :
-                   paymentMethod === '4' ? 'Tiền mặt' : 'Chuyển khoản' }}
-              </p>
+              <div class="flex items-center space-x-2">
+                <i :class="paymentMethod === 'cod' ? 'fas fa-truck text-orange-600' :
+                          paymentMethod === '4' ? 'fas fa-money-bill-wave text-green-600' : 
+                          'fas fa-credit-card text-blue-600'"></i>
+                <span class="text-sm font-medium text-gray-900">
+                  {{ paymentMethod === 'cod' ? 'Thanh toán khi nhận hàng (COD)' :
+                     paymentMethod === '4' ? 'Tiền mặt' : 'Chuyển khoản' }}
+                </span>
+                <span :class="['px-2 py-1 text-xs rounded-full font-semibold',
+                  paymentMethod === 'cod' ? 'bg-orange-100 text-orange-800' :
+                  paymentMethod === '4' ? 'bg-green-100 text-green-800' : 
+                  'bg-blue-100 text-blue-800']">
+                  {{ paymentMethod === 'cod' ? 'COD' :
+                     paymentMethod === '4' ? 'TIỀN MẶT' : 'CHUYỂN KHOẢN' }}
+                </span>
+              </div>
             </div>
 
             <!-- Tiền khách đưa (chỉ hiển thị khi thanh toán tiền mặt) -->
@@ -1087,7 +1150,7 @@ export default {
             phieuGiamGiaId: this.selectedVoucher?.id || null,
             loaiHoaDon: this.mapDeliveryMethod(this.deliveryMethod),
             tongTien: this.thanhTien,
-            phuongThucThanhToan: paymentMethodId === 4 ? 'TIEN_MAT' : 'CHUYEN_KHOAN'
+            phuongThucThanhToan: paymentMethodId === 4 ? 'TIEN_MAT' : 'VNPAY'
           };
           const payRes = await HoaDonService.updatePayment(orderId, paymentData);
           if (payRes.status !== 200) {
@@ -1103,6 +1166,8 @@ export default {
           console.log(`DEBUG: Order confirmed successfully, status: ${newStatus}`);
           alert("Xác nhận hóa đơn thành công!");
           await this.fetchOrders();
+          // Làm mới trang để cập nhật dữ liệu
+          window.location.reload();
         } else {
           console.error("Xác nhận hóa đơn thất bại:", response.status);
           alert("Có lỗi xảy ra khi xác nhận hóa đơn!");
@@ -1162,7 +1227,7 @@ export default {
           phieuGiamGiaId: this.selectedVoucher?.id || null,
           loaiHoaDon: this.mapDeliveryMethod(this.deliveryMethod),
           tongTien: this.thanhTien,
-          phuongThucThanhToan: paymentMethodId === 4 ? 'TIEN_MAT' : 'CHUYEN_KHOAN'
+          phuongThucThanhToan: paymentMethodId === 4 ? 'TIEN_MAT' : 'VNPAY'
         };
         // Cập nhật thông tin hóa đơn trước khi xác nhận thanh toán
         await HoaDonService.updateHoaDon(orderId, {

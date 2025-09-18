@@ -441,9 +441,19 @@ public class HoaDonService {
             newTrangThai = phuongThucThanhToanId == 1 ? "Đã thanh toán" : "Chờ xác nhận";
             System.out.println("DEBUG: loaiHoaDon is Giao hàng, phuongThucThanhToanId=" + phuongThucThanhToanId + ", setting newTrangThai to " + newTrangThai);
         } else if ("Online".equals(loaiHoaDon)) {
-            // Với đơn online, nếu là VNPAY (phuongThucThanhToanId = 1) thì chờ giao hàng, nếu là COD thì chờ xác nhận
-            newTrangThai = phuongThucThanhToanId == 1 ? "Chờ giao hàng" : "Chờ xác nhận";
-            System.out.println("DEBUG: loaiHoaDon is Online, phuongThucThanhToanId=" + phuongThucThanhToanId + ", setting newTrangThai to " + newTrangThai);
+            // Với đơn online, phân biệt VNPay và COD
+            if (phuongThucThanhToanId == 1) {
+                // VNPay: Tạo hóa đơn → Thanh toán thành công → Chờ giao hàng → Đang vận chuyển → Đã giao hàng → Hoàn thành
+                newTrangThai = "Thanh toán thành công";
+                System.out.println("DEBUG: loaiHoaDon is Online VNPay, setting newTrangThai to Thanh toán thành công");
+            } else if (phuongThucThanhToanId == 4) {
+                // COD: Tạo hóa đơn → Chờ xác nhận → Chờ giao hàng → Đang vận chuyển → Đã giao hàng → Đã thanh toán → Hoàn thành
+                newTrangThai = "Chờ xác nhận";
+                System.out.println("DEBUG: loaiHoaDon is Online COD, setting newTrangThai to Chờ xác nhận");
+            } else {
+                newTrangThai = "Chờ xác nhận";
+                System.out.println("DEBUG: loaiHoaDon is Online with unknown phuongThucThanhToanId=" + phuongThucThanhToanId + ", setting newTrangThai to Chờ xác nhận");
+            }
         } else {
                 newTrangThai = "Chờ xác nhận";
             System.out.println("DEBUG: Invalid loaiHoaDon=" + loaiHoaDon + ", defaulting to Chờ xác nhận");
@@ -462,6 +472,7 @@ public class HoaDonService {
         lichSuHoaDonRepository.save(lichSu);
         System.out.println("DEBUG: Saved LichSuHoaDon: trangThaiCu=" + oldTrangThai + ", trangThaiMoi=" + newTrangThai + " for HoaDon ID: " + updatedHoaDon.getId());
 
+
         // Trừ số lượng phiếu giảm giá
         if (phieuGiamGiaId != null) {
                 PhieuGiamGia phieuGiamGia = phieuGiamGiaRepository.findById(phieuGiamGiaId).orElse(null);
@@ -473,7 +484,7 @@ public class HoaDonService {
         }
 
         // Gửi email xác nhận
-        if ("Hoàn thành".equals(newTrangThai) || "Đã thanh toán".equals(newTrangThai) || "Chờ xác nhận".equals(newTrangThai) || "Chờ giao hàng".equals(newTrangThai)) {
+        if ("Hoàn thành".equals(newTrangThai) || "Đã thanh toán".equals(newTrangThai) || "Chờ xác nhận".equals(newTrangThai) || "Chờ giao hàng".equals(newTrangThai) || "Thanh toán thành công".equals(newTrangThai)) {
             sendOrderConfirmationEmail(updatedHoaDon);
         }
 
