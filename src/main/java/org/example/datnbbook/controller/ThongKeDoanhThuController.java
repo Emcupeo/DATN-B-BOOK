@@ -300,47 +300,81 @@ public class ThongKeDoanhThuController {
         return result;
     }
 
-    // Thống kê sản phẩm bán chạy (theo số lượng)
+    // Thống kê sản phẩm bán chạy (theo số lượng) - bao gồm cả sản phẩm lẻ và bộ sách
     @GetMapping("/san-pham-ban-chay")
     public List<Map<String, Object>> getSanPhamBanChay() {
-        List<HoaDonChiTiet> allChiTiet = hoaDonChiTietRepository.findAll();
+        List<Map<String, Object>> result = new ArrayList<>();
         
-        Map<Integer, Map<String, Object>> productSales = new HashMap<>();
-        
-        for (HoaDonChiTiet ct : allChiTiet) {
-            if (ct.getChiTietSanPham() != null) {
-                Integer productId = ct.getChiTietSanPham().getId();
-                Integer quantity = ct.getSoLuong() != null ? ct.getSoLuong() : 0;
-                BigDecimal giaSanPham = ct.getGiaSanPham() != null ? ct.getGiaSanPham() : BigDecimal.ZERO;
-                BigDecimal doanhThu = giaSanPham.multiply(BigDecimal.valueOf(quantity));
+        // Lấy sản phẩm lẻ bán chạy
+        List<Object[]> topProducts = hoaDonChiTietRepository.findTopSellingProducts(10);
+        for (Object[] row : topProducts) {
+            Integer productId = (Integer) row[0];
+            Long totalSold = ((Number) row[1]).longValue();
+            
+            // Lấy thông tin chi tiết sản phẩm
+            chiTietSanPhamRepository.findById(productId).ifPresent(ctsp -> {
+                Map<String, Object> productData = new HashMap<>();
+                productData.put("id", productId);
+                productData.put("soLuongBan", totalSold.intValue());
+                productData.put("tenSanPham", ctsp.getTenChiTietSanPham());
+                productData.put("maSanPham", ctsp.getMaChiTietSanPham());
+                productData.put("giaBan", ctsp.getGia());
+                productData.put("loai", "Sản phẩm lẻ");
                 
-                if (productSales.containsKey(productId)) {
-                    Map<String, Object> existing = productSales.get(productId);
-                    existing.put("soLuongBan", (Integer) existing.get("soLuongBan") + quantity);
-                    existing.put("doanhThu", ((BigDecimal) existing.get("doanhThu")).add(doanhThu));
+                // Lấy ảnh sản phẩm
+                if (ctsp.getAnhSanPhams() != null && !ctsp.getAnhSanPhams().isEmpty()) {
+                    productData.put("hinhAnh", ctsp.getAnhSanPhams().get(0).getUrl());
                 } else {
-                    Map<String, Object> productData = new HashMap<>();
-                    productData.put("id", productId);
-                    productData.put("soLuongBan", quantity);
-                    productData.put("doanhThu", doanhThu);
-                    productData.put("tenSanPham", ct.getTenSanPham());
-                    productData.put("maSanPham", ct.getMaSanPham());
-                    productData.put("giaBan", giaSanPham);
-                    // Lấy đường dẫn ảnh từ chi tiết sản phẩm
-                    if (ct.getChiTietSanPham() != null && 
-                        ct.getChiTietSanPham().getAnhSanPhams() != null && 
-                        !ct.getChiTietSanPham().getAnhSanPhams().isEmpty()) {
-                        // Lấy ảnh đầu tiên
-                        productData.put("hinhAnh", ct.getChiTietSanPham().getAnhSanPhams().get(0).getUrl());
-                    } else {
-                        productData.put("hinhAnh", null);
-                    }
-                    productSales.put(productId, productData);
+                    productData.put("hinhAnh", null);
                 }
-            }
+                
+                // Tính doanh thu từ các đơn hàng đã hoàn thành
+                BigDecimal doanhThu = hoaDonChiTietRepository.findAll().stream()
+                    .filter(ct -> ct.getChiTietSanPham() != null && 
+                                 ct.getChiTietSanPham().getId().equals(productId) &&
+                                 ct.getHoaDon() != null &&
+                                 "Hoàn thành".equals(ct.getHoaDon().getTrangThai()))
+                    .map(ct -> ct.getGiaSanPham().multiply(BigDecimal.valueOf(ct.getSoLuong())))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+                
+                productData.put("doanhThu", doanhThu);
+                result.add(productData);
+            });
         }
         
-        return productSales.values().stream()
+        // Lấy bộ sách bán chạy
+        List<Object[]> topBookSets = hoaDonChiTietRepository.findTopSellingBookSets(10);
+        for (Object[] row : topBookSets) {
+            Integer boSachId = (Integer) row[0];
+            Long totalSold = ((Number) row[1]).longValue();
+            
+            // Lấy thông tin bộ sách
+            boSachRepository.findById(boSachId).ifPresent(boSach -> {
+                Map<String, Object> productData = new HashMap<>();
+                productData.put("id", boSachId);
+                productData.put("soLuongBan", totalSold.intValue());
+                productData.put("tenSanPham", boSach.getTenBoSach());
+                productData.put("maSanPham", boSach.getMaBoSach());
+                productData.put("giaBan", boSach.getGiaTien());
+                productData.put("loai", "Bộ sách");
+                productData.put("hinhAnh", boSach.getUrl());
+                
+                // Tính doanh thu từ các đơn hàng đã hoàn thành
+                BigDecimal doanhThu = hoaDonChiTietRepository.findAll().stream()
+                    .filter(ct -> ct.getBoSach() != null && 
+                                 ct.getBoSach().getId().equals(boSachId) &&
+                                 ct.getHoaDon() != null &&
+                                 "Hoàn thành".equals(ct.getHoaDon().getTrangThai()))
+                    .map(ct -> ct.getGiaSanPham().multiply(BigDecimal.valueOf(ct.getSoLuong())))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+                
+                productData.put("doanhThu", doanhThu);
+                result.add(productData);
+            });
+        }
+        
+        // Sắp xếp theo số lượng bán và giới hạn 10 sản phẩm
+        return result.stream()
                 .sorted((a, b) -> ((Integer) b.get("soLuongBan")).compareTo((Integer) a.get("soLuongBan")))
                 .limit(10)
                 .collect(Collectors.toList());

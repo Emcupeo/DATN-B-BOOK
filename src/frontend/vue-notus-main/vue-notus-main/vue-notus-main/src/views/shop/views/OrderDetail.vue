@@ -110,21 +110,20 @@
           <!-- Order Timeline -->
           <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h2 class="text-lg font-bold text-gray-800 mb-4">Lịch sử đơn hàng</h2>
-            <div class="space-y-4">
-              <div class="flex items-start space-x-3">
-                <div class="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
+            <div v-if="order.lichSuHoaDons && order.lichSuHoaDons.length > 0" class="space-y-4">
+              <div v-for="(history, index) in sortedOrderHistory" :key="index" class="flex items-start space-x-3">
+                <div :class="getHistoryStatusClass(history.trangThaiMoi, index)" class="w-2 h-2 rounded-full mt-2"></div>
                 <div>
-                  <p class="font-medium text-gray-800">Đơn hàng đã được tạo</p>
-                  <p class="text-sm text-gray-500">{{ formatDate(order.ngayDatHang) }}</p>
+                  <p class="font-medium" :class="getHistoryTextClass(history.trangThaiMoi, index)">
+                    {{ getHistoryStatusText(history.trangThaiMoi) }}
+                  </p>
+                  <p class="text-sm text-gray-500">{{ formatDate(history.createdAt) }}</p>
+                  <p v-if="history.ghiChu" class="text-xs text-gray-400 mt-1">{{ history.ghiChu }}</p>
                 </div>
               </div>
-              <div class="flex items-start space-x-3">
-                <div class="w-2 h-2 bg-gray-300 rounded-full mt-2"></div>
-                <div>
-                  <p class="font-medium text-gray-600">Đang xử lý</p>
-                  <p class="text-sm text-gray-500">Đơn hàng đang được xử lý</p>
-                </div>
-              </div>
+            </div>
+            <div v-else class="text-center text-gray-500 py-4">
+              <p>Chưa có lịch sử đơn hàng</p>
             </div>
           </div>
         </div>
@@ -210,7 +209,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 export default {
@@ -341,6 +340,55 @@ export default {
       return classMap[status] || 'bg-gray-100 text-gray-800'
     }
 
+    // Computed properties for order history
+    const sortedOrderHistory = computed(() => {
+      if (!order.value || !order.value.lichSuHoaDons) return []
+      return [...order.value.lichSuHoaDons].sort((a, b) => {
+        const dateA = new Date(a.createdAt)
+        const dateB = new Date(b.createdAt)
+        return dateA - dateB
+      })
+    })
+
+    // Methods for order history display
+    const getHistoryStatusText = (status) => {
+      const statusMap = {
+        'Chờ xác nhận': 'Đơn hàng đã được tạo',
+        'Đã xác nhận': 'Đơn hàng đã được xác nhận',
+        'Chờ giao hàng': 'Đang chuẩn bị giao hàng',
+        'Đang vận chuyển': 'Đang vận chuyển',
+        'Đã giao hàng': 'Đã giao hàng thành công',
+        'Hoàn thành': 'Đơn hàng hoàn thành',
+        'Đã thanh toán': 'Đã thanh toán',
+        'Thanh toán thành công': 'Thanh toán thành công',
+        'Đã hủy': 'Đơn hàng đã bị hủy',
+        'Hoàn trả': 'Đơn hàng đã hoàn trả'
+      }
+      return statusMap[status] || status || 'Cập nhật trạng thái'
+    }
+
+    const getHistoryStatusClass = (status, index) => {
+      const isCompleted = index < sortedOrderHistory.value.length - 1 || 
+                         ['Hoàn thành', 'Đã giao hàng', 'Đã thanh toán', 'Thanh toán thành công'].includes(status)
+      
+      if (isCompleted) {
+        return 'bg-green-600'
+      } else {
+        return 'bg-blue-600'
+      }
+    }
+
+    const getHistoryTextClass = (status, index) => {
+      const isCompleted = index < sortedOrderHistory.value.length - 1 || 
+                         ['Hoàn thành', 'Đã giao hàng', 'Đã thanh toán', 'Thanh toán thành công'].includes(status)
+      
+      if (isCompleted) {
+        return 'text-gray-800'
+      } else {
+        return 'text-gray-600'
+      }
+    }
+
     const goBack = () => {
       router.go(-1)
     }
@@ -414,7 +462,12 @@ export default {
       contactSupport,
       calculateSubtotal,
       calculateDiscount,
-      calculateTotal
+      calculateTotal,
+      // Order history methods
+      sortedOrderHistory,
+      getHistoryStatusText,
+      getHistoryStatusClass,
+      getHistoryTextClass
     }
   }
 }

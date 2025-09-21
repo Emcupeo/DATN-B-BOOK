@@ -279,13 +279,17 @@ public class HoaDonService {
 
     @Transactional
     public HoaDon updateTrangThai(int id, String trangThaiMoi) {
+        System.out.println("DEBUG: updateTrangThai called with id=" + id + ", trangThaiMoi=" + trangThaiMoi);
+        
         HoaDon hoaDon = hoaDonRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hóa đơn với ID: " + id));
 
         String trangThaiCu = hoaDon.getTrangThai();
+        System.out.println("DEBUG: Current trangThai: " + trangThaiCu + ", new trangThai: " + trangThaiMoi);
 
         // Nếu hủy hóa đơn, khôi phục số lượng
-        if ("Đã hủy".equals(trangThaiMoi)) {
+        if ("Đã hủy".equals(trangThaiMoi) || "Hủy".equals(trangThaiMoi)) {
+            System.out.println("DEBUG: Order cancellation detected, calling restoreQuantitiesOnCancel");
             restoreQuantitiesOnCancel(hoaDon);
         }
 
@@ -299,6 +303,7 @@ public class HoaDonService {
         lichSu.setCreatedAt(Instant.now());
         lichSuHoaDonRepository.save(lichSu);
 
+        System.out.println("DEBUG: updateTrangThai completed successfully");
         return hoaDon;
     }
     
@@ -336,8 +341,15 @@ public class HoaDonService {
     @Transactional
     private void restoreQuantitiesOnCancel(HoaDon hoaDon) {
         try {
+            System.out.println("DEBUG: Starting restoreQuantitiesOnCancel for HoaDon ID: " + hoaDon.getId());
+            
             // Force load hoaDonChiTiets
             hoaDon.getHoaDonChiTiets().size();
+            System.out.println("DEBUG: HoaDonChiTiets size: " + hoaDon.getHoaDonChiTiets().size());
+            
+            // Force load phieuGiamGia
+            PhieuGiamGia phieuGiamGia = hoaDon.getPhieuGiamGia();
+            System.out.println("DEBUG: PhieuGiamGia: " + (phieuGiamGia != null ? "Found ID " + phieuGiamGia.getId() + ", quantity: " + phieuGiamGia.getSoLuong() : "null"));
             
             for (HoaDonChiTiet chiTiet : hoaDon.getHoaDonChiTiets()) {
                 if (chiTiet.getChiTietSanPham() != null) {
@@ -366,6 +378,17 @@ public class HoaDonService {
                     }
                 }
             }
+            
+            // Khôi phục số lượng phiếu giảm giá nếu có
+            if (phieuGiamGia != null) {
+                Long oldQuantity = phieuGiamGia.getSoLuong();
+                phieuGiamGia.setSoLuong(oldQuantity + 1L);
+                phieuGiamGiaRepository.save(phieuGiamGia);
+                System.out.println("DEBUG: Restored voucher quantity for ID: " + phieuGiamGia.getId() + ", old: " + oldQuantity + ", new: " + phieuGiamGia.getSoLuong());
+            } else {
+                System.out.println("DEBUG: No voucher found for this order");
+            }
+            
         } catch (Exception e) {
             System.err.println("ERROR: Failed to restore quantities on cancel: " + e.getMessage());
             e.printStackTrace();

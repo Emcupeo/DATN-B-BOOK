@@ -195,9 +195,14 @@
                 <span class="text-gray-600">Phí vận chuyển:</span>
                 <span class="text-gray-900">{{ formatPrice(order.phiShip || 0) }}</span>
               </div>
-              <div v-if="order.phieuGiamGia" class="flex justify-between">
+              <div v-if="order.phieuGiamGia && getDiscount() > 0" class="flex justify-between">
                 <span class="text-gray-600">Giảm giá:</span>
-                <span class="text-green-600">-{{ formatPrice(order.phieuGiamGia.giaTriGiam || 0) }}</span>
+                <span class="text-green-600">-{{ formatPrice(getDiscount()) }}</span>
+              </div>
+              <div v-if="order.phieuGiamGia && getDiscount() > 0" class="text-xs text-gray-500 mt-1">
+                Phiếu: {{ order.phieuGiamGia.tenPhieuGiamGia || order.phieuGiamGia.tenPhieu }}
+                <span v-if="order.phieuGiamGia.soPhanTramGiam"> ({{ order.phieuGiamGia.soPhanTramGiam }}%)</span>
+                <span v-else-if="order.phieuGiamGia.giaTriGiam"> ({{ formatPrice(order.phieuGiamGia.giaTriGiam) }})</span>
               </div>
               <div class="flex justify-between text-lg font-semibold border-t pt-2">
                 <span class="text-gray-900">Tổng cộng:</span>
@@ -380,6 +385,30 @@ export default {
       }, 0)
     }
 
+    const getDiscount = () => {
+      if (!order.value || !order.value.phieuGiamGia) return 0
+      
+      const voucher = order.value.phieuGiamGia
+      const subtotal = getSubtotal()
+      
+      // Kiểm tra đơn tối thiểu
+      if (voucher.giaTriDonHangToiThieu && subtotal < voucher.giaTriDonHangToiThieu) {
+        return 0
+      }
+      
+      // Tính giảm giá theo phần trăm
+      if (voucher.soPhanTramGiam && voucher.soPhanTramGiam > 0) {
+        return (subtotal * voucher.soPhanTramGiam) / 100
+      }
+      
+      // Tính giảm giá theo số tiền cố định
+      if (voucher.giaTriGiam && voucher.giaTriGiam > 0) {
+        return voucher.giaTriGiam
+      }
+      
+      return 0
+    }
+
     const getStatusText = (status) => {
       const statusMap = {
         'PENDING': 'Chờ xử lý',
@@ -444,6 +473,7 @@ export default {
       formatPrice,
       formatDate,
       getSubtotal,
+      getDiscount,
       getStatusText,
       getStatusColor,
       printOrder,
