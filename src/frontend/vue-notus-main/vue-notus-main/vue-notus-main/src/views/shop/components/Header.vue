@@ -9,14 +9,11 @@
             <span>📧 Email: support@bbook.com</span>
           </div>
           <div class="flex items-center space-x-4">
-            <template v-if="!authStore.isAuthenticated">
-              <router-link to="/auth/login" class="hover:text-blue-400 transition-colors">Đăng nhập</router-link>
-              <router-link to="/auth/register" class="hover:text-blue-400 transition-colors">Đăng ký</router-link>
-            </template>
-            <template v-else>
-              <span class="text-blue-400">Xin chào, {{ userDisplayName }}!</span>
-              <button @click="handleLogout" class="hover:text-red-400 transition-colors">Đăng xuất</button>
-            </template>
+            <!-- Đã vô hiệu hóa authentication check -->
+            <router-link to="/auth/login" class="hover:text-blue-400 transition-colors">Đăng nhập</router-link>
+            <router-link to="/auth/register" class="hover:text-blue-400 transition-colors">Đăng ký</router-link>
+            <span class="text-blue-400">Xin chào, {{ userDisplayName }}!</span>
+            <button @click="handleLogout" class="hover:text-red-400 transition-colors">Đăng xuất</button>
           </div>
         </div>
       </div>
@@ -38,6 +35,8 @@
         <div class="flex-1 max-w-2xl mx-8">
           <div class="relative">
             <input 
+              v-model="searchQuery"
+              @keyup.enter="handleSearch"
               type="text" 
               placeholder="Tìm kiếm sách, tác giả, nhà xuất bản..."
               class="w-full px-6 py-3 pl-14 pr-16 text-gray-700 bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all duration-200 shadow-sm hover:shadow-md"
@@ -48,9 +47,9 @@
                   d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
               </svg>
             </div>
-            <button class="absolute inset-y-0 right-0 flex items-center pr-5">
+            <button @click="handleSearch" class="absolute inset-y-0 right-0 flex items-center pr-5">
               <svg class="w-5 h-5 text-gray-400 hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
               </svg>
             </button>
           </div>
@@ -86,8 +85,8 @@
             </span>
           </router-link>
 
-          <!-- User Menu -->
-          <div v-if="authStore.isAuthenticated" class="relative group">
+          <!-- User Menu - Đã vô hiệu hóa authentication check -->
+          <div class="relative group">
             <button class="flex items-center space-x-3 p-3 rounded-full hover:bg-gray-100 transition-all duration-200">
               <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center shadow-sm">
                 <span class="text-white font-semibold text-sm">{{ userInitial }}</span>
@@ -275,8 +274,8 @@
 </template>
 
 <script>
-import { computed, ref, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useRealDataStore } from '../store/realDataStore'
 import { useWishlist } from '../store/wishlist'
 import { useAuthStore } from '@/store/auth'
@@ -294,12 +293,26 @@ export default {
     const wishlist = useWishlist()
     const authStore = useAuthStore()
     const router = useRouter()
+    const route = useRoute()
     const cartItemCount = computed(() => store.cartItemCount.value)
     const showCategories = ref(false)
     const wishlistCount = ref(wishlist.getCount())
     const showProfileModal = ref(false)
     const showChangePasswordModal = ref(false)
+    const searchQuery = ref('')
     let hideTimeout = null
+
+    // Handle search
+    const handleSearch = () => {
+      if (searchQuery.value.trim()) {
+        // Chuyển đến trang products với query parameter
+        router.push({
+          path: '/products',
+          query: { search: searchQuery.value.trim() }
+        })
+        // Không xóa search query để có thể tìm kiếm tiếp
+      }
+    }
 
     // Handle logout
     const handleLogout = async () => {
@@ -395,10 +408,28 @@ export default {
     const userDisplayName = computed(() => authStore.userName || 'User')
     const userInitial = computed(() => (authStore.userName || 'U').charAt(0).toUpperCase())
 
+    // Sync searchQuery with route query
+    const syncSearchQuery = () => {
+      if (route.query.search) {
+        searchQuery.value = route.query.search
+      }
+    }
+
+    // Watch for route changes to sync search query
+    watch(() => route.query.search, (newSearch) => {
+      if (newSearch) {
+        searchQuery.value = newSearch
+      } else {
+        searchQuery.value = ''
+      }
+    })
+
     // Setup on mount
     onMounted(() => {
       // Listen for wishlist updates
       window.addEventListener('wishlist-updated', updateWishlistCount)
+      // Sync search query with current route
+      syncSearchQuery()
     })
 
     // Cleanup on unmount
@@ -416,11 +447,14 @@ export default {
       wishlistCount,
       showProfileModal,
       showChangePasswordModal,
+      searchQuery,
       toggleCategories,
       handleMouseEnter,
       handleMouseLeave,
       handleDropdownEnter,
       handleDropdownLeave,
+      handleSearch,
+      syncSearchQuery,
       handleLogout,
       openProfileModal,
       openChangePasswordModal,

@@ -21,6 +21,14 @@
                 <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">Sản phẩm</span>
               </div>
             </li>
+            <li v-if="filters.search">
+              <div class="flex items-center">
+                <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                </svg>
+                <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">Tìm kiếm: "{{ filters.search }}"</span>
+              </div>
+            </li>
           </ol>
         </nav>
       </div>
@@ -30,7 +38,10 @@
     <div class="bg-white border-b border-gray-200 sticky top-0 z-40">
       <div class="container mx-auto px-4 py-4">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-bold text-gray-800">Danh mục sản phẩm</h2>
+          <h2 class="text-lg font-bold text-gray-800">
+            <span v-if="filters.search">Kết quả tìm kiếm cho "{{ filters.search }}"</span>
+            <span v-else>Danh mục sản phẩm</span>
+          </h2>
           <div class="flex items-center space-x-2">
             <span class="text-sm text-gray-500">{{ filteredBooks.length }} sản phẩm</span>
             <button 
@@ -43,7 +54,7 @@
         </div>
         
         <!-- Categories Grid -->
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        <div v-if="!filters.search" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
           <button
             v-for="category in categoryData"
             :key="category.name"
@@ -868,9 +879,15 @@ export default {
     // Load saved filters and apply category from query when component mounts
     loadSavedFilters()
 
-    // Apply filters from query string if provided (e.g., /products?category=Văn học&type=bookset&sort=newest)
+    // Apply filters from query string if provided (e.g., /products?category=Văn học&type=bookset&sort=newest&search=keyword)
     try {
       const params = new URLSearchParams(window.location.search)
+      
+      // Apply search filter
+      const searchFromQuery = params.get('search')
+      if (searchFromQuery) {
+        filters.search = searchFromQuery
+      }
       
       // Apply category filter
       const categoryFromQuery = params.get('category')

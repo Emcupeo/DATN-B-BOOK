@@ -313,7 +313,7 @@ const loadCategories = async () => {
 
 const addToCart = (product) => {
   // Kiểm tra tồn kho
-  const stockQuantity = product.category === 'Bộ sách' ? product.stockQuantity : product.soLuongTon
+  const stockQuantity = product.stockQuantity || 0
   if (stockQuantity <= 0) {
     return false // Không thể thêm vào giỏ hàng
   }

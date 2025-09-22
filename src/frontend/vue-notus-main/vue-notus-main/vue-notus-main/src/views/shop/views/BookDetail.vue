@@ -208,6 +208,8 @@ export default {
           return
         }
       }
+      
+      alert('Đã thêm vào giỏ hàng thành công!')
       quantity.value = 1
     }
 

@@ -37,7 +37,8 @@
               />
               <p v-if="errors.giaTien" class="text-red-500 text-xs mt-1">{{ errors.giaTien }}</p>
             </div>
-            <div class="col-span-2 sm:col-span-1">
+            <!-- Số lượng bộ sách được tính tự động dựa theo sản phẩm con -->
+            <div class="col-span-2 sm:col-span-1" style="display: none;">
               <label for="soLuong" class="block mb-2 text-sm font-medium text-gray-700">Số lượng <span class="text-red-500">*</span></label>
               <input
                   v-model.number="form.soLuong"
@@ -303,7 +304,7 @@ export default {
         tenBoSach: '',
         giaTien: 0,
         moTa: '',
-        soLuong: 0,
+        soLuong: 5, // Số lượng cố định gửi về database
         chiTietSanPhams: [],
       },
       giaTuDong: true,
@@ -603,7 +604,7 @@ export default {
         this.form.tenBoSach = this.editBoSachData.tenBoSach;
         this.form.giaTien = this.editBoSachData.giaTien;
         this.form.moTa = this.editBoSachData.moTa;
-        this.form.soLuong = this.editBoSachData.soLuong;
+        this.form.soLuong = 5; // Luôn đặt số lượng cố định là 5
         
         // Set current image as preview if exists
         if (this.editBoSachData.url) {

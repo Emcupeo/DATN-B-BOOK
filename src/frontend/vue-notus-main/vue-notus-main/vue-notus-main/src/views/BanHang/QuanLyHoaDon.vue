@@ -575,7 +575,7 @@
         <div class="bg-white p-6 rounded-lg shadow-md flex justify-between items-center">
           <div class="text-sm">
             <p class="mb-3">Phiếu giảm giá: <strong>{{ order.phieuGiamGia?.maPhieuGiamGia || "Không có" }}</strong></p>
-            <p class="mb-3">Phần trăm giảm giá: <strong>{{ order.phieuGiamGia?.soPhanTramGiam || 0 }}%</strong></p>
+            <p class="mb-3">Loại giảm giá: <strong>{{ getDiscountType() }}</strong></p>
             <p class="mb-3">Số tiền giảm giá: <strong>{{ formatCurrency(tienGiamGia) }}</strong></p>
           </div>
           <div class="text-sm">
@@ -740,15 +740,23 @@ export default {
           .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
     },
     tienGiamGia() {
-      const phanTramGiam = this.order.phieuGiamGia?.soPhanTramGiam || 0;
-      return (this.tongTienHang * phanTramGiam) / 100;
+      if (!this.order.phieuGiamGia) return 0;
+      
+      // Nếu có giảm giá theo phần trăm
+      if (this.order.phieuGiamGia.soPhanTramGiam > 0) {
+        return (this.tongTienHang * this.order.phieuGiamGia.soPhanTramGiam) / 100;
+      }
+      
+      // Nếu có giảm giá theo số tiền cố định
+      if (this.order.phieuGiamGia.giaTriGiam > 0) {
+        return this.order.phieuGiamGia.giaTriGiam;
+      }
+      
+      return 0;
     },
     thanhTien() {
       const phiShip = this.order.phiShip || 0;
-      const tongTienHang = this.tongTienHang;
-      const phanTramGiam = this.order.phieuGiamGia?.soPhanTramGiam || 0;
-      const tienGiamGia = (tongTienHang * phanTramGiam) / 100;
-      return tongTienHang - tienGiamGia + phiShip;
+      return this.tongTienHang - this.tienGiamGia + phiShip;
     },
     filteredProducts() {
       const products = this.productSearchQuery ? this.searchResults : this.allProducts;
@@ -873,6 +881,19 @@ export default {
     }
   },
   methods: {
+    getDiscountType() {
+      if (!this.order.phieuGiamGia) return "Không có";
+      
+      if (this.order.phieuGiamGia.soPhanTramGiam > 0) {
+        return "Phần trăm";
+      }
+      
+      if (this.order.phieuGiamGia.giaTriGiam > 0) {
+        return "Tiền mặt";
+      }
+      
+      return "Không có";
+    },
     openCustomerForm() {
       this.showCustomerForm = true;
       this.loadProvinces();

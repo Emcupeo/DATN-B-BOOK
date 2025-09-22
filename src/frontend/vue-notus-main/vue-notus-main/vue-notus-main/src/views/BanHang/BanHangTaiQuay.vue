@@ -171,6 +171,9 @@
             <button @click="openAddCustomerModal" class="bg-green-500 text-white text-sm px-3 py-1 rounded-lg hover:bg-green-600">
               Thêm mới khách hàng
             </button>
+            <button v-if="selectedOrder?.idKhachHang" @click="removeCustomer" class="bg-red-500 text-white text-sm px-3 py-1 rounded-lg hover:bg-red-600">
+              Bỏ chọn khách hàng
+            </button>
           </div>
         </div>
 
@@ -200,18 +203,10 @@
         <div class="mb-6">
           <h3 class="text-md font-semibold text-gray-900 mb-2">Hình thức thanh toán</h3>
           <div class="space-y-2">
-            <!-- Tại quầy: Chuyển khoản và Tiền mặt -->
+            <!-- Tại quầy: Chỉ Tiền mặt -->
             <template v-if="deliveryMethod === 'TaiQuay'">
-              <label class="flex items-center space-x-2 p-2 rounded-lg border-2 transition-all" 
-                     :class="paymentMethod === '1' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'">
-                <input type="radio" value="1" v-model="paymentMethod" class="text-sm" />
-                <i class="fas fa-credit-card text-blue-600"></i>
-                <span class="text-sm font-medium">Chuyển khoản</span>
-                <span class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">CHUYỂN KHOẢN</span>
-              </label>
-              <label class="flex items-center space-x-2 p-2 rounded-lg border-2 transition-all" 
-                     :class="paymentMethod === '4' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'">
-                <input type="radio" value="4" v-model="paymentMethod" class="text-sm" />
+              <label class="flex items-center space-x-2 p-2 rounded-lg border-2 transition-all border-green-500 bg-green-50">
+                <input type="radio" value="4" v-model="paymentMethod" class="text-sm" checked />
                 <i class="fas fa-money-bill-wave text-green-600"></i>
                 <span class="text-sm font-medium">Tiền mặt</span>
                 <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">TIỀN MẶT</span>
@@ -315,13 +310,13 @@
               <!-- Voucher cá nhân của khách hàng -->
               <optgroup v-if="personalVouchers.length > 0" label="Voucher cá nhân">
                 <option v-for="voucher in personalVouchers" :key="'personal-' + voucher.id" :value="voucher">
-                  🎁 {{ voucher.tenPhieuGiamGia }} - {{ formatCurrency(voucher.giaTriGiam) }}
+                  🎁 {{ voucher.tenPhieuGiamGia }} - {{ getVoucherDisplayValue(voucher) }}
                 </option>
               </optgroup>
               <!-- Voucher công khai -->
               <optgroup v-if="availableVouchers.length > 0" label="Voucher công khai">
                 <option v-for="voucher in availableVouchers" :key="'public-' + voucher.id" :value="voucher">
-                  {{ voucher.tenPhieuGiamGia }} - {{ formatCurrency(voucher.giaTriGiam) }}
+                  {{ voucher.tenPhieuGiamGia }} - {{ getVoucherDisplayValue(voucher) }}
                 </option>
               </optgroup>
             </select>
@@ -906,9 +901,18 @@ export default {
       return total;
     },
     tienGiamGia() {
-      if (this.selectedVoucher) {
-        return this.selectedVoucher.giaTriGiam || 0;
+      if (!this.selectedVoucher) return 0;
+      
+      // Nếu có giảm giá theo phần trăm
+      if (this.selectedVoucher.soPhanTramGiam > 0) {
+        return (this.tongTienHang * this.selectedVoucher.soPhanTramGiam) / 100;
       }
+      
+      // Nếu có giảm giá theo số tiền cố định
+      if (this.selectedVoucher.giaTriGiam > 0) {
+        return this.selectedVoucher.giaTriGiam;
+      }
+      
       return 0;
     },
     thanhTien() {
@@ -1046,6 +1050,21 @@ export default {
     },
     formatCurrency(value) {
       return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(value || 0);
+    },
+    getVoucherDisplayValue(voucher) {
+      if (!voucher) return '';
+      
+      // Nếu có giảm giá theo phần trăm
+      if (voucher.soPhanTramGiam > 0) {
+        return `${voucher.soPhanTramGiam}%`;
+      }
+      
+      // Nếu có giảm giá theo số tiền cố định
+      if (voucher.giaTriGiam > 0) {
+        return this.formatCurrency(voucher.giaTriGiam);
+      }
+      
+      return '';
     },
     formatDiaChi(customer) {
       if (!customer.danhSachDiaChi || customer.danhSachDiaChi.length === 0) return '';
@@ -1239,7 +1258,6 @@ export default {
           const newStatus = backendPaymentMethod === "1" ? "Thanh toán thành công" : "Thanh toán";
           await HoaDonService.updateTrangThaiHoaDon(orderId, newStatus);
           await this.deductStockAfterPayment();
-          await this.deductVoucherAfterPayment();
           alert("Xác nhận thanh toán thành công!");
           this.showPaymentModal = false;
           await this.fetchOrders();
@@ -1357,6 +1375,33 @@ export default {
       } catch (error) {
         console.error('Lỗi khi chọn khách hàng:', error);
         alert('Có lỗi xảy ra khi chọn khách hàng!');
+      }
+    },
+    async removeCustomer() {
+      if (!confirm('Bạn có chắc chắn muốn bỏ chọn khách hàng này?')) {
+        return;
+      }
+      
+      try {
+        const orderId = this.selectedOrder.id;
+        const customerData = {
+          idKhachHang: null,
+          tenNguoiNhan: null,
+          soDienThoaiNguoiNhan: null,
+          diaChi: null
+        };
+        await HoaDonService.updateCustomerInfo(orderId, customerData);
+        this.orders[this.selectedOrderIndex] = {
+          ...this.selectedOrder,
+          ...customerData
+        };
+        this.$nextTick(() => {
+          this.personalVouchers = []; // Xóa voucher cá nhân
+        });
+        alert('Bỏ chọn khách hàng thành công!');
+      } catch (error) {
+        console.error('Lỗi khi bỏ chọn khách hàng:', error);
+        alert('Có lỗi xảy ra khi bỏ chọn khách hàng!');
       }
     },
     async saveCustomer() {

@@ -52,7 +52,6 @@
           <div><span class="font-medium">Trọng lượng:</span> {{ totalWeight }} gr</div>
           <div><span class="font-medium">Số lượng tồn:</span> {{ boSach.soLuong }}</div>
         </div>
-        <!-- Số lượng và nút mua -->
         <div class="space-y-4">
           <div class="flex items-center space-x-4">
             <label class="text-sm font-medium text-gray-700">Số lượng:</label>
@@ -232,7 +231,7 @@ export default {
         }
       }
       
-      alert('Đã thêm vào giỏ hàng!')
+      alert('Đã thêm vào giỏ hàng thành công!')
       quantity.value = 1
     }
 

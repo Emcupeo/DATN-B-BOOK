@@ -2,47 +2,85 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:8080/api/admin/phieu-giam-gia';
 
+const axiosInstance = axios.create({
+  baseURL: API_URL,
+  timeout: 10000,
+  headers: { 'Content-Type': 'application/json' },
+});
+
 export default {
-  getAll(params = {}) {
-    // Convert params to URLSearchParams
-    const searchParams = new URLSearchParams();
-    
-    // Handle pagination params
-    if (typeof params.page !== 'undefined') searchParams.append('page', params.page);
-    if (typeof params.size !== 'undefined') searchParams.append('size', params.size);
-    
-    // Handle sorting params
-    if (params.sortBy) searchParams.append('sortBy', params.sortBy);
-    if (params.sortDir) searchParams.append('sortDir', params.sortDir);
-    
-    // Handle filter params
-    if (params.loaiApDung) searchParams.append('loaiApDung', params.loaiApDung);
-    if (params.loaiPhieu) searchParams.append('loaiPhieu', params.loaiPhieu);
-    if (params.trangThai !== undefined) searchParams.append('trangThai', params.trangThai);
-    if (params.tinhTrang) searchParams.append('tinhTrang', params.tinhTrang);
-    if (params.searchQuery) searchParams.append('searchQuery', params.searchQuery);
-    if (params.fromDate) searchParams.append('fromDate', params.fromDate);
-    if (params.toDate) searchParams.append('toDate', params.toDate);
+  // Lấy danh sách phiếu giảm giá với phân trang và filter
+  async getAll(params = {}) {
+    try {
+      const response = await axiosInstance.get('', { params });
+      return response;
+    } catch (error) {
+      console.error('Lỗi khi lấy danh sách phiếu giảm giá:', error);
+      throw new Error(error.response?.data?.message || 'Không thể lấy danh sách phiếu giảm giá!');
+    }
+  },
 
-    // Log query params for debugging
-    console.log('Sending API with query:', searchParams.toString());
+  // Lấy phiếu giảm giá theo ID
+  async getById(id) {
+    try {
+      const response = await axiosInstance.get(`/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Lỗi khi lấy phiếu giảm giá:', error);
+      throw new Error(error.response?.data?.message || 'Không thể lấy phiếu giảm giá!');
+    }
+  },
 
-    return axios.get(`${API_URL}?${searchParams.toString()}`);
+  // Tạo phiếu giảm giá mới
+  async create(data) {
+    try {
+      const response = await axiosInstance.post('', data);
+      return response.data;
+    } catch (error) {
+      console.error('Lỗi khi tạo phiếu giảm giá:', error);
+      throw new Error(error.response?.data?.message || 'Không thể tạo phiếu giảm giá!');
+    }
   },
-  
-  getById(id) {
-    return axios.get(`${API_URL}/${id}`);
+
+  // Cập nhật phiếu giảm giá
+  async update(id, data) {
+    try {
+      const response = await axiosInstance.put(`/${id}`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Lỗi khi cập nhật phiếu giảm giá:', error);
+      throw new Error(error.response?.data?.message || 'Không thể cập nhật phiếu giảm giá!');
+    }
   },
-  
-  create(phieuGiamGia) {
-    return axios.post(API_URL, phieuGiamGia);
+
+  // Xóa phiếu giảm giá
+  async delete(id) {
+    try {
+      const response = await axiosInstance.delete(`/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Lỗi khi xóa phiếu giảm giá:', error);
+      throw new Error(error.response?.data?.message || 'Không thể xóa phiếu giảm giá!');
+    }
   },
-  
-  update(id, phieuGiamGia) {
-    return axios.put(`${API_URL}/${id}`, phieuGiamGia);
-  },
-  
-  delete(id) {
-    return axios.delete(`${API_URL}/${id}`);
+
+  // Trừ số lượng voucher sau thanh toán
+  async deductVoucherQuantity(voucherId) {
+    try {
+      // Lấy thông tin voucher hiện tại
+      const getResponse = await axiosInstance.get(`/${voucherId}`);
+      const currentVoucher = getResponse.data;
+      
+      // Cập nhật số lượng (giảm 1)
+      const updateResponse = await axiosInstance.put(`/${voucherId}`, {
+        ...currentVoucher,
+        soLuong: currentVoucher.soLuong - 1
+      });
+      
+      return updateResponse.data;
+    } catch (error) {
+      console.error('Lỗi khi trừ số lượng voucher:', error);
+      throw new Error(error.response?.data?.message || 'Không thể trừ số lượng voucher!');
+    }
   }
 };
