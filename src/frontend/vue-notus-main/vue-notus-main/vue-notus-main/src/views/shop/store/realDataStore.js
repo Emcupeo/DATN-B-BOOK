@@ -2,6 +2,7 @@ import { reactive, computed, watch } from 'vue'
 import ShopService from '../../../service/ShopService'
 import DotGiamGiaService from '../../../service/DotGiamGiaService'
 import BoSachService from '../../../service/BoSachService'
+import SalesService from '../../../service/SalesService'
 
 // Store data
 const state = reactive({
@@ -135,6 +136,42 @@ const isProductInStock = (productDetailItems) => {
 const getTotalStockQuantity = (productDetailItems) => {
   if (!productDetailItems || productDetailItems.length === 0) return 0
   return productDetailItems.reduce((sum, item) => sum + (Number(item.soLuongTon) || 0), 0)
+}
+
+// Helper to update sales data for products
+const updateSalesData = async (processedProducts) => {
+  try {
+    const salesData = await SalesService.getSanPhamBanChay()
+    const salesMap = new Map()
+    
+    // Tạo map để tra cứu nhanh dữ liệu bán chạy
+    salesData.forEach(item => {
+      if (item.loai === 'Sản phẩm lẻ') {
+        salesMap.set(`product_${item.id}`, item.soLuongBan || 0)
+      } else if (item.loai === 'Bộ sách') {
+        salesMap.set(`bosach_${item.id}`, item.soLuongBan || 0)
+      }
+    })
+    
+    // Cập nhật sales cho từng sản phẩm
+    processedProducts.forEach(product => {
+      if (product.category === 'Bộ sách') {
+        product.sales = salesMap.get(`bosach_${product.id}`) || 0
+      } else {
+        // Tính tổng sales cho sản phẩm từ các chi tiết sản phẩm
+        let totalSales = 0
+        if (product.productDetailItems) {
+          for (const item of product.productDetailItems) {
+            const itemSales = salesMap.get(`product_${item.id}`) || 0
+            totalSales += itemSales
+          }
+        }
+        product.sales = totalSales
+      }
+    })
+  } catch (error) {
+    console.error('Error updating sales data:', error)
+  }
 }
 
 // Actions
@@ -283,6 +320,10 @@ const loadProducts = async () => {
     }
 
     state.products = processedProducts
+    
+    // Cập nhật dữ liệu bán chạy
+    await updateSalesData(state.products)
+    
     // Sắp xếp theo sortCreatedAt giảm dần, đan xen bộ sách và sản phẩm
     state.products.sort((a, b) => b.sortCreatedAt - a.sortCreatedAt);
     // Log kiểm tra thứ tự hiển thị
