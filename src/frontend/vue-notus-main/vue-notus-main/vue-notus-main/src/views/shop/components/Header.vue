@@ -9,11 +9,15 @@
             <span>📧 Email: support@bbook.com</span>
           </div>
           <div class="flex items-center space-x-4">
-            <!-- Đã vô hiệu hóa authentication check -->
-            <router-link to="/auth/login" class="hover:text-blue-400 transition-colors">Đăng nhập</router-link>
-            <router-link to="/auth/register" class="hover:text-blue-400 transition-colors">Đăng ký</router-link>
-            <span class="text-blue-400">Xin chào, {{ userDisplayName }}!</span>
-            <button @click="handleLogout" class="hover:text-red-400 transition-colors">Đăng xuất</button>
+            <!-- Hiển thị theo trạng thái đăng nhập -->
+            <template v-if="authStore.isAuthenticated">
+              <span class="text-blue-400">Xin chào, {{ userDisplayName }}!</span>
+              <button @click="handleLogout" class="hover:text-red-400 transition-colors">Đăng xuất</button>
+            </template>
+            <template v-else>
+              <router-link to="/auth/login" class="hover:text-blue-400 transition-colors">Đăng nhập</router-link>
+              <router-link to="/auth/register" class="hover:text-blue-400 transition-colors">Đăng ký</router-link>
+            </template>
           </div>
         </div>
       </div>
@@ -85,8 +89,8 @@
             </span>
           </router-link>
 
-          <!-- User Menu - Đã vô hiệu hóa authentication check -->
-          <div class="relative group">
+          <!-- User Menu - Hiển thị theo trạng thái đăng nhập -->
+          <div v-if="authStore.isAuthenticated" class="relative group">
             <button class="flex items-center space-x-3 p-3 rounded-full hover:bg-gray-100 transition-all duration-200">
               <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center shadow-sm">
                 <span class="text-white font-semibold text-sm">{{ userInitial }}</span>
@@ -140,6 +144,22 @@
                 </button>
               </div>
             </div>
+          </div>
+          
+          <!-- Login Button for unauthenticated users -->
+          <div v-else class="flex items-center space-x-3">
+            <router-link to="/auth/login" class="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 rounded-lg font-medium">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+              </svg>
+              <span>Đăng nhập</span>
+            </router-link>
+            <router-link to="/auth/register" class="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-all duration-200 rounded-lg font-medium">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+              </svg>
+              <span>Đăng ký</span>
+            </router-link>
           </div>
         </div>
       </div>
@@ -426,6 +446,8 @@ export default {
 
     // Setup on mount
     onMounted(() => {
+      // Initialize auth store
+      authStore.initializeAuth()
       // Listen for wishlist updates
       window.addEventListener('wishlist-updated', updateWishlistCount)
       // Sync search query with current route
