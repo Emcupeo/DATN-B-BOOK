@@ -1853,7 +1853,7 @@ export default {
           loaiHoaDon: 'Online',
           tienKhachDua: paymentMethod.value === 'cod' ? finalTotal.value : 0,
           phieuGiamGiaId: discountInfo.value ? discountInfo.value.id : null,
-          phuongThucThanhToan: paymentMethod.value === 'cod' ? 'COD' : 'VNPAY'
+          phuongThucThanhToan: paymentMethod.value === 'cod' ? 'COD' : 'Tra_Truoc'
         }
         await hoaDonService.updatePayment(hoaDonId, paymentPayload)
         
@@ -2092,7 +2092,7 @@ export default {
           loaiHoaDon: 'Online',
           tienKhachDua: 0,
           phieuGiamGiaId: tempOrderData.discountInfo ? tempOrderData.discountInfo.id : null,
-          phuongThucThanhToan: 'VNPAY'
+          phuongThucThanhToan: 'Tra_Truoc'
         })
 
         // 6. Ghi nhận ngày đặt hàng (trạng thái đã được set trong updatePayment)
@@ -2912,7 +2912,7 @@ export default {
           
           // Cập nhật thông tin đơn hàng
           orderCode.value = tempOrderData?.tempOrderCode || 'VNPAY_SUCCESS'
-          paymentMethod.value = 'VNPAY'
+          paymentMethod.value = 'Tra_Truoc'
           deliveryTime.value = tempOrderData?.selectedDeliveryMethod === 'express' ? '1-2 ngày làm việc' : '2-5 ngày làm việc'
           
           // Dọn dẹp
@@ -2949,7 +2949,7 @@ export default {
           
           // Cập nhật thông tin và chuyển sang trạng thái failed
           orderCode.value = orderCodeValue
-          paymentMethod.value = 'VNPAY'
+          paymentMethod.value = 'Tra_Truoc'
           cancelReason.value = reason
           
           // Chuyển sang Step 2 - Failed

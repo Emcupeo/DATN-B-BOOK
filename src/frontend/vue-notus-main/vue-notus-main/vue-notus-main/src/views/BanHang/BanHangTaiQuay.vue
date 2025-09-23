@@ -9,19 +9,6 @@
                   :class="['px-4 py-2 text-sm font-medium mr-2 mb-2 rounded-t-lg flex items-center space-x-2', { 'bg-blue-100 border border-blue-500 text-blue-700': selectedOrderIndex === index, 'bg-gray-200 text-gray-600 hover:bg-gray-300': selectedOrderIndex !== index }]"
                   @click="selectedOrderIndex = index">
             <span>Hóa đơn #{{ order.maHoaDon || index + 1 }}</span>
-            <!-- Badge phương thức thanh toán -->
-            <span v-if="order.phuongThucThanhToanId" 
-                  :class="['px-2 py-1 text-xs rounded-full font-semibold',
-                    order.phuongThucThanhToanId === 1 ? 'bg-blue-100 text-blue-800' : 
-                    order.phuongThucThanhToanId === 4 ? 'bg-green-100 text-green-800' : 
-                    'bg-orange-100 text-orange-800']">
-              <i :class="order.phuongThucThanhToanId === 1 ? 'fas fa-credit-card' : 
-                        order.phuongThucThanhToanId === 4 ? 'fas fa-money-bill-wave' : 
-                        'fas fa-truck'"></i>
-              {{ order.phuongThucThanhToanId === 1 ? 'Chuyển khoản' : 
-                 order.phuongThucThanhToanId === 4 ? 'Tiền mặt' : 
-                 'COD' }}
-            </span>
           </button>
           <button @click="createNewInvoice" class="ml-auto bg-green-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-green-700 transition">
             Tạo hóa đơn mới
@@ -73,12 +60,12 @@
               </td>
               <td class="px-4 py-2">
                 <input
-                  type="number"
-                  v-model="prod.soLuong"
-                  min="1"
-                  :max="prod.boSach?.soLuong || prod.chiTietSanPham?.soLuongTon || 0"
-                  @change="updateProductQuantity(prod)"
-                  class="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    type="number"
+                    v-model="prod.soLuong"
+                    min="1"
+                    :max="prod.boSach?.soLuong || prod.chiTietSanPham?.soLuongTon || 0"
+                    @change="updateProductQuantity(prod)"
+                    class="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </td>
               <td class="px-4 py-2">{{ prod.boSach?.soLuong || prod.chiTietSanPham?.soLuongTon || 0 }}</td>
@@ -97,10 +84,10 @@
                 <div class="flex space-x-2">
                   <!-- Nút Chi tiết cho bộ sách -->
                   <button
-                    v-if="prod.boSach"
-                    @click="openBookSetDetailModal(prod.boSach)"
-                    class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors duration-200"
-                    title="Xem chi tiết bộ sách"
+                      v-if="prod.boSach"
+                      @click="openBookSetDetailModal(prod.boSach)"
+                      class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors duration-200"
+                      title="Xem chi tiết bộ sách"
                   >
                     <i class="fas fa-info-circle mr-1"></i>
                     Chi tiết
@@ -108,10 +95,10 @@
 
                   <!-- Nút Xóa sản phẩm -->
                   <button
-                    v-if="selectedOrder && (selectedOrder.trangThai === 'Tạo hóa đơn' || selectedOrder.trangThai === 'Chờ xác nhận')"
-                    @click="removeItem(prod.id)"
-                    class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors duration-200"
-                    title="Xóa sản phẩm khỏi hóa đơn"
+                      v-if="selectedOrder && (selectedOrder.trangThai === 'Tạo hóa đơn' || selectedOrder.trangThai === 'Chờ xác nhận')"
+                      @click="removeItem(prod.id)"
+                      class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors duration-200"
+                      title="Xóa sản phẩm khỏi hóa đơn"
                   >
                     <i class="fas fa-trash-alt mr-1"></i>
                     Xóa
@@ -181,7 +168,7 @@
           <h3 class="text-md font-semibold text-gray-900 mb-2">Hình thức nhận hàng</h3>
           <div class="space-y-2">
             <label class="flex items-center space-x-2">
-<input type="radio" value="TaiQuay" v-model="deliveryMethod" class="text-sm" />
+              <input type="radio" value="TaiQuay" v-model="deliveryMethod" class="text-sm" />
               <span class="text-sm">Tại quầy</span>
             </label>
             <label class="flex items-center space-x-2">
@@ -215,14 +202,14 @@
 
             <!-- Giao hàng: COD và Tiền mặt -->
             <template v-if="deliveryMethod === 'GiaoHang'">
-              <label class="flex items-center space-x-2 p-2 rounded-lg border-2 transition-all" 
+              <label class="flex items-center space-x-2 p-2 rounded-lg border-2 transition-all"
                      :class="paymentMethod === 'cod' ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-orange-300'">
                 <input type="radio" value="cod" v-model="paymentMethod" class="text-sm" />
                 <i class="fas fa-truck text-orange-600"></i>
                 <span class="text-sm font-medium">Thanh toán khi nhận hàng (COD)</span>
                 <span class="px-2 py-1 text-xs bg-orange-100 text-orange-800 rounded-full">COD</span>
               </label>
-              <label class="flex items-center space-x-2 p-2 rounded-lg border-2 transition-all" 
+              <label class="flex items-center space-x-2 p-2 rounded-lg border-2 transition-all"
                      :class="paymentMethod === '4' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'">
                 <input type="radio" value="4" v-model="paymentMethod" class="text-sm" />
                 <i class="fas fa-money-bill-wave text-green-600"></i>
@@ -260,7 +247,7 @@
 
         <div class="border-t pt-4">
           <!-- Hiển thị phương thức thanh toán nếu đã có -->
-          <div v-if="selectedOrder?.phuongThucThanhToanId" class="flex justify-between items-center mb-3 p-2 rounded-lg" 
+          <div v-if="selectedOrder?.phuongThucThanhToanId" class="flex justify-between items-center mb-3 p-2 rounded-lg"
                :class="selectedOrder.phuongThucThanhToanId === 1 ? 'bg-blue-50 border border-blue-200' :
                        selectedOrder.phuongThucThanhToanId === 4 ? 'bg-green-50 border border-green-200' : 
                        'bg-orange-50 border border-orange-200'">
@@ -274,26 +261,26 @@
                 selectedOrder.phuongThucThanhToanId === 4 ? 'text-green-700' : 
                 'text-orange-700']">
                 {{ selectedOrder.phuongThucThanhToanId === 1 ? 'Chuyển khoản' :
-                   selectedOrder.phuongThucThanhToanId === 4 ? 'Tiền mặt' : 
-                   'COD' }}
+                  selectedOrder.phuongThucThanhToanId === 4 ? 'Tiền mặt' :
+                      'COD' }}
               </span>
               <span :class="['px-2 py-1 text-xs rounded-full font-bold',
                 selectedOrder.phuongThucThanhToanId === 1 ? 'bg-blue-100 text-blue-800' :
                 selectedOrder.phuongThucThanhToanId === 4 ? 'bg-green-100 text-green-800' : 
                 'bg-orange-100 text-orange-800']">
                 {{ selectedOrder.phuongThucThanhToanId === 1 ? 'CHUYỂN KHOẢN' :
-                   selectedOrder.phuongThucThanhToanId === 4 ? 'TIỀN MẶT' : 
-                   'COD' }}
+                  selectedOrder.phuongThucThanhToanId === 4 ? 'TIỀN MẶT' :
+                      'COD' }}
               </span>
             </div>
           </div>
-          
+
           <div class="flex justify-between mb-2">
             <span class="text-gray-600 text-sm">Tạm tính:</span>
             <span class="font-medium text-sm">{{ formatCurrency(tongTienHang) }}</span>
           </div>
           <div class="flex justify-between mb-2">
-<span class="text-gray-600 text-sm">Phí vận chuyển:</span>
+            <span class="text-gray-600 text-sm">Phí vận chuyển:</span>
             <span class="font-medium text-sm">{{ formatCurrency(selectedOrder?.phiShip || 0) }}</span>
           </div>
           <div class="flex justify-between mb-2">
@@ -343,7 +330,7 @@
     <transition name="fade">
       <div v-if="showAddProductModal" class="fixed inset-0 z-10 flex items-center justify-center bg-gray-600 bg-opacity-50">
         <div class="bg-white p-6 z-10 rounded-lg shadow-lg w-3/4 max-h-[80vh] overflow-y-auto">
-            <h3 class="text-lg font-semibold mb-4">Chọn chi tiết sản phẩm</h3>
+          <h3 class="text-lg font-semibold mb-4">Chọn chi tiết sản phẩm</h3>
           <form @submit.prevent="addProduct" class="space-y-4">
             <div class="flex justify-between items-center mb-4">
               <div class="w-1/2">
@@ -369,7 +356,7 @@
             <div class="grid grid-cols-5 gap-4 mb-4">
               <div>
                 <label class="block text-sm font-medium text-gray-700">Giá tối thiểu</label>
-<input v-model.number="filters.minPrice" type="number" min="0" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="0" />
+                <input v-model.number="filters.minPrice" type="number" min="0" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="0" />
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700">Giá tối đa</label>
@@ -405,7 +392,7 @@
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700">Người dịch</label>
-<select v-model="filters.idNguoiDich" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                <select v-model="filters.idNguoiDich" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
                   <option :value="null">Tất cả</option>
                   <option v-for="item in nguoiDichList" :key="item.id" :value="item.id">{{ item.tenNguoiDich }}</option>
                 </select>
@@ -448,7 +435,7 @@
                         <img v-for="(image, imgIndex) in product.anhSanPhams" :key="image.id" :src="image.url" class="w-full h-full object-cover absolute top-0 left-0" :class="{'image-active': imgIndex === currentImageIndex[product.id], 'image-inactive': imgIndex !== currentImageIndex[product.id]}" alt="Sản phẩm" />
                       </div>
                       <span v-else class="text-gray-500">Không có ảnh</span>
-</div>
+                    </div>
                   </td>
                   <td class="px-4 py-3 font-medium">{{ product.tenChiTietSanPham }}</td>
                   <td class="px-4 py-3 text-red-500">{{ formatCurrency(product.gia) }}</td>
@@ -537,7 +524,7 @@
                 <th class="px-4 py-3">Email</th>
                 <th class="px-4 py-3">Số điện thoại</th>
                 <th class="px-4 py-3">Địa chỉ</th>
-<th class="px-4 py-3">Chọn</th>
+                <th class="px-4 py-3">Chọn</th>
               </tr>
               </thead>
               <tbody>
@@ -592,7 +579,7 @@
             </div>
             <div>
               <label class="block text-sm font-medium mb-1">Trạng thái</label>
-<select v-model="newCustomer.trangThai" class="w-full border rounded px-3 py-2">
+              <select v-model="newCustomer.trangThai" class="w-full border rounded px-3 py-2">
                 <option :value="true">Hoạt động</option>
                 <option :value="false">Không hoạt động</option>
               </select>
@@ -683,22 +670,22 @@
               <div class="overflow-x-auto">
                 <table class="w-full text-sm text-left text-gray-500">
                   <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                    <tr>
-                      <th class="px-4 py-3">Tên sách</th>
-                      <th class="px-4 py-3">Tác giả</th>
-                      <th class="px-4 py-3">Số lượng trong bộ</th>
-                      <th class="px-4 py-3">Kho</th>
-                      <th class="px-4 py-3">Giá</th>
-                    </tr>
+                  <tr>
+                    <th class="px-4 py-3">Tên sách</th>
+                    <th class="px-4 py-3">Tác giả</th>
+                    <th class="px-4 py-3">Số lượng trong bộ</th>
+                    <th class="px-4 py-3">Kho</th>
+                    <th class="px-4 py-3">Giá</th>
+                  </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="bookDetail in bookSetDetails[selectedBookSet?.id] || []" :key="bookDetail.id?.idBoSach + '-' + bookDetail.id?.idChiTietSanPham" class="bg-white border-b hover:bg-gray-50">
-                      <td class="px-4 py-3 font-medium">{{ bookDetail.idChiTietSanPham?.tenChiTietSanPham || 'Không xác định' }}</td>
-                      <td class="px-4 py-3">{{ bookDetail.idChiTietSanPham?.idTacGia?.tenTacGia || 'Không có tác giả' }}</td>
-                      <td class="px-4 py-3">{{ bookDetail.soLuong || 1 }}</td>
-                      <td class="px-4 py-3">{{ bookDetail.idChiTietSanPham?.soLuongTon || 0 }}</td>
-                      <td class="px-4 py-3 text-red-500">{{ formatCurrency(bookDetail.idChiTietSanPham?.gia || 0) }}</td>
-                    </tr>
+                  <tr v-for="bookDetail in bookSetDetails[selectedBookSet?.id] || []" :key="bookDetail.id?.idBoSach + '-' + bookDetail.id?.idChiTietSanPham" class="bg-white border-b hover:bg-gray-50">
+                    <td class="px-4 py-3 font-medium">{{ bookDetail.idChiTietSanPham?.tenChiTietSanPham || 'Không xác định' }}</td>
+                    <td class="px-4 py-3">{{ bookDetail.idChiTietSanPham?.idTacGia?.tenTacGia || 'Không có tác giả' }}</td>
+                    <td class="px-4 py-3">{{ bookDetail.soLuong || 1 }}</td>
+                    <td class="px-4 py-3">{{ bookDetail.idChiTietSanPham?.soLuongTon || 0 }}</td>
+                    <td class="px-4 py-3 text-red-500">{{ formatCurrency(bookDetail.idChiTietSanPham?.gia || 0) }}</td>
+                  </tr>
                   </tbody>
                 </table>
               </div>
@@ -736,14 +723,14 @@
                           'fas fa-credit-card text-blue-600'"></i>
                 <span class="text-sm font-medium text-gray-900">
                   {{ paymentMethod === 'cod' ? 'Thanh toán khi nhận hàng (COD)' :
-                     paymentMethod === '4' ? 'Tiền mặt' : 'Chuyển khoản' }}
+                    paymentMethod === '4' ? 'Tiền mặt' : 'Chuyển khoản' }}
                 </span>
                 <span :class="['px-2 py-1 text-xs rounded-full font-semibold',
                   paymentMethod === 'cod' ? 'bg-orange-100 text-orange-800' :
                   paymentMethod === '4' ? 'bg-green-100 text-green-800' : 
                   'bg-blue-100 text-blue-800']">
                   {{ paymentMethod === 'cod' ? 'COD' :
-                     paymentMethod === '4' ? 'TIỀN MẶT' : 'CHUYỂN KHOẢN' }}
+                    paymentMethod === '4' ? 'TIỀN MẶT' : 'CHUYỂN KHOẢN' }}
                 </span>
               </div>
             </div>
@@ -775,17 +762,17 @@
 
             <div class="flex justify-end gap-2">
               <button
-                @click="showPaymentModal = false"
-                type="button"
-                class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition"
+                  @click="showPaymentModal = false"
+                  type="button"
+                  class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition"
               >
                 Hủy
               </button>
               <button
-                @click="submitPayment"
-                type="button"
-                class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
-                :disabled="paymentMethod === '4' && (tienKhachDua <= 0 || tienTraKhach < 0)"
+                  @click="submitPayment"
+                  type="button"
+                  class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+                  :disabled="paymentMethod === '4' && (tienKhachDua <= 0 || tienTraKhach < 0)"
               >
                 Xác nhận thanh toán
               </button>
@@ -902,17 +889,17 @@ export default {
     },
     tienGiamGia() {
       if (!this.selectedVoucher) return 0;
-      
+
       // Nếu có giảm giá theo phần trăm
       if (this.selectedVoucher.soPhanTramGiam > 0) {
         return (this.tongTienHang * this.selectedVoucher.soPhanTramGiam) / 100;
       }
-      
+
       // Nếu có giảm giá theo số tiền cố định
       if (this.selectedVoucher.giaTriGiam > 0) {
         return this.selectedVoucher.giaTriGiam;
       }
-      
+
       return 0;
     },
     thanhTien() {
@@ -1053,17 +1040,17 @@ export default {
     },
     getVoucherDisplayValue(voucher) {
       if (!voucher) return '';
-      
+
       // Nếu có giảm giá theo phần trăm
       if (voucher.soPhanTramGiam > 0) {
         return `${voucher.soPhanTramGiam}%`;
       }
-      
+
       // Nếu có giảm giá theo số tiền cố định
       if (voucher.giaTriGiam > 0) {
         return this.formatCurrency(voucher.giaTriGiam);
       }
-      
+
       return '';
     },
     formatDiaChi(customer) {
@@ -1132,7 +1119,6 @@ export default {
       try {
         const orderId = this.selectedOrder?.id;
         if (!orderId) {
-          console.error("Thiếu ID hóa đơn để xác nhận");
           alert("Không tìm thấy ID hóa đơn!");
           return;
         }
@@ -1147,48 +1133,60 @@ export default {
           alert("Hóa đơn phải có ít nhất một sản phẩm!");
           return;
         }
-        // Với Tại quầy và thanh toán tiền mặt cần kiểm tra tiền khách đưa
-        if (this.deliveryMethod === 'TaiQuay' && this.paymentMethod === '4' && (this.tienKhachDua <= 0 || this.tienTraKhach < 0)) {
-          alert("Số tiền khách đưa không đủ để thanh toán!");
-          return;
-        }
-        // Cập nhật thông tin hóa đơn trước khi xác nhận
+
+        // Cập nhật thông tin hóa đơn
         await HoaDonService.updateHoaDon(orderId, {
           phiShip: this.selectedOrder.phiShip || 0,
-          tongTien: this.thanhTien
+          tongTien: this.thanhTien,
+          loaiHoaDon: this.mapDeliveryMethod(this.deliveryMethod),
+          phieuGiamGiaId: this.selectedVoucher?.id || null,
         });
-        // Nếu là Tại quầy, ghi nhận thanh toán ngay để lưu phương thức
+
+        // Ghi nhận thông tin thanh toán
+        let paymentPayload = {
+          tienMat: 0,
+          chuyenKhoan: 0,
+          ghiChu: this.paymentNote || '',
+          loaiHoaDon: this.mapDeliveryMethod(this.deliveryMethod),
+          tienKhachDua: 0,
+          phieuGiamGiaId: this.selectedVoucher?.id || null,
+        };
+
         if (this.deliveryMethod === 'TaiQuay') {
-          const paymentMethodId = this.paymentMethod === '1' ? 1 : 4;
-          const paymentData = {
-            phuongThucThanhToanId: paymentMethodId,
-            tienMat: paymentMethodId === 4 ? this.thanhTien : 0,
-            chuyenKhoan: paymentMethodId === 1 ? this.thanhTien : 0,
-            tienKhachDua: paymentMethodId === 4 ? this.tienKhachDua : 0,
-            ghiChu: this.paymentNote,
-            phieuGiamGiaId: this.selectedVoucher?.id || null,
-            loaiHoaDon: this.mapDeliveryMethod(this.deliveryMethod),
-            tongTien: this.thanhTien,
-            phuongThucThanhToan: paymentMethodId === 4 ? 'TIEN_MAT' : 'VNPAY'
-          };
-          const payRes = await HoaDonService.updatePayment(orderId, paymentData);
-          if (payRes.status !== 200) {
-            alert('Có lỗi khi ghi nhận thanh toán, vui lòng thử lại!');
-            return;
+          // Đối với hóa đơn tại quầy, gán đầy đủ thông tin thanh toán
+          paymentPayload.phuongThucThanhToanId = this.paymentMethod === '1' ? 1 : 4;
+          paymentPayload.phuongThucThanhToan = this.paymentMethod === '1' ? 'Tra_Truoc' : 'TIEN_MAT';
+          paymentPayload.tienMat = this.paymentMethod === '4' ? this.thanhTien : 0;
+          paymentPayload.chuyenKhoan = this.paymentMethod === '1' ? this.thanhTien : 0;
+          paymentPayload.tienKhachDua = this.paymentMethod === '4' ? this.tienKhachDua : 0;
+        } else if (this.deliveryMethod === 'GiaoHang') {
+          // Đối với hóa đơn giao hàng, không gán phuongThucThanhToanId cho COD
+          paymentPayload.phuongThucThanhToan = this.paymentMethod === 'cod' ? 'COD' : this.paymentMethod === '1' ? 'Tra_Truoc' : 'TIEN_MAT';
+          paymentPayload.tienMat = this.paymentMethod === 'cod' || this.paymentMethod === '4' ? this.thanhTien : 0;
+          paymentPayload.chuyenKhoan = this.paymentMethod === '1' ? this.thanhTien : 0;
+          paymentPayload.tienKhachDua = this.paymentMethod === '4' ? this.tienKhachDua : this.thanhTien;
+          if (this.paymentMethod !== 'cod') {
+            paymentPayload.phuongThucThanhToanId = this.paymentMethod === '1' ? 1 : 4;
           }
         }
-        // Đặt trạng thái dựa trên deliveryMethod
+
+        console.log("Dữ liệu thanh toán gửi đi:", paymentPayload);
+
+        // Ghi nhận thanh toán
+        const payRes = await HoaDonService.updatePayment(orderId, paymentPayload);
+        if (payRes.status !== 200) {
+          alert('Có lỗi khi ghi nhận thanh toán, vui lòng thử lại!');
+          return;
+        }
+
+        // Đặt trạng thái
         const newStatus = this.deliveryMethod === 'TaiQuay' ? 'Hoàn thành' : 'Chờ xác nhận';
-        console.log(`DEBUG: Confirming order ID: ${orderId}, deliveryMethod: ${this.deliveryMethod}, newStatus: ${newStatus}`);
         const response = await HoaDonService.updateTrangThaiHoaDon(orderId, newStatus);
         if (response.status === 200) {
-          console.log(`DEBUG: Order confirmed successfully, status: ${newStatus}`);
           alert("Xác nhận hóa đơn thành công!");
           await this.fetchOrders();
-          // Làm mới trang để cập nhật dữ liệu
           window.location.reload();
         } else {
-          console.error("Xác nhận hóa đơn thất bại:", response.status);
           alert("Có lỗi xảy ra khi xác nhận hóa đơn!");
         }
       } catch (error) {
@@ -1214,59 +1212,62 @@ export default {
       try {
         const orderId = this.selectedOrder?.id;
         if (!orderId) {
-          console.error("Thiếu ID hóa đơn để xác nhận thanh toán");
           alert("Không tìm thấy ID hóa đơn!");
           return;
         }
-        const backendPaymentMethod = this.paymentMethod === "cod" ? "4" : this.paymentMethod;
-        const paymentMethodId = parseInt(backendPaymentMethod, 10);
-        if (Number.isNaN(paymentMethodId)) {
-          alert('Phương thức thanh toán không hợp lệ!');
-          return;
-        }
-        if (![1, 4].includes(paymentMethodId)) {
-          console.error("Phương thức thanh toán không hợp lệ:", backendPaymentMethod);
-          alert("Phương thức thanh toán không hợp lệ!");
-          return;
+        let paymentPayload = {
+          tienMat: 0,
+          chuyenKhoan: 0,
+          phuongThucThanhToanId: 4,
+          ghiChu: this.paymentNote || '',
+          loaiHoaDon: this.mapDeliveryMethod(this.deliveryMethod),
+          tienKhachDua: 0,
+          phieuGiamGiaId: this.selectedVoucher?.id || null,
+          phuongThucThanhToan: 'COD',
+        };
+        if (this.paymentMethod === 'cod') {
+          paymentPayload.phuongThucThanhToanId = 4;
+          paymentPayload.phuongThucThanhToan = 'COD';
+          paymentPayload.tienMat = this.thanhTien;
+          paymentPayload.chuyenKhoan = 0;
+          paymentPayload.tienKhachDua = this.thanhTien;
+        } else if (this.paymentMethod === '1') {
+          paymentPayload.phuongThucThanhToanId = 1;
+          paymentPayload.phuongThucThanhToan = 'Tra_Truoc';
+          paymentPayload.tienMat = 0;
+          paymentPayload.chuyenKhoan = this.thanhTien;
+          paymentPayload.tienKhachDua = 0;
+        } else if (this.paymentMethod === '4') {
+          paymentPayload.phuongThucThanhToanId = 4;
+          paymentPayload.phuongThucThanhToan = 'COD';
+          paymentPayload.tienMat = this.thanhTien;
+          paymentPayload.chuyenKhoan = 0;
+          paymentPayload.tienKhachDua = this.thanhTien;
         }
         if (this.thanhTien <= 0) {
           alert("Tổng tiền hóa đơn không hợp lệ!");
           return;
         }
-        if (paymentMethodId === 4 && (this.tienKhachDua <= 0 || this.tienTraKhach < 0)) {
+        if ( paymentPayload.phuongThucThanhToanId === 4 && (this.tienKhachDua <= 0 || this.tienTraKhach < 0)) {
           alert("Số tiền khách đưa không đủ để thanh toán!");
           return;
         }
-        const paymentData = {
-          phuongThucThanhToanId: paymentMethodId,
-          tienMat: paymentMethodId === 4 ? this.thanhTien : 0,
-          chuyenKhoan: paymentMethodId === 1 ? this.thanhTien : 0,
-          tienKhachDua: paymentMethodId === 4 ? this.tienKhachDua : 0,
-          ghiChu: this.paymentNote,
-          phieuGiamGiaId: this.selectedVoucher?.id || null,
-          loaiHoaDon: this.mapDeliveryMethod(this.deliveryMethod),
-          tongTien: this.thanhTien,
-          phuongThucThanhToan: paymentMethodId === 4 ? 'TIEN_MAT' : 'VNPAY'
-        };
-        // Cập nhật thông tin hóa đơn trước khi xác nhận thanh toán
         await HoaDonService.updateHoaDon(orderId, {
           phiShip: this.selectedOrder.phiShip || 0,
           tongTien: this.thanhTien
         });
-        const response = await HoaDonService.updatePayment(orderId, paymentData);
+        const response = await HoaDonService.updatePayment(orderId, paymentPayload);
         if (response.status === 200) {
-          const newStatus = backendPaymentMethod === "1" ? "Thanh toán thành công" : "Thanh toán";
+          let newStatus = paymentPayload.phuongThucThanhToan === 'Tra_Truoc' ? 'Thanh toán thành công' : 'Thanh toán';
           await HoaDonService.updateTrangThaiHoaDon(orderId, newStatus);
           await this.deductStockAfterPayment();
           alert("Xác nhận thanh toán thành công!");
           this.showPaymentModal = false;
           await this.fetchOrders();
         } else {
-          console.error("Xác nhận thanh toán thất bại:", response.status);
           alert("Có lỗi xảy ra khi xác nhận thanh toán!");
         }
       } catch (error) {
-        console.error("Lỗi khi xác nhận thanh toán:", error);
         alert(error.response?.data?.message || "Có lỗi xảy ra khi xác nhận thanh toán!");
       }
     },
@@ -1381,7 +1382,7 @@ export default {
       if (!confirm('Bạn có chắc chắn muốn bỏ chọn khách hàng này?')) {
         return;
       }
-      
+
       try {
         const orderId = this.selectedOrder.id;
         const customerData = {
