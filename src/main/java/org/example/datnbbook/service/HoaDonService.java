@@ -280,7 +280,7 @@ public class HoaDonService {
     @Transactional
     public HoaDon updateTrangThai(int id, String trangThaiMoi) {
         System.out.println("DEBUG: updateTrangThai called with id=" + id + ", trangThaiMoi=" + trangThaiMoi);
-        
+
         HoaDon hoaDon = hoaDonRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hóa đơn với ID: " + id));
 
@@ -306,7 +306,7 @@ public class HoaDonService {
         System.out.println("DEBUG: updateTrangThai completed successfully");
         return hoaDon;
     }
-    
+
     // Alias method cho frontend
     @Transactional
     public HoaDon updateTrangThaiHoaDon(int id, String trangThaiMoi) {
@@ -319,10 +319,10 @@ public class HoaDonService {
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hóa đơn với ID: " + id));
 
         String trangThaiCu = hoaDon.getTrangThai();
-        
+
         // Khôi phục số lượng sản phẩm/bộ sách trước khi hủy
         restoreQuantitiesOnCancel(hoaDon);
-        
+
         hoaDon.setTrangThai("Đã hủy");
         hoaDon.setDeleted(true);
         hoaDonRepository.save(hoaDon);
@@ -339,18 +339,18 @@ public class HoaDonService {
 
     // Method khôi phục số lượng khi hủy hóa đơn
     @Transactional
-    private void restoreQuantitiesOnCancel(HoaDon hoaDon) {
+    protected void restoreQuantitiesOnCancel(HoaDon hoaDon) {
         try {
             System.out.println("DEBUG: Starting restoreQuantitiesOnCancel for HoaDon ID: " + hoaDon.getId());
-            
+
             // Force load hoaDonChiTiets
             hoaDon.getHoaDonChiTiets().size();
             System.out.println("DEBUG: HoaDonChiTiets size: " + hoaDon.getHoaDonChiTiets().size());
-            
+
             // Force load phieuGiamGia
             PhieuGiamGia phieuGiamGia = hoaDon.getPhieuGiamGia();
             System.out.println("DEBUG: PhieuGiamGia: " + (phieuGiamGia != null ? "Found ID " + phieuGiamGia.getId() + ", quantity: " + phieuGiamGia.getSoLuong() : "null"));
-            
+
             for (HoaDonChiTiet chiTiet : hoaDon.getHoaDonChiTiets()) {
                 if (chiTiet.getChiTietSanPham() != null) {
                     // Khôi phục số lượng cho sản phẩm lẻ
@@ -359,14 +359,14 @@ public class HoaDonService {
                     chiTietSanPhamRepository.save(chiTietSanPham);
                     System.out.println("DEBUG: Restored " + chiTiet.getSoLuong() + " units for product: " + chiTietSanPham.getTenChiTietSanPham());
                 }
-                
+
                 if (chiTiet.getBoSach() != null) {
                     // Khôi phục số lượng cho bộ sách
                     BoSach boSach = chiTiet.getBoSach();
                     boSach.setSoLuong(boSach.getSoLuong() + chiTiet.getSoLuong());
                     boSachRepository.save(boSach);
                     System.out.println("DEBUG: Restored " + chiTiet.getSoLuong() + " units for book set: " + boSach.getTenBoSach());
-                    
+
                     // Khôi phục số lượng cho các sản phẩm trong bộ sách
                     List<BoSachChiTiet> boSachChiTiets = boSachChiTietRepository.findByIdBoSachId(boSach.getId());
                     for (BoSachChiTiet boSachChiTiet : boSachChiTiets) {
@@ -378,7 +378,7 @@ public class HoaDonService {
                     }
                 }
             }
-            
+
             // Khôi phục số lượng phiếu giảm giá nếu có
             if (phieuGiamGia != null) {
                 Long oldQuantity = phieuGiamGia.getSoLuong();
@@ -388,7 +388,7 @@ public class HoaDonService {
             } else {
                 System.out.println("DEBUG: No voucher found for this order");
             }
-            
+
         } catch (Exception e) {
             System.err.println("ERROR: Failed to restore quantities on cancel: " + e.getMessage());
             e.printStackTrace();
@@ -398,7 +398,7 @@ public class HoaDonService {
 
     @Transactional
     public HoaDon updatePayment(int id, BigDecimal tienMat, BigDecimal chuyenKhoan, Integer phuongThucThanhToanId, String ghiChu, String loaiHoaDon, BigDecimal tienKhachDua, Long phieuGiamGiaId, String phuongThucThanhToan) {
-        System.out.println("DEBUG: updatePayment called with id=" + id + ", tienMat=" + tienMat + ", chuyenKhoan=" + chuyenKhoan + ", phuongThucThanhToanId=" + phuongThucThanhToanId + ", loaiHoaDon=" + loaiHoaDon);
+        System.out.println("DEBUG: updatePayment called with id=" + id + ", tienMat=" + tienMat + ", chuyenKhoan=" + chuyenKhoan + ", phuongThucThanhToanId=" + phuongThucThanhToanId + ", loaiHoaDon=" + loaiHoaDon + ", phuongThucThanhToan=" + phuongThucThanhToan);
 
         HoaDon hoaDon = hoaDonRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hóa đơn với ID: " + id));
@@ -439,47 +439,99 @@ public class HoaDonService {
         hinhThucThanhToan.setUpdatedAt(Instant.now());
         hinhThucThanhToan.setDeleted(false);
 
-        PhuongThucThanhToan phuongThucThanhToanEntity = phuongThucThanhToanRepository.findById(phuongThucThanhToanId)
-                .orElseThrow(() -> new IllegalArgumentException("Phương thức thanh toán không tồn tại với ID: " + phuongThucThanhToanId));
-        hinhThucThanhToan.setPhuongThucThanhToan(phuongThucThanhToanEntity);
-            hinhThucThanhToan = hinhThucThanhToanRepository.save(hinhThucThanhToan);
+        // Xử lý phương thức thanh toán
+        if ("COD".equalsIgnoreCase(phuongThucThanhToan)) {
+            // Không gán phuongThucThanhToanId cho COD
+            hinhThucThanhToan.setPhuongThucThanhToan(null);
+        } else {
+            if (phuongThucThanhToanId == null) {
+                throw new IllegalArgumentException("Phương thức thanh toán ID không được để trống cho các phương thức không phải COD!");
+            }
+            PhuongThucThanhToan phuongThucThanhToanEntity = phuongThucThanhToanRepository.findById(phuongThucThanhToanId)
+                    .orElseThrow(() -> new IllegalArgumentException("Phương thức thanh toán không tồn tại với ID: " + phuongThucThanhToanId));
+            hinhThucThanhToan.setPhuongThucThanhToan(phuongThucThanhToanEntity);
+        }
+
+        hinhThucThanhToan = hinhThucThanhToanRepository.save(hinhThucThanhToan);
 
         // Cập nhật hóa đơn
         hoaDon.setHinhThucThanhToan(hinhThucThanhToan);
         if (hinhThucThanhToan.getHoaDons() == null) {
             hinhThucThanhToan.setHoaDons(new LinkedHashSet<>());
         }
-            hinhThucThanhToan.getHoaDons().add(hoaDon);
+        hinhThucThanhToan.getHoaDons().add(hoaDon);
         hoaDon.setGhiChu(ghiChu);
         hoaDon.setTongTien(thanhTien);
-        hoaDon.setPhuongThucThanhToan(phuongThucThanhToan); // Lưu phương thức thanh toán (String)
-        hoaDon.setUpdatedAt(Instant.now());
 
-        // Đặt trạng thái
-        String newTrangThai;
-        if ("Tại quầy".equals(loaiHoaDon)) {
-            newTrangThai = "Hoàn thành";
-            System.out.println("DEBUG: loaiHoaDon is Tại quầy, setting newTrangThai to Hoàn thành");
-        } else if ("Giao hàng".equals(loaiHoaDon)) {
-            newTrangThai = phuongThucThanhToanId == 1 ? "Đã thanh toán" : "Chờ xác nhận";
-            System.out.println("DEBUG: loaiHoaDon is Giao hàng, phuongThucThanhToanId=" + phuongThucThanhToanId + ", setting newTrangThai to " + newTrangThai);
-        } else if ("Online".equals(loaiHoaDon)) {
-            // Với đơn online, phân biệt VNPay và COD
-            if (phuongThucThanhToanId == 1) {
-                // VNPay: Tạo hóa đơn → Thanh toán thành công → Chờ giao hàng → Đang vận chuyển → Đã giao hàng → Hoàn thành
-                newTrangThai = "Thanh toán thành công";
-                System.out.println("DEBUG: loaiHoaDon is Online VNPay, setting newTrangThai to Thanh toán thành công");
-            } else if (phuongThucThanhToanId == 4) {
-                // COD: Tạo hóa đơn → Chờ xác nhận → Chờ giao hàng → Đang vận chuyển → Đã giao hàng → Đã thanh toán → Hoàn thành
-                newTrangThai = "Chờ xác nhận";
-                System.out.println("DEBUG: loaiHoaDon is Online COD, setting newTrangThai to Chờ xác nhận");
-            } else {
-                newTrangThai = "Chờ xác nhận";
-                System.out.println("DEBUG: loaiHoaDon is Online with unknown phuongThucThanhToanId=" + phuongThucThanhToanId + ", setting newTrangThai to Chờ xác nhận");
+        // Chuẩn hóa giá trị phương thức thanh toán
+        if (phuongThucThanhToan != null) {
+            if (hoaDon.getPhuongThucThanhToan() == null || hoaDon.getPhuongThucThanhToan().isEmpty()) {
+                if (phuongThucThanhToan.equalsIgnoreCase("COD")) {
+                    hoaDon.setPhuongThucThanhToan("COD");
+                } else if (phuongThucThanhToan.equalsIgnoreCase("Tra_Truoc")) {
+                    hoaDon.setPhuongThucThanhToan("Tra_Truoc");
+                } else if (phuongThucThanhToan.equalsIgnoreCase("TIEN_MAT")) {
+                    hoaDon.setPhuongThucThanhToan("TIEN_MAT");
+                } else {
+                    hoaDon.setPhuongThucThanhToan("");
+                }
             }
         } else {
-                newTrangThai = "Chờ xác nhận";
-            System.out.println("DEBUG: Invalid loaiHoaDon=" + loaiHoaDon + ", defaulting to Chờ xác nhận");
+            if (hoaDon.getPhuongThucThanhToan() == null) {
+                hoaDon.setPhuongThucThanhToan("");
+            }
+        }
+        hoaDon.setUpdatedAt(Instant.now());
+
+        // Timeline trạng thái
+        String newTrangThai;
+        if ("COD".equalsIgnoreCase(phuongThucThanhToan)) {
+            switch (hoaDon.getTrangThai()) {
+                case "Tạo hóa đơn":
+                    newTrangThai = "Chờ xác nhận";
+                    break;
+                case "Chờ xác nhận":
+                    newTrangThai = "Chờ giao hàng";
+                    break;
+                case "Chờ giao hàng":
+                    newTrangThai = "Đang vận chuyển";
+                    break;
+                case "Đang vận chuyển":
+                    newTrangThai = "Đã giao hàng";
+                    break;
+                case "Đã giao hàng":
+                    newTrangThai = "Đã thanh toán";
+                    break;
+                case "Đã thanh toán":
+                    newTrangThai = "Hoàn thành";
+                    break;
+                default:
+                    newTrangThai = hoaDon.getTrangThai();
+            }
+        } else if ("Tra_Truoc".equalsIgnoreCase(phuongThucThanhToan)) {
+            switch (hoaDon.getTrangThai()) {
+                case "Tạo hóa đơn":
+                    newTrangThai = "Chờ xác nhận";
+                    break;
+                case "Thanh toán thành công":
+                    newTrangThai = "Chờ giao hàng";
+                    break;
+                case "Chờ giao hàng":
+                    newTrangThai = "Đang vận chuyển";
+                    break;
+                case "Đang vận chuyển":
+                    newTrangThai = "Đã giao hàng";
+                    break;
+                case "Đã giao hàng":
+                    newTrangThai = "Hoàn thành";
+                    break;
+                default:
+                    newTrangThai = hoaDon.getTrangThai();
+            }
+        } else if ("TIEN_MAT".equalsIgnoreCase(phuongThucThanhToan)) {
+            newTrangThai = "Đã thanh toán";
+        } else {
+            newTrangThai = hoaDon.getTrangThai();
         }
         hoaDon.setTrangThai(newTrangThai);
         System.out.println("DEBUG: Set trangThai to: " + newTrangThai + " for HoaDon ID: " + hoaDon.getId());
@@ -495,13 +547,12 @@ public class HoaDonService {
         lichSuHoaDonRepository.save(lichSu);
         System.out.println("DEBUG: Saved LichSuHoaDon: trangThaiCu=" + oldTrangThai + ", trangThaiMoi=" + newTrangThai + " for HoaDon ID: " + updatedHoaDon.getId());
 
-
         // Trừ số lượng phiếu giảm giá
         if (phieuGiamGiaId != null) {
-                PhieuGiamGia phieuGiamGia = phieuGiamGiaRepository.findById(phieuGiamGiaId).orElse(null);
-                if (phieuGiamGia != null && phieuGiamGia.getSoLuong() > 0) {
-                    phieuGiamGia.setSoLuong(phieuGiamGia.getSoLuong() - 1);
-                    phieuGiamGiaRepository.save(phieuGiamGia);
+            PhieuGiamGia phieuGiamGia = phieuGiamGiaRepository.findById(phieuGiamGiaId).orElse(null);
+            if (phieuGiamGia != null && phieuGiamGia.getSoLuong() > 0) {
+                phieuGiamGia.setSoLuong(phieuGiamGia.getSoLuong() - 1);
+                phieuGiamGiaRepository.save(phieuGiamGia);
                 System.out.println("DEBUG: Decreased voucher quantity for ID: " + phieuGiamGiaId);
             }
         }
@@ -622,7 +673,7 @@ public class HoaDonService {
     @Transactional
     public HoaDonChiTiet addBoSachToOrder(int orderId, int boSachId, int soLuong, BigDecimal giaSanPham) {
         System.out.println("DEBUG: addBoSachToOrder called with orderId=" + orderId + ", boSachId=" + boSachId + ", soLuong=" + soLuong + ", giaSanPham=" + giaSanPham);
-        
+
         HoaDon hoaDon = hoaDonRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hóa đơn với ID: " + orderId));
 
@@ -661,19 +712,19 @@ public class HoaDonService {
         for (BoSachChiTiet boSachChiTiet : boSachChiTiets) {
             ChiTietSanPham chiTietSanPham = boSachChiTiet.getIdChiTietSanPham();
             int soLuongCanTru = boSachChiTiet.getSoLuong() * soLuong; // Số lượng trong bộ sách * số lượng bộ sách mua
-            
+
             if (chiTietSanPham.getSoLuongTon() < soLuongCanTru) {
                 throw new IllegalArgumentException(
-                    String.format("Không đủ số lượng tồn kho cho chi tiết sản phẩm '%s'. Cần: %d, Có: %d", 
-                        chiTietSanPham.getTenChiTietSanPham(), soLuongCanTru, chiTietSanPham.getSoLuongTon())
+                        String.format("Không đủ số lượng tồn kho cho chi tiết sản phẩm '%s'. Cần: %d, Có: %d",
+                                chiTietSanPham.getTenChiTietSanPham(), soLuongCanTru, chiTietSanPham.getSoLuongTon())
                 );
             }
-            
+
             chiTietSanPham.setSoLuongTon(chiTietSanPham.getSoLuongTon() - soLuongCanTru);
             chiTietSanPhamRepository.save(chiTietSanPham);
-            
-            System.out.println(String.format("DEBUG: Trừ %d sản phẩm '%s' (cần %d, còn %d)", 
-                soLuongCanTru, chiTietSanPham.getTenChiTietSanPham(), soLuongCanTru, chiTietSanPham.getSoLuongTon()));
+
+            System.out.println(String.format("DEBUG: Trừ %d sản phẩm '%s' (cần %d, còn %d)",
+                    soLuongCanTru, chiTietSanPham.getTenChiTietSanPham(), soLuongCanTru, chiTietSanPham.getSoLuongTon()));
         }
 
         return hoaDonChiTietRepository.save(hoaDonChiTiet);
@@ -721,19 +772,19 @@ public class HoaDonService {
 
         // Khôi phục số lượng cho sản phẩm lẻ
         if (hoaDonChiTiet.getChiTietSanPham() != null) {
-        ChiTietSanPham chiTietSanPham = hoaDonChiTiet.getChiTietSanPham();
-        chiTietSanPham.setSoLuongTon(chiTietSanPham.getSoLuongTon() + hoaDonChiTiet.getSoLuong());
-        chiTietSanPhamRepository.save(chiTietSanPham);
+            ChiTietSanPham chiTietSanPham = hoaDonChiTiet.getChiTietSanPham();
+            chiTietSanPham.setSoLuongTon(chiTietSanPham.getSoLuongTon() + hoaDonChiTiet.getSoLuong());
+            chiTietSanPhamRepository.save(chiTietSanPham);
             System.out.println("DEBUG: Restored " + hoaDonChiTiet.getSoLuong() + " units for product: " + chiTietSanPham.getTenChiTietSanPham());
         }
-        
+
         // Khôi phục số lượng cho bộ sách
         if (hoaDonChiTiet.getBoSach() != null) {
             BoSach boSach = hoaDonChiTiet.getBoSach();
             boSach.setSoLuong(boSach.getSoLuong() + hoaDonChiTiet.getSoLuong());
             boSachRepository.save(boSach);
             System.out.println("DEBUG: Restored " + hoaDonChiTiet.getSoLuong() + " units for book set: " + boSach.getTenBoSach());
-            
+
             // Khôi phục số lượng cho các sản phẩm trong bộ sách
             List<BoSachChiTiet> boSachChiTiets = boSachChiTietRepository.findByIdBoSachId(boSach.getId());
             for (BoSachChiTiet boSachChiTiet : boSachChiTiets) {
@@ -789,11 +840,11 @@ public class HoaDonService {
             System.out.println("📧 DEBUG: sendOrderConfirmationEmail called for order: " + hoaDon.getMaHoaDon());
             System.out.println("📧 DEBUG: hoaDon.getKhachHang(): " + (hoaDon.getKhachHang() != null ? "exists" : "null"));
             System.out.println("📧 DEBUG: hoaDon.getEmailNguoiNhan(): " + hoaDon.getEmailNguoiNhan());
-            
+
             // Lấy email từ khách hàng đã đăng nhập hoặc từ thông tin người nhận
             String customerEmail = null;
             String customerName = hoaDon.getTenNguoiNhan();
-            
+
             if (hoaDon.getKhachHang() != null && hoaDon.getKhachHang().getEmail() != null) {
                 // Khách hàng đã đăng nhập - lấy email từ tài khoản
                 customerEmail = hoaDon.getKhachHang().getEmail();
@@ -807,49 +858,49 @@ public class HoaDonService {
                 System.out.println("📧 DEBUG: No email available, skipping email notification");
                 return; // Không gửi email nếu không có email
             }
-            
+
             if (customerEmail == null || customerEmail.trim().isEmpty()) {
                 System.out.println("📧 DEBUG: No email available, skipping email notification");
                 return;
             }
-            
+
             // Format dữ liệu cho email
             String orderCode = hoaDon.getMaHoaDon();
-            
+
             // Sử dụng ngày tạo đơn hàng nếu chưa có ngày đặt hàng
             String orderDate = "N/A";
             if (hoaDon.getNgayDatHang() != null) {
                 orderDate = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").format(
-                    java.time.LocalDateTime.ofInstant(hoaDon.getNgayDatHang(), java.time.ZoneId.systemDefault())
+                        java.time.LocalDateTime.ofInstant(hoaDon.getNgayDatHang(), java.time.ZoneId.systemDefault())
                 );
             } else if (hoaDon.getNgayTao() != null) {
                 orderDate = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").format(
-                    java.time.LocalDateTime.ofInstant(hoaDon.getNgayTao(), java.time.ZoneId.systemDefault())
+                        java.time.LocalDateTime.ofInstant(hoaDon.getNgayTao(), java.time.ZoneId.systemDefault())
                 );
             }
-            
+
             // Tính tổng tiền từ chi tiết đơn hàng nếu chưa có tongTien
             String totalAmount = "N/A";
             if (hoaDon.getTongTien() != null) {
                 totalAmount = String.format("%,.0f ₫", hoaDon.getTongTien().doubleValue());
             } else if (hoaDon.getHoaDonChiTiets() != null && !hoaDon.getHoaDonChiTiets().isEmpty()) {
                 BigDecimal calculatedTotal = hoaDon.getHoaDonChiTiets().stream()
-                    .map(item -> item.getGiaSanPham() != null ? 
-                        item.getGiaSanPham().multiply(BigDecimal.valueOf(item.getSoLuong())) : BigDecimal.ZERO)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+                        .map(item -> item.getGiaSanPham() != null ?
+                                item.getGiaSanPham().multiply(BigDecimal.valueOf(item.getSoLuong())) : BigDecimal.ZERO)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
                 if (calculatedTotal.compareTo(BigDecimal.ZERO) > 0) {
                     totalAmount = String.format("%,.0f ₫", calculatedTotal.doubleValue());
                 }
             }
-            
+
             // Xác định phương thức thanh toán
             String paymentMethod = "Chưa thanh toán";
-            
+
             // Ưu tiên sử dụng trường mới phuongThucThanhToan
             if (hoaDon.getPhuongThucThanhToan() != null && !hoaDon.getPhuongThucThanhToan().trim().isEmpty()) {
                 String phuongThuc = hoaDon.getPhuongThucThanhToan();
                 switch (phuongThuc) {
-                    case "VNPAY":
+                    case "TraTruoc":
                         paymentMethod = "VNPAY (Thanh toán online)";
                         break;
                     case "COD":
@@ -865,9 +916,8 @@ public class HoaDonService {
                         paymentMethod = phuongThuc;
                         break;
                 }
-            } else if (hoaDon.getHinhThucThanhToan() != null && 
-                hoaDon.getHinhThucThanhToan().getPhuongThucThanhToan() != null) {
-                // Fallback về cách cũ nếu không có trường mới
+            } else if (hoaDon.getHinhThucThanhToan() != null &&
+                    hoaDon.getHinhThucThanhToan().getPhuongThucThanhToan() != null) {
                 String kieuThanhToan = hoaDon.getHinhThucThanhToan().getPhuongThucThanhToan().getKieuThanhToan();
                 if ("Chuyển khoản".equals(kieuThanhToan)) {
                     paymentMethod = "VNPAY (Chuyển khoản)";
@@ -877,27 +927,27 @@ public class HoaDonService {
                     paymentMethod = kieuThanhToan;
                 }
             }
-            
+
             String deliveryAddress = hoaDon.getDiaChi() != null ? hoaDon.getDiaChi() : "N/A";
             String phoneNumber = hoaDon.getSoDienThoaiNguoiNhan() != null ? hoaDon.getSoDienThoaiNguoiNhan() : "N/A";
-            
+
             System.out.println("📧 DEBUG: Sending order confirmation email to: " + customerEmail);
             System.out.println("📧 DEBUG: Order details - Code: " + orderCode + ", Date: " + orderDate + ", Amount: " + totalAmount + ", Payment: " + paymentMethod);
-            
+
             // Gửi email
             emailService.sendOrderConfirmationEmail(
-                customerEmail,
-                customerName,
-                orderCode,
-                orderDate,
-                totalAmount,
-                paymentMethod,
-                deliveryAddress,
-                phoneNumber
+                    customerEmail,
+                    customerName,
+                    orderCode,
+                    orderDate,
+                    totalAmount,
+                    paymentMethod,
+                    deliveryAddress,
+                    phoneNumber
             );
-            
+
             System.out.println("✅ DEBUG: Order confirmation email sent successfully to: " + customerEmail);
-            
+
         } catch (Exception e) {
             System.out.println("❌ DEBUG: Error sending order confirmation email: " + e.getMessage());
             e.printStackTrace();
@@ -909,63 +959,63 @@ public class HoaDonService {
     public HoaDon updateProductQuantity(int hoaDonId, Integer chiTietSanPhamId, Integer soLuong) {
         HoaDon hoaDon = hoaDonRepository.findById(hoaDonId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hóa đơn với ID: " + hoaDonId));
-        
+
         // Kiểm tra hóa đơn có thể chỉnh sửa không
         if (hoaDon.getDeleted() || !hoaDon.getTrangThai().equals("Tạo hóa đơn") && !hoaDon.getTrangThai().equals("Chờ xác nhận")) {
             throw new IllegalArgumentException("Không thể chỉnh sửa hóa đơn đã hủy hoặc đã hoàn thành");
         }
-        
+
         // Tìm HoaDonChiTiet cần cập nhật
         HoaDonChiTiet hoaDonChiTiet = hoaDon.getHoaDonChiTiets().stream()
                 .filter(hct -> hct.getChiTietSanPham() != null && hct.getChiTietSanPham().getId().equals(chiTietSanPhamId))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy chi tiết sản phẩm trong hóa đơn"));
-        
+
         System.out.println("DEBUG: updateProductQuantity - Before update: soLuong=" + hoaDonChiTiet.getSoLuong() + ", thanhTien=" + hoaDonChiTiet.getThanhTien());
-        
+
         // Cập nhật số lượng
         hoaDonChiTiet.setSoLuong(soLuong);
-        
+
         // Cập nhật thành tiền
         BigDecimal giaSanPham = hoaDonChiTiet.getChiTietSanPham().getGia();
         hoaDonChiTiet.setThanhTien(giaSanPham.multiply(new BigDecimal(soLuong)));
-        
+
         System.out.println("DEBUG: updateProductQuantity - After update: soLuong=" + hoaDonChiTiet.getSoLuong() + ", thanhTien=" + hoaDonChiTiet.getThanhTien());
-        
+
         return hoaDonRepository.save(hoaDon);
     }
 
     @Transactional
     public HoaDon updateBoSachQuantity(int hoaDonId, Integer boSachId, Integer soLuong) {
         System.out.println("DEBUG: updateBoSachQuantity called with hoaDonId=" + hoaDonId + ", boSachId=" + boSachId + ", soLuong=" + soLuong);
-        
+
         HoaDon hoaDon = hoaDonRepository.findById(hoaDonId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hóa đơn với ID: " + hoaDonId));
-        
+
         // Kiểm tra hóa đơn có thể chỉnh sửa không
         if (hoaDon.getDeleted() || !hoaDon.getTrangThai().equals("Tạo hóa đơn") && !hoaDon.getTrangThai().equals("Chờ xác nhận")) {
             throw new IllegalArgumentException("Không thể chỉnh sửa hóa đơn đã hủy hoặc đã hoàn thành");
         }
-        
+
         System.out.println("DEBUG: Found HoaDon: " + hoaDon.getMaHoaDon() + ", HoaDonChiTiets size: " + hoaDon.getHoaDonChiTiets().size());
-        
+
         // Tìm HoaDonChiTiet cần cập nhật
         HoaDonChiTiet hoaDonChiTiet = hoaDon.getHoaDonChiTiets().stream()
                 .filter(hct -> hct.getBoSach() != null && hct.getBoSach().getId().equals(boSachId))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bộ sách trong hóa đơn"));
-        
+
         System.out.println("DEBUG: Found HoaDonChiTiet for boSachId=" + boSachId + ", current soLuong=" + hoaDonChiTiet.getSoLuong());
-        
+
         // Cập nhật số lượng
         hoaDonChiTiet.setSoLuong(soLuong);
-        
+
         // Cập nhật thành tiền
         BigDecimal giaBoSach = hoaDonChiTiet.getBoSach().getGiaTien();
         hoaDonChiTiet.setThanhTien(giaBoSach.multiply(new BigDecimal(soLuong)));
-        
+
         System.out.println("DEBUG: Updated soLuong=" + soLuong + ", thanhTien=" + hoaDonChiTiet.getThanhTien());
-        
+
         return hoaDonRepository.save(hoaDon);
     }
 }

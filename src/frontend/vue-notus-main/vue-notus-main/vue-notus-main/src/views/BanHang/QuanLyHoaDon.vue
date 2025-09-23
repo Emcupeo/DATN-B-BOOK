@@ -4,49 +4,10 @@
     <div ref="invoice" class="bg-white p-4 rounded-lg shadow-md">
       <div class="flex items-center justify-between">
         <h2 class="text-lg font-semibold">Quản lý hóa đơn / <span class="text-gray-400">{{ order.maHoaDon || "Không có" }}</span></h2>
-        <!-- Badge phương thức thanh toán -->
-        <div v-if="order.phuongThucThanhToan" class="flex items-center space-x-2">
-          <i :class="isVNPayOrder ? 'fas fa-credit-card text-blue-600' :
-                    isCOrder ? 'fas fa-truck text-orange-600' : 
-                    'fas fa-money-bill-wave text-green-600'"></i>
-          <span :class="['px-3 py-1 text-sm rounded-full font-semibold',
-            isVNPayOrder ? 'bg-blue-100 text-blue-800' :
-            isCOrder ? 'bg-orange-100 text-orange-800' : 
-            'bg-green-100 text-green-800']">
-            <i :class="isVNPayOrder ? 'fas fa-credit-card mr-1' :
-                      isCOrder ? 'fas fa-truck mr-1' : 
-                      'fas fa-money-bill-wave mr-1'"></i>
-            {{ isVNPayOrder ? 'Chuyển khoản' :
-               isCOrder ? 'COD' : 
-               isTienMatOrder ? 'Tiền mặt' : 
-               'Không xác định' }}
-          </span>
-        </div>
       </div>
 
       <!-- Lịch sử đơn hàng dạng timeline -->
       <div v-if="order.lichSuHoaDons.length" class="bg-white p-6 rounded-lg shadow-md">
-        <!-- Hiển thị loại hóa đơn -->
-        <div class="mb-4 p-3 rounded-lg" 
-             :class="isVNPayOrder ? 'bg-blue-50 border border-blue-200' : 
-                     isCOrder ? 'bg-orange-50 border border-orange-200' : 
-                     'bg-green-50 border border-green-200'">
-          <div class="flex items-center space-x-2">
-            <i :class="isVNPayOrder ? 'fas fa-credit-card text-blue-600' : 
-                      isCOrder ? 'fas fa-truck text-orange-600' : 
-                      'fas fa-money-bill-wave text-green-600'"></i>
-            <span class="font-semibold" :class="isVNPayOrder ? 'text-blue-700' : 
-                                               isCOrder ? 'text-orange-700' : 
-                                               'text-green-700'">
-              {{ isCOrder ? 'Hóa đơn online (COD)' :
-                 isVNPayOrder ? 
-                   (isOnlineOrder ? 'Hóa đơn online (Chuyển khoản VNPay)' : 'Hóa đơn tại quầy (Chuyển khoản)') :
-                 isTienMatOrder ? 'Hóa đơn tại quầy (Tiền mặt)' : 
-                 'Hóa đơn không xác định' }}
-            </span>
-          </div>
-        </div>
-        
         <div class="flex items-center overflow-x-auto space-x-4 py-4">
           <div v-for="(status, index) in sortedOrderHistory" :key="status.id" class="flex items-center">
             <div class="flex flex-col items-center">
@@ -69,7 +30,7 @@
 
         <!-- Nút quay về trạng thái trước -->
         <div class="mt-4 flex justify-end">
-          <button v-if="order.trangThai === 'Chờ giao hàng'" @click="quayVeTrangThai" class="bg-orange-500 text-white px-4 py-2 rounded">
+          <button v-if="order.trangThai === 'Chờ giao hàng'" @click="quayVeTrangThai" :disabled="loadingAction" class="bg-orange-500 text-white px-4 py-2 rounded">
             Quay về trạng thái trước
           </button>
         </div>
@@ -79,29 +40,27 @@
       <div class="bg-white p-6 rounded-lg shadow-md mt-4 flex justify-between items-center">
         <div class="flex gap-2">
           <!-- COD: Chờ xác nhận → Chờ giao hàng -->
-          <button v-if="isCOrder && order.trangThai === 'Chờ xác nhận'" @click="xacNhanHoaDon" class="px-4 py-2 border border-green-500 text-green-500 rounded-lg">
+          <button v-if="isCOrder && order.trangThai === 'Chờ xác nhận'" @click="xacNhanHoaDon" :disabled="loadingAction" class="px-4 py-2 border border-green-500 text-green-500 rounded-lg">
             <i class="fas fa-check mr-1"></i>Xác nhận hóa đơn
           </button>
 
           <!-- Tại quầy (Tiền mặt): Chờ xác nhận → Chờ giao hàng -->
-          <button v-if="isTienMatOrder && order.trangThai === 'Chờ xác nhận'" @click="xacNhanHoaDon" class="px-4 py-2 border border-green-500 text-green-500 rounded-lg">
+          <button v-if="isTienMatOrder && order.trangThai === 'Chờ xác nhận'" @click="xacNhanHoaDon" :disabled="loadingAction" class="px-4 py-2 border border-green-500 text-green-500 rounded-lg">
             <i class="fas fa-check mr-1"></i>Xác nhận hóa đơn
           </button>
 
           <!-- Chuyển khoản: Thanh toán thành công → Chờ giao hàng -->
-          <button v-if="isVNPayOrder && order.trangThai === 'Thanh toán thành công'" @click="xacNhanGiaoHangVNPay" class="px-4 py-2 border border-blue-500 text-blue-500 rounded-lg">
+          <button v-if="isVNPayOrder && order.trangThai === 'Thanh toán thành công'" @click="xacNhanGiaoHangVNPay" :disabled="loadingAction" class="px-4 py-2 border border-blue-500 text-blue-500 rounded-lg">
             <i class="fas fa-truck mr-1"></i>Xác nhận giao hàng
           </button>
 
-          <!-- COD: Chờ xác nhận → Chờ giao hàng -->
-
           <!-- COD & Chuyển khoản: Chờ giao hàng → Đang vận chuyển -->
-          <button v-if="order.trangThai === 'Chờ giao hàng'" @click="xacNhanGiaoHang" class="px-4 py-2 border border-blue-500 text-blue-500 rounded-lg">
+          <button v-if="order.trangThai === 'Chờ giao hàng'" @click="xacNhanGiaoHang" :disabled="loadingAction" class="px-4 py-2 border border-blue-500 text-blue-500 rounded-lg">
             <i class="fas fa-truck mr-1"></i>Xác nhận giao hàng
           </button>
 
           <!-- COD & Chuyển khoản: Đang vận chuyển → Đã giao hàng -->
-          <button v-if="order.trangThai === 'Đang vận chuyển'" @click="xacNhanLayHang" class="px-4 py-2 border border-yellow-500 text-yellow-500 rounded-lg">
+          <button v-if="order.trangThai === 'Đang vận chuyển'" @click="xacNhanLayHang" :disabled="loadingAction" class="px-4 py-2 border border-yellow-500 text-yellow-500 rounded-lg">
             <i class="fas fa-shipping-fast mr-1"></i>Xác nhận lấy hàng
           </button>
 
@@ -109,23 +68,24 @@
           <button
               v-if="isCOrder && order.trangThai === 'Đã giao hàng'"
               @click="openPaymentModal"
+              :disabled="loadingAction"
               class="px-4 py-2 border border-green-500 text-green-500 rounded-lg"
           >
             <i class="fas fa-money-bill-wave mr-1"></i>Xác nhận thanh toán COD
           </button>
 
           <!-- COD: Đã thanh toán → Hoàn thành -->
-          <button v-if="isCOrder && order.trangThai === 'Đã thanh toán'" @click="hoanThanhDon" class="px-4 py-2 border border-green-500 text-green-500 rounded-lg">
+          <button v-if="isCOrder && order.trangThai === 'Đã thanh toán'" @click="hoanThanhDon" :disabled="loadingAction" class="px-4 py-2 border border-green-500 text-green-500 rounded-lg">
             <i class="fas fa-check-double mr-1"></i>Hoàn thành đơn hàng
           </button>
 
           <!-- Chuyển khoản: Đã giao hàng → Hoàn thành -->
-          <button v-if="isVNPayOrder && order.trangThai === 'Đã giao hàng'" @click="hoanThanhDon" class="px-4 py-2 border border-green-500 text-green-500 rounded-lg">
+          <button v-if="isVNPayOrder && order.trangThai === 'Đã giao hàng'" @click="hoanThanhDon" :disabled="loadingAction" class="px-4 py-2 border border-green-500 text-green-500 rounded-lg">
             <i class="fas fa-check-double mr-1"></i>Hoàn thành đơn hàng
           </button>
 
           <!-- Hủy đơn (chỉ cho Chờ xác nhận) -->
-          <button v-if="order.trangThai === 'Chờ xác nhận'" @click="huyDon" class="px-4 py-2 border border-red-500 text-red-500 rounded-lg">
+          <button v-if="order.trangThai === 'Chờ xác nhận'" @click="huyDon" :disabled="loadingAction" class="px-4 py-2 border border-red-500 text-red-500 rounded-lg">
             <i class="fas fa-times mr-1"></i>Hủy đơn
           </button>
 
@@ -186,7 +146,9 @@
       <!-- Thông tin đơn hàng -->
       <div class="mt-4">
         <div class="flex justify-between items-center">
-          <h3 class="text-md font-semibold">Thông tin đơn hàng - Đơn tại quầy</h3>
+          <h3 class="text-md font-semibold">
+            Thông tin đơn hàng - {{ order.loaiHoaDon === 'Tại quầy' ? 'Đơn tại quầy' : (order.loaiHoaDon === 'Online' ? 'Đơn online' : 'Không xác định') }}
+          </h3>
           <div class="flex gap-2">
             <button v-if="order.trangThai === 'Chờ giao hàng'" @click="openCustomerForm" class="bg-blue-500 text-white px-3 py-1 rounded">
               Cập nhật thông tin khách hàng
@@ -252,37 +214,14 @@
             <p><strong>Địa chỉ:</strong> {{ formatDiaChi(order) }}</p>
           </div>
           <div class="text-sm">
-            <p class="mb-3"><strong>Loại:</strong> <span :class="getInvoiceTypeClass(order.loaiHoaDon)">{{ order.loaiHoaDon || "Không xác định" }}</span></p>
+            <p class="mb-3"><strong>Loại:</strong> <span :class="getInvoiceTypeClass(order.loaiHoaDon)">{{ order.loaiHoaDon === 'Tại quầy' ? 'Đơn tại quầy' : (order.loaiHoaDon === 'Online' ? 'Đơn online' : 'Không xác định') }}</span></p>
             <p><strong>Trạng thái:</strong> <span class="px-2 py-1 rounded" :class="getStatusClass(order.trangThai)">{{ order.trangThai || "Không xác định" }}</span></p>
             <!-- Phương thức thanh toán -->
-            <div v-if="order.phuongThucThanhToan" class="mt-3 p-2 rounded-lg" 
-                 :class="isVNPayOrder ? 'bg-blue-50 border border-blue-200' :
-                         isCOrder ? 'bg-orange-50 border border-orange-200' : 
-                         'bg-green-50 border border-green-200'">
-              <p class="mb-2"><strong>Phương thức thanh toán:</strong></p>
-              <div class="flex items-center space-x-2">
-                <i :class="isVNPayOrder ? 'fas fa-credit-card text-blue-600' :
-                          isCOrder ? 'fas fa-truck text-orange-600' : 
-                          'fas fa-money-bill-wave text-green-600'"></i>
-                <span :class="['text-sm font-semibold',
-                  isVNPayOrder ? 'text-blue-700' :
-                  isCOrder ? 'text-orange-700' : 
-                  'text-green-700']">
-                  {{ isVNPayOrder ? 'Chuyển khoản' :
-                     isCOrder ? 'COD' : 
-                     isTienMatOrder ? 'Tiền mặt' : 
-                     'Không xác định' }}
-                </span>
-                <span :class="['px-2 py-1 text-xs rounded-full font-bold',
-                  isVNPayOrder ? 'bg-blue-100 text-blue-800' :
-                  isCOrder ? 'bg-orange-100 text-orange-800' : 
-                  'bg-green-100 text-green-800']">
-                  {{ isVNPayOrder ? 'CHUYỂN KHOẢN' :
-                     isCOrder ? 'COD' : 
-                     isTienMatOrder ? 'TIỀN MẶT' : 
-                     'KHÔNG XÁC ĐỊNH' }}
-                </span>
-              </div>
+            <div v-if="order.phuongThucThanhToan" class="mt-3 p-2 rounded-lg bg-gray-50 border">
+              <strong>Phương thức thanh toán:</strong>
+              <span>
+                {{ order.phuongThucThanhToan === 'COD' ? 'Thanh toán khi nhận hàng' : (order.phuongThucThanhToan === 'Tra_Truoc' ? 'Thanh toán trước' : order.phuongThucThanhToan) }}
+              </span>
             </div>
           </div>
         </div>
@@ -309,24 +248,17 @@
                 <td class="px-4 py-3">{{ formatDate(order.updatedAt || order.lichSuHoaDons.find(h => h.trangThaiMoi === 'Thanh toán thành công')?.createdAt) }}</td>
                 <td class="px-4 py-3">
                   <div class="flex items-center space-x-2">
-                    <i :class="isVNPayOrder ? 'fas fa-credit-card text-blue-600' :
-                              isCOrder ? 'fas fa-truck text-orange-600' : 
-                              'fas fa-money-bill-wave text-green-600'"></i>
+                    <i :class="order.phuongThucThanhToanId === 1 ? 'fas fa-credit-card text-blue-600' : 'fas fa-money-bill-wave text-green-600'"></i>
                     <span :class="['px-2 py-1 text-xs rounded-full font-semibold',
-                      isVNPayOrder ? 'bg-blue-100 text-blue-800' :
-                      isCOrder ? 'bg-orange-100 text-orange-800' : 
-                      'bg-green-100 text-green-800']">
-                      {{ isVNPayOrder ? 'Chuyển khoản' :
-                         isCOrder ? 'COD' : 
-                         isTienMatOrder ? 'Tiền mặt' : 
-                         'Không xác định' }}
-                    </span>
+                  order.phuongThucThanhToanId === 1 ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800']">
+                  {{ order.phuongThucThanhToanId === 1 ? 'Chuyển khoản' : 'Tiền mặt' }}
+                </span>
                   </div>
                 </td>
                 <td class="px-4 py-3">
-                    <span :class="getStatusClass(order.trangThai)">
-                      {{ order.trangThai }}
-                    </span>
+              <span :class="getStatusClass(order.trangThai)">
+                {{ order.trangThai }}
+              </span>
                 </td>
                 <td class="px-4 py-3">{{ order.nhanVien?.maNhanVien || 'Không có' }}</td>
               </tr>
@@ -603,13 +535,13 @@
               <div class="mb-4">
                 <label class="block text-sm font-medium mb-1">Hình thức thanh toán</label>
                 <div class="space-y-3">
-                  <label class="flex items-center space-x-3 p-3 rounded-lg border-2 transition-all" 
+                  <label class="flex items-center space-x-3 p-3 rounded-lg border-2 transition-all"
                          :class="orderPaymentMethod === '1' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'">
                     <input type="radio" value="1" v-model="orderPaymentMethod" class="text-sm" />
                     <i class="fas fa-credit-card text-blue-600"></i>
                     <span class="text-sm font-medium">Chuyển khoản</span>
                   </label>
-                  <label class="flex items-center space-x-3 p-3 rounded-lg border-2 transition-all" 
+                  <label class="flex items-center space-x-3 p-3 rounded-lg border-2 transition-all"
                          :class="orderPaymentMethod === '4' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'">
                     <input type="radio" value="4" v-model="orderPaymentMethod" class="text-sm" />
                     <i class="fas fa-money-bill-wave text-green-600"></i>
@@ -715,7 +647,7 @@ import { reactive } from "vue";
 export default {
   computed: {
     isVNPayOrder() {
-      return this.order.phuongThucThanhToan === 'VNPAY' || this.order.phuongThucThanhToanId === 1;
+      return this.order.phuongThucThanhToan === 'Tra_Truoc' || this.order.phuongThucThanhToanId === 1;
     },
     isCOrder() {
       return this.order.phuongThucThanhToan === 'COD' || this.order.phuongThucThanhToanId === 2;
@@ -741,17 +673,17 @@ export default {
     },
     tienGiamGia() {
       if (!this.order.phieuGiamGia) return 0;
-      
+
       // Nếu có giảm giá theo phần trăm
       if (this.order.phieuGiamGia.soPhanTramGiam > 0) {
         return (this.tongTienHang * this.order.phieuGiamGia.soPhanTramGiam) / 100;
       }
-      
+
       // Nếu có giảm giá theo số tiền cố định
       if (this.order.phieuGiamGia.giaTriGiam > 0) {
         return this.order.phieuGiamGia.giaTriGiam;
       }
-      
+
       return 0;
     },
     thanhTien() {
@@ -851,6 +783,7 @@ export default {
       imageIntervals: {},
       paymentNote: "",
       orderPaymentMethod: '4',
+      loadingAction: false,
     };
   },
   watch: {
@@ -883,15 +816,15 @@ export default {
   methods: {
     getDiscountType() {
       if (!this.order.phieuGiamGia) return "Không có";
-      
+
       if (this.order.phieuGiamGia.soPhanTramGiam > 0) {
         return "Phần trăm";
       }
-      
+
       if (this.order.phieuGiamGia.giaTriGiam > 0) {
         return "Tiền mặt";
       }
-      
+
       return "Không có";
     },
     openCustomerForm() {
@@ -961,29 +894,26 @@ export default {
       }
     },
     async xacNhanHoaDon() {
+      if (this.loadingAction) return;
+      this.loadingAction = true;
       try {
         const orderId = this.$route.params.id;
         if (!orderId) {
           alert("Không tìm thấy ID hóa đơn!");
           return;
         }
-
+        // Chỉ cập nhật trạng thái nếu trạng thái hiện tại chưa đúng
         let newStatus;
         if (this.isVNPayOrder) {
-          // Chuyển khoản: Chờ xác nhận → Thanh toán thành công
           newStatus = "Thanh toán thành công";
-        } else if (this.isCOrder) {
-          // COD: Chờ xác nhận → Chờ giao hàng
-          newStatus = "Chờ giao hàng";
         } else {
-          // Tiền mặt tại quầy: Chờ xác nhận → Chờ giao hàng
           newStatus = "Chờ giao hàng";
         }
-
-        // Cập nhật trạng thái
+        if (this.order.trangThai === newStatus) {
+          alert("Trạng thái hóa đơn đã đúng, không cần cập nhật lại!");
+          return;
+        }
         const response = await HoaDonService.updateTrangThaiHoaDon(orderId, newStatus);
-        
-        // Chỉ cập nhật phương thức thanh toán cho chuyển khoản
         if (this.isVNPayOrder) {
           await HoaDonService.updatePayment(orderId, {
             tienMat: 0,
@@ -993,15 +923,11 @@ export default {
             loaiHoaDon: 'Online',
             tienKhachDua: 0,
             phieuGiamGiaId: this.order.phieuGiamGia?.id || null,
-            phuongThucThanhToan: 'VNPAY'
+            phuongThucThanhToan: 'Tra_Truoc'
           });
         }
         if (response.status === 200) {
-          if (this.isVNPayOrder) {
-            alert("Xác nhận thanh toán chuyển khoản thành công!");
-          } else {
-            alert("Xác nhận hóa đơn COD thành công!");
-          }
+          alert("Xác nhận hóa đơn thành công!");
           await this.fetchOrder();
         } else {
           alert("Có lỗi xảy ra khi xác nhận hóa đơn!");
@@ -1009,9 +935,13 @@ export default {
       } catch (error) {
         console.error("Lỗi khi xác nhận hóa đơn:", error);
         alert("Có lỗi xảy ra khi xác nhận hóa đơn: " + (error.response?.data?.message || "Vui lòng thử lại!"));
+      } finally {
+        this.loadingAction = false;
       }
     },
     async xacNhanGiaoHangVNPay() {
+      if (this.loadingAction) return;
+      this.loadingAction = true;
       try {
         const orderId = this.$route.params.id;
         if (!orderId) {
@@ -1032,6 +962,8 @@ export default {
       } catch (error) {
         console.error("Lỗi khi xác nhận giao hàng:", error);
         alert("Có lỗi xảy ra khi xác nhận giao hàng: " + (error.response?.data?.message || "Vui lòng thử lại!"));
+      } finally {
+        this.loadingAction = false;
       }
     },
     async xacNhanHoaDonTuCheckout(phuongThucThanhToanId) {
@@ -1053,7 +985,7 @@ export default {
             phieuGiamGiaId: this.order?.phieuGiamGia?.id || null,
             loaiHoaDon: this.order?.loaiHoaDon || 'Giao hàng',
             tongTien: this.thanhTien,
-            phuongThucThanhToan: phuongThucThanhToanId === 1 ? 'VNPAY' : 'COD',
+            phuongThucThanhToan: phuongThucThanhToanId === 1 ? 'Tra_Truoc' : 'COD',
           };
           await HoaDonService.updatePayment(orderId, paymentData);
         }
@@ -1084,13 +1016,15 @@ export default {
       }
     },
     async xacNhanGiaoHang() {
+      if (this.loadingAction) return;
+      this.loadingAction = true;
       try {
         const orderId = this.$route.params.id;
         if (!orderId) {
           alert("Không tìm thấy ID hóa đơn!");
           return;
         }
-        
+
         // Chuyển từ "Chờ giao hàng" → "Đang vận chuyển"
         const response = await HoaDonService.updateTrangThaiHoaDon(orderId, "Đang vận chuyển");
         if (response.status === 200) {
@@ -1102,9 +1036,13 @@ export default {
       } catch (error) {
         console.error("Lỗi khi xác nhận giao hàng:", error);
         alert("Có lỗi xảy ra khi xác nhận giao hàng: " + (error.response?.data?.message || "Vui lòng thử lại!"));
+      } finally {
+        this.loadingAction = false;
       }
     },
     async xacNhanLayHang() {
+      if (this.loadingAction) return;
+      this.loadingAction = true;
       try {
         const orderId = this.$route.params.id;
         if (!orderId) {
@@ -1121,39 +1059,33 @@ export default {
       } catch (error) {
         console.error("Lỗi khi xác nhận lấy hàng:", error);
         alert("Có lỗi xảy ra khi xác nhận lấy hàng: " + (error.response?.data?.message || "Vui lòng thử lại!"));
+      } finally {
+        this.loadingAction = false;
       }
     },
     async hoanThanhDon() {
+      if (this.loadingAction) return;
+      this.loadingAction = true;
       try {
         const orderId = this.$route.params.id;
         if (!orderId) {
           alert("Không tìm thấy ID hóa đơn!");
           return;
         }
-        
-        // Kiểm tra trạng thái hiện tại
         if (this.order.trangThai === 'Hoàn thành') {
           alert("Đơn hàng đã ở trạng thái hoàn thành!");
           return;
         }
-        
-        // Kiểm tra xem đã có trạng thái "Hoàn thành" trong lịch sử chưa
-        const hasCompletedStatus = this.order.lichSuHoaDons && this.order.lichSuHoaDons.some(history => 
-          history.trangThaiMoi === 'Hoàn thành'
-        );
-        
+        const hasCompletedStatus = this.order.lichSuHoaDons && this.order.lichSuHoaDons.some(history => history.trangThaiMoi === 'Hoàn thành');
         if (hasCompletedStatus) {
           alert("Đơn hàng đã được hoàn thành trước đó!");
           return;
         }
-        
-        // Kiểm tra thêm: nếu trạng thái hiện tại không phù hợp để hoàn thành
         const validStatuses = ['Đã giao hàng', 'Đã thanh toán'];
         if (!validStatuses.includes(this.order.trangThai)) {
           alert("Đơn hàng chưa ở trạng thái phù hợp để hoàn thành!");
           return;
         }
-        
         const response = await HoaDonService.updateTrangThaiHoaDon(orderId, "Hoàn thành");
         if (response.status === 200) {
           alert("Hoàn thành đơn hàng thành công!");
@@ -1164,26 +1096,26 @@ export default {
       } catch (error) {
         console.error("Lỗi khi hoàn thành đơn hàng:", error);
         alert("Có lỗi xảy ra khi hoàn thành đơn hàng: " + (error.response?.data?.message || "Vui lòng thử lại!"));
+      } finally {
+        this.loadingAction = false;
       }
     },
     async submitPayment() {
+      if (this.loadingAction) return;
+      this.loadingAction = true;
       try {
         const orderId = this.$route.params.id;
         if (!orderId) {
           alert("Không tìm thấy ID hóa đơn!");
           return;
         }
-        // Chọn hình thức thanh toán: chuyển khoản (1) hoặc tiền mặt (4)
         const isChuyenKhoan = String(this.orderPaymentMethod) === '1';
         const phieuGiamGiaId = this.order?.phieuGiamGia?.id || null;
         const tongTien = this.thanhTien;
-
-        // Đồng bộ tổng tiền vào hóa đơn (đề phòng backend yêu cầu)
         await HoaDonService.updateHoaDon(orderId, {
           tongTien: tongTien,
           phiShip: this.order?.phiShip || 0,
         });
-
         const paymentData = {
           phuongThucThanhToanId: isChuyenKhoan ? 1 : 4,
           tienMat: isChuyenKhoan ? 0 : tongTien,
@@ -1193,9 +1125,8 @@ export default {
           phieuGiamGiaId: phieuGiamGiaId,
           loaiHoaDon: this.order?.loaiHoaDon || 'Tại quầy',
           tongTien: tongTien,
-          phuongThucThanhToan: isChuyenKhoan ? 'VNPAY' : 'TIEN_MAT',
+          phuongThucThanhToan: isChuyenKhoan ? 'Tra_Truoc' : 'TIEN_MAT',
         };
-
         const response = await HoaDonService.updatePayment(orderId, paymentData);
         if (response.status === 200) {
           alert("Xác nhận thanh toán thành công!");
@@ -1203,17 +1134,23 @@ export default {
           // Chỉ chuyển trạng thái cho COD: Đã giao hàng → Đã thanh toán
           if (this.isCOrder && this.order.trangThai === 'Đã giao hàng') {
             await HoaDonService.updateTrangThaiHoaDon(orderId, "Đã thanh toán");
+            await this.fetchOrder();
+          } else {
+            await this.fetchOrder();
           }
-          await this.fetchOrder();
         } else {
           alert("Có lỗi xảy ra khi xác nhận thanh toán!");
         }
       } catch (error) {
         console.error("Lỗi khi xác nhận thanh toán:", error);
         alert("Có lỗi xảy ra khi xác nhận thanh toán: " + (error.response?.data?.message || "Vui lòng thử lại!"));
+      } finally {
+        this.loadingAction = false;
       }
     },
     async huyDon() {
+      if (this.loadingAction) return;
+      this.loadingAction = true;
       try {
         const orderId = this.$route.params.id;
         if (!orderId) {
@@ -1230,9 +1167,13 @@ export default {
       } catch (error) {
         console.error("Lỗi khi hủy đơn hàng:", error);
         alert("Có lỗi xảy ra khi hủy đơn hàng: " + (error.response?.data?.message || "Vui lòng thử lại!"));
+      } finally {
+        this.loadingAction = false;
       }
     },
     async quayVeTrangThai() {
+      if (this.loadingAction) return;
+      this.loadingAction = true;
       try {
         const orderId = this.$route.params.id;
         if (!orderId) {
@@ -1250,6 +1191,8 @@ export default {
       } catch (error) {
         console.error("Lỗi khi quay về trạng thái trước:", error);
         alert("Có lỗi xảy ra khi quay về trạng thái trước: " + (error.response?.data?.message || "Vui lòng thử lại!"));
+      } finally {
+        this.loadingAction = false;
       }
     },
     async printInvoice() {
@@ -1740,3 +1683,4 @@ export default {
   opacity: 0;
 }
 </style>
+
