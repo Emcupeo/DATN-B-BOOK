@@ -273,11 +273,37 @@ public class SanPhamService {
             ctsp.setUpdatedAt(Instant.now());
             ctsp.setDeleted(false);
 
-            chiTietSanPhamRepository.save(ctsp);
+            // Lưu để có ID trước khi tạo ISBN
+            ChiTietSanPham savedCtsp = chiTietSanPhamRepository.save(ctsp);
+
+            // Tạo ISBN nếu có nhà xuất bản
+            if (savedCtsp.getIdNhaXuatBan() != null) {
+                String isbn = generateISBN(
+                    savedCtsp.getIdNhaXuatBan().getId().longValue(),
+                    savedCtsp.getId().longValue()
+                );
+                savedCtsp.setIsbn(isbn);
+                chiTietSanPhamRepository.save(savedCtsp);
+            }
         }
 
         return savedSanPham;
     }
 
+    private String generateISBN(Long idNhaXuatBan, Long idChiTietSanPham) {
+        // Tạo chuỗi 12 số đầu: 978604 + idNhaXuatBan (pad 3 số) + idChiTietSanPham (pad 4 số)
+        String prefix = "978604";
+        String nhaXB = String.format("%03d", idNhaXuatBan);
+        String chiTiet = String.format("%04d", idChiTietSanPham);
+        String isbn12 = prefix + nhaXB + chiTiet;
+        // Tính số kiểm tra
+        int sum = 0;
+        for (int i = 0; i < 12; i++) {
+            int digit = Character.getNumericValue(isbn12.charAt(i));
+            sum += (i % 2 == 0) ? digit : digit * 3;
+        }
+        int checkDigit = (10 - (sum % 10)) % 10;
+        return String.format("978-604-%s-%s-%d", nhaXB, chiTiet, checkDigit);
+    }
 
 }

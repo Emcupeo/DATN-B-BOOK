@@ -71,8 +71,8 @@
             <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Sách mới nhất</h2>
             <p class="text-gray-600">Những cuốn sách vừa được thêm vào thư viện</p>
           </div>
-          <router-link 
-            to="/products?sort=newest"
+          <router-link
+            to="/products?sort=newest&category=book"
             class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-full font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
           >
             Xem thêm
@@ -113,7 +113,7 @@
             <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Sản phẩm bán chạy nhất</h2>
             <p class="text-gray-600">Những sản phẩm được yêu thích nhất bao gồm sách lẻ và bộ sách</p>
           </div>
-          <router-link 
+          <router-link
             to="/products?sort=bestselling"
             class="bg-gradient-to-r from-green-600 to-teal-600 text-white px-6 py-3 rounded-full font-semibold hover:from-green-700 hover:to-teal-700 transition-all duration-200 shadow-lg hover:shadow-xl"
           >
@@ -155,8 +155,8 @@
             <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Bộ sách mới nhất</h2>
             <p class="text-gray-600">Những bộ sách vừa được thêm vào thư viện</p>
           </div>
-          <router-link 
-            to="/products?type=bookset&sort=newest"
+          <router-link
+            to="/products?sort=newest&category=bookset"
             class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-full font-semibold hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-lg hover:shadow-xl"
           >
             Xem thêm

@@ -322,10 +322,10 @@
                     v-model="sortBy"
                     class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                   >
+                    <option value="newest">Mới nhất</option>
                     <option value="bestselling">Bán chạy nhất</option>
                     <option value="price-low">Giá tăng dần</option>
                     <option value="price-high">Giá giảm dần</option>
-                    <option value="newest">Mới nhất</option>
                   </select>
                 </div>
 
@@ -470,7 +470,7 @@ export default {
     
     // Reactive data
     const viewMode = ref('grid')
-    const sortBy = ref('bestselling')
+    const sortBy = ref('newest')
     const currentPage = ref(1)
     const itemsPerPage = 12
     const showMobileFilters = ref(false)
@@ -644,14 +644,31 @@ export default {
       const books = [...filteredBooks.value]
       
       switch (sortBy.value) {
-        case 'bestselling':
-          return books.sort((a, b) => (b.sales || 0) - (a.sales || 0))
+        case 'bestselling': {
+          console.log('[DEBUG] Sorting by bestselling, books with sales:', books.map(b => ({ title: b.title, sales: b.sales })))
+          
+          // Tách sản phẩm có sales > 0 và sales = 0
+          const productsWithSales = books.filter(book => (book.sales || 0) > 0)
+          const productsWithoutSales = books.filter(book => (book.sales || 0) === 0)
+          
+          // Sắp xếp sản phẩm có sales theo sales giảm dần
+          productsWithSales.sort((a, b) => (b.sales || 0) - (a.sales || 0))
+          
+          // Sắp xếp sản phẩm không có sales theo mới nhất
+          productsWithoutSales.sort((a, b) => (b.sortCreatedAt || 0) - (a.sortCreatedAt || 0))
+          
+          // Kết hợp: sản phẩm có sales trước, sản phẩm không có sales sau
+          const sorted = [...productsWithSales, ...productsWithoutSales]
+          
+          console.log('[DEBUG] After sorting:', sorted.map(b => ({ title: b.title, sales: b.sales })))
+          return sorted
+        }
         case 'price-low':
           return books.sort((a, b) => a.price - b.price)
         case 'price-high':
           return books.sort((a, b) => b.price - a.price)
         case 'newest':
-          return books.sort((a, b) => new Date(b.publishedDate || Date.now()) - new Date(a.publishedDate || Date.now()))
+          return books.sort((a, b) => (b.sortCreatedAt || 0) - (a.sortCreatedAt || 0))
         default:
           return books
       }
@@ -855,6 +872,7 @@ export default {
 
     // Watch for filter changes to reset pagination
     watch([filters, sortBy], () => {
+      console.log('[DEBUG] Filter or sortBy changed:', { sortBy: sortBy.value, filters })
       currentPage.value = 1
       // Save filters to localStorage
       localStorage.setItem('shop-filters', JSON.stringify(filters))
@@ -892,10 +910,18 @@ export default {
       // Apply category filter
       const categoryFromQuery = params.get('category')
       if (categoryFromQuery) {
-        filters.categories = [categoryFromQuery]
+        if (categoryFromQuery === 'bookset') {
+          filters.categories = ['Bộ sách']
+          filters.productTypes = ['Bộ sách']
+        } else if (categoryFromQuery === 'book') {
+          // Lọc ra bộ sách, chỉ hiển thị sách lẻ
+          filters.productTypes = ['Sách lẻ']
+        } else {
+          filters.categories = [categoryFromQuery]
+        }
       }
       
-      // Apply type filter (bookset for book sets)
+      // Apply type filter (bookset for book sets) - giữ lại để tương thích
       const typeFromQuery = params.get('type')
       if (typeFromQuery === 'bookset') {
         filters.categories = ['Bộ sách']

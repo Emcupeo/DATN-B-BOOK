@@ -119,6 +119,9 @@
             <span v-if="book.originalPrice && book.originalPrice > book.price" class="text-sm text-gray-400 line-through">
               {{ formatPrice(book.originalPrice) }}
             </span>
+            <span v-if="book.originalPrice && book.originalPrice > book.price" class="ml-2 bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs font-semibold">
+              -{{ formatDiscountAmount(book.originalPrice - book.price) }}
+            </span>
           </div>
           <div>
             <span 
@@ -211,6 +214,16 @@ export default {
       }).format(price)
     }
 
+    const formatDiscountAmount = (amount) => {
+      if (amount >= 1000000) {
+        return `${Math.round(amount / 1000000)}M`
+      } else if (amount >= 1000) {
+        return `${Math.round(amount / 1000)}k`
+      } else {
+        return `${Math.round(amount)}`
+      }
+    }
+
     const addToCart = () => {
       if (props.book.inStock) {
         // Kiểm tra số lượng tồn kho - xử lý cả sản phẩm thường và bộ sách
@@ -272,6 +285,7 @@ export default {
 
     return {
       formatPrice,
+      formatDiscountAmount,
       addToCart,
       buyNow,
       viewDetails,

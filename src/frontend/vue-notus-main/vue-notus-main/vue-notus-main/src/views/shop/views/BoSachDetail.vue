@@ -35,7 +35,7 @@
             <span class="text-3xl font-bold text-red-600">{{ formatPrice(discountInfo ? discountInfo.giaSauGiam : (boSach.giaTien || 0)) }}</span>
             <span v-if="discountInfo && discountInfo.giaBanDau && discountInfo.giaBanDau > discountInfo.giaSauGiam" class="text-lg text-gray-500 line-through">{{ formatPrice(discountInfo.giaBanDau) }}</span>
             <span v-if="discountInfo && discountInfo.giaBanDau && discountInfo.giaBanDau > discountInfo.giaSauGiam" class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-sm font-semibold">
-              -{{ Math.round(((discountInfo.giaBanDau - discountInfo.giaSauGiam) / discountInfo.giaBanDau) * 100) }}%
+              -{{ formatDiscountAmount(discountInfo.giaBanDau - discountInfo.giaSauGiam) }}
             </span>
             <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm font-semibold" v-if="boSach.soLuong > 0">Còn hàng</span>
             <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-sm font-semibold" v-else>Hết hàng</span>
@@ -185,6 +185,16 @@ export default {
       }).format(price)
     }
 
+    const formatDiscountAmount = (amount) => {
+      if (amount >= 1000000) {
+        return `${Math.round(amount / 1000000)}M`
+      } else if (amount >= 1000) {
+        return `${Math.round(amount / 1000)}k`
+      } else {
+        return `${Math.round(amount)}`
+      }
+    }
+
     const increaseQuantity = () => {
       if (boSach.value?.soLuong === 0) {
         alert('Bộ sách này đã hết hàng!')
@@ -292,6 +302,7 @@ export default {
       prevThumbs,
       nextThumbs,
       formatPrice,
+      formatDiscountAmount,
       increaseQuantity,
       decreaseQuantity,
       addToCart,

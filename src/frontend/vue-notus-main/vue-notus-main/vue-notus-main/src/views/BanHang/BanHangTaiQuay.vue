@@ -1258,8 +1258,7 @@ export default {
         });
         const response = await HoaDonService.updatePayment(orderId, paymentPayload);
         if (response.status === 200) {
-          let newStatus = paymentPayload.phuongThucThanhToan === 'Tra_Truoc' ? 'Thanh toán thành công' : 'Thanh toán';
-          await HoaDonService.updateTrangThaiHoaDon(orderId, newStatus);
+          // updatePayment đã tự động cập nhật trạng thái, không cần gọi updateTrangThaiHoaDon
           await this.deductStockAfterPayment();
           alert("Xác nhận thanh toán thành công!");
           this.showPaymentModal = false;

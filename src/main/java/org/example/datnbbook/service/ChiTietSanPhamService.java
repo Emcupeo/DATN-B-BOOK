@@ -235,7 +235,20 @@ public class ChiTietSanPhamService {
             chiTietSanPham.setIdNgonNgu(ngonNgu);
         }
 
-        return repository.save(chiTietSanPham);
+        // Lưu để có ID trước khi tạo ISBN
+        ChiTietSanPham savedChiTietSanPham = repository.save(chiTietSanPham);
+
+        // Tạo ISBN nếu có nhà xuất bản
+        if (savedChiTietSanPham.getIdNhaXuatBan() != null) {
+            String isbn = generateISBN(
+                savedChiTietSanPham.getIdNhaXuatBan().getId().longValue(),
+                savedChiTietSanPham.getId().longValue()
+            );
+            savedChiTietSanPham.setIsbn(isbn);
+            savedChiTietSanPham = repository.save(savedChiTietSanPham);
+        }
+
+        return savedChiTietSanPham;
     }
 
     public List<ChiTietSanPham> search(String keyword) {

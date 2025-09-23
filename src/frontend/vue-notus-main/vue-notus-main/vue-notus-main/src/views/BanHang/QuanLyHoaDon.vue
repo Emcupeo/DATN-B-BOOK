@@ -913,9 +913,11 @@ export default {
           alert("Trạng thái hóa đơn đã đúng, không cần cập nhật lại!");
           return;
         }
-        const response = await HoaDonService.updateTrangThaiHoaDon(orderId, newStatus);
+        
+        // Chỉ gọi updatePayment, không gọi updateTrangThaiHoaDon để tránh trùng lặp
+        let response;
         if (this.isVNPayOrder) {
-          await HoaDonService.updatePayment(orderId, {
+          response = await HoaDonService.updatePayment(orderId, {
             tienMat: 0,
             chuyenKhoan: this.order.tongTien,
             phuongThucThanhToanId: 1,
@@ -925,6 +927,9 @@ export default {
             phieuGiamGiaId: this.order.phieuGiamGia?.id || null,
             phuongThucThanhToan: 'Tra_Truoc'
           });
+        } else {
+          // Chỉ cập nhật trạng thái cho trường hợp không phải VNPay
+          response = await HoaDonService.updateTrangThaiHoaDon(orderId, newStatus);
         }
         if (response.status === 200) {
           alert("Xác nhận hóa đơn thành công!");
@@ -974,7 +979,8 @@ export default {
           return;
         }
 
-        // Lưu phương thức thanh toán vào hóa đơn
+        // Chỉ gọi updatePayment, không gọi updateTrangThaiHoaDon để tránh trùng lặp
+        let response;
         if (phuongThucThanhToanId) {
           const paymentData = {
             phuongThucThanhToanId: phuongThucThanhToanId,
@@ -987,19 +993,17 @@ export default {
             tongTien: this.thanhTien,
             phuongThucThanhToan: phuongThucThanhToanId === 1 ? 'Tra_Truoc' : 'COD',
           };
-          await HoaDonService.updatePayment(orderId, paymentData);
-        }
-
-        let newStatus;
-        if (phuongThucThanhToanId === 1) {
-          // Chuyển khoản: Chờ xác nhận → Thanh toán thành công
-          newStatus = "Thanh toán thành công";
+          response = await HoaDonService.updatePayment(orderId, paymentData);
         } else {
-          // COD: Chờ xác nhận → Chờ giao hàng
-          newStatus = "Chờ giao hàng";
+          // Nếu không có phương thức thanh toán, chỉ cập nhật trạng thái
+          let newStatus;
+          if (phuongThucThanhToanId === 1) {
+            newStatus = "Thanh toán thành công";
+          } else {
+            newStatus = "Chờ giao hàng";
+          }
+          response = await HoaDonService.updateTrangThaiHoaDon(orderId, newStatus);
         }
-
-        const response = await HoaDonService.updateTrangThaiHoaDon(orderId, newStatus);
         if (response.status === 200) {
           if (phuongThucThanhToanId === 1) {
             alert("Xác nhận thanh toán chuyển khoản thành công!");
@@ -1131,13 +1135,8 @@ export default {
         if (response.status === 200) {
           alert("Xác nhận thanh toán thành công!");
           this.showPaymentModal = false;
-          // Chỉ chuyển trạng thái cho COD: Đã giao hàng → Đã thanh toán
-          if (this.isCOrder && this.order.trangThai === 'Đã giao hàng') {
-            await HoaDonService.updateTrangThaiHoaDon(orderId, "Đã thanh toán");
-            await this.fetchOrder();
-          } else {
-            await this.fetchOrder();
-          }
+          // updatePayment đã tự động cập nhật trạng thái, không cần gọi updateTrangThaiHoaDon
+          await this.fetchOrder();
         } else {
           alert("Có lỗi xảy ra khi xác nhận thanh toán!");
         }

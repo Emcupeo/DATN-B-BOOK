@@ -38,7 +38,7 @@
             <span class="text-3xl font-bold text-red-600">{{ formatPrice(selectedPrice) }}</span>
             <span v-if="selectedOriginalPrice && selectedOriginalPrice > selectedPrice" class="text-lg text-gray-500 line-through">{{ formatPrice(selectedOriginalPrice) }}</span>
             <span v-if="selectedOriginalPrice && selectedOriginalPrice > selectedPrice" class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-sm font-semibold">
-              -{{ Math.round(((selectedOriginalPrice - selectedPrice) / selectedOriginalPrice) * 100) }}%
+              -{{ formatDiscountAmount(selectedOriginalPrice - selectedPrice) }}
             </span>
             <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm font-semibold" v-if="totalInStock > 0">Còn hàng</span>
             <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-sm font-semibold" v-else>Hết hàng</span>
@@ -171,6 +171,16 @@ export default {
       }).format(price)
     }
 
+    const formatDiscountAmount = (amount) => {
+      if (amount >= 1000000) {
+        return `${Math.round(amount / 1000000)}M`
+      } else if (amount >= 1000) {
+        return `${Math.round(amount / 1000)}k`
+      } else {
+        return `${Math.round(amount)}`
+      }
+    }
+
     const formatIsbnShort = (isbn) => {
       if (!isbn) return '';
       return isbn.length > 20 ? isbn.slice(0, 20) + '...' : isbn;
@@ -248,6 +258,7 @@ export default {
       book,
       quantity,
       formatPrice,
+      formatDiscountAmount,
       increaseQuantity,
       decreaseQuantity,
       addToCart,

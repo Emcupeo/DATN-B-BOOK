@@ -142,10 +142,32 @@ const getTotalStockQuantity = (productDetailItems) => {
 const updateSalesData = async (processedProducts) => {
   try {
     const salesData = await SalesService.getSanPhamBanChay()
+    console.log('[DEBUG] Sales data from API:', salesData)
+    console.log('[DEBUG] Sales data details:', salesData.map(item => ({
+      id: item.id,
+      soLuongBan: item.soLuongBan,
+      tenSanPham: item.tenSanPham,
+      loai: item.loai
+    })))
+    
     const salesMap = new Map()
     
     // Tạo map để tra cứu nhanh dữ liệu bán chạy
     salesData.forEach(item => {
+      console.log(`[DEBUG] Processing sales item:`, {
+        id: item.id,
+        soLuongBan: item.soLuongBan,
+        tenSanPham: item.tenSanPham,
+        loai: item.loai,
+        maSanPham: item.maSanPham
+      });
+      
+      // Mapping theo maSanPham (vì đây là key chính từ API)
+      if (item.maSanPham) {
+        salesMap.set(item.maSanPham, item.soLuongBan || 0)
+      }
+      
+      // Cũng mapping theo id để backup
       if (item.loai === 'Sản phẩm lẻ') {
         salesMap.set(`product_${item.id}`, item.soLuongBan || 0)
       } else if (item.loai === 'Bộ sách') {
@@ -153,20 +175,41 @@ const updateSalesData = async (processedProducts) => {
       }
     })
     
+    console.log('[DEBUG] Sales map:', salesMap)
+    
     // Cập nhật sales cho từng sản phẩm
-    processedProducts.forEach(product => {
+    processedProducts.forEach((product) => {
       if (product.category === 'Bộ sách') {
-        product.sales = salesMap.get(`bosach_${product.id}`) || 0
+        // Tìm sales cho bộ sách theo maBoSach
+        let sales = 0
+        if (product.productDetailItems && product.productDetailItems.length > 0) {
+          const firstItem = product.productDetailItems[0]
+          if (firstItem && firstItem.idBoSach && firstItem.idBoSach.maBoSach) {
+            sales = salesMap.get(firstItem.idBoSach.maBoSach) || 0
+          }
+        }
+        // Fallback: tìm theo id
+        if (sales === 0) {
+          sales = salesMap.get(`bosach_${product.id}`) || 0
+        }
+        product.sales = sales
+        console.log(`[DEBUG] BoSach ${product.id} (${product.title}): sales = ${product.sales}`)
       } else {
         // Tính tổng sales cho sản phẩm từ các chi tiết sản phẩm
         let totalSales = 0
         if (product.productDetailItems) {
           for (const item of product.productDetailItems) {
-            const itemSales = salesMap.get(`product_${item.id}`) || 0
+            // Tìm theo maChiTietSanPham trước
+            let itemSales = salesMap.get(item.maChiTietSanPham) || 0
+            // Fallback: tìm theo id
+            if (itemSales === 0) {
+              itemSales = salesMap.get(`product_${item.id}`) || 0
+            }
             totalSales += itemSales
           }
         }
         product.sales = totalSales
+        console.log(`[DEBUG] Product ${product.id} (${product.title}): sales = ${product.sales}`)
       }
     })
   } catch (error) {
@@ -327,13 +370,17 @@ const loadProducts = async () => {
     // Sắp xếp theo sortCreatedAt giảm dần, đan xen bộ sách và sản phẩm
     state.products.sort((a, b) => b.sortCreatedAt - a.sortCreatedAt);
     // Log kiểm tra thứ tự hiển thị
-    console.log('[DEBUG] Thứ tự hiển thị (title, sortCreatedAt, type):',
+    console.log('[DEBUG] Thứ tự hiển thị (title, sortCreatedAt, sales, type):',
       state.products.map(item => ({
         title: item.title,
         sortCreatedAt: item.sortCreatedAt,
+        sales: item.sales,
         type: item.category
       }))
     );
+    
+    // Log để kiểm tra dữ liệu sales trong store
+    console.log('[DEBUG] Store products with sales:', state.products.map(p => ({ title: p.title, sales: p.sales })));
   } catch (error) {
     console.error('Error loading products:', error)
     state.error = 'Không thể tải danh sách sản phẩm'

@@ -538,14 +538,8 @@ public class HoaDonService {
 
         HoaDon updatedHoaDon = hoaDonRepository.saveAndFlush(hoaDon);
 
-        // Ghi lịch sử trạng thái
-        LichSuHoaDon lichSu = new LichSuHoaDon();
-        lichSu.setHoaDon(updatedHoaDon);
-        lichSu.setTrangThaiCu(oldTrangThai);
-        lichSu.setTrangThaiMoi(newTrangThai);
-        lichSu.setCreatedAt(Instant.now());
-        lichSuHoaDonRepository.save(lichSu);
-        System.out.println("DEBUG: Saved LichSuHoaDon: trangThaiCu=" + oldTrangThai + ", trangThaiMoi=" + newTrangThai + " for HoaDon ID: " + updatedHoaDon.getId());
+        // Không tạo LichSuHoaDon ở đây vì sẽ được tạo trong updateTrangThai
+        System.out.println("DEBUG: Updated HoaDon without creating LichSuHoaDon to avoid duplication");
 
         // Trừ số lượng phiếu giảm giá
         if (phieuGiamGiaId != null) {
